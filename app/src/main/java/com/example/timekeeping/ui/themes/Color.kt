@@ -1,4 +1,4 @@
-package com.example.timekeeping.ui.theme
+package com.example.timekeeping.ui.themes
 
 import androidx.compose.ui.graphics.Color
 

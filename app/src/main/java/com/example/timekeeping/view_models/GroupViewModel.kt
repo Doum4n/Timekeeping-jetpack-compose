@@ -1,109 +1,63 @@
 package com.example.timekeeping.view_models
 
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.timekeeping.models.Group
-import com.example.timekeeping.models.Group.Companion.fromDocument
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.DocumentReference
-import com.google.firebase.firestore.FieldPath
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.timekeeping.repositories.GroupRepository
 
-// HomeViewModel.kt
 class GroupViewModel(
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val groupRepository: GroupRepository = GroupRepository()
 ) : ViewModel() {
 
-    val joinedGroups = mutableStateListOf<Group>()
-    val createdGroups = mutableStateListOf<Group>()
+    val joinedGroups = mutableStateOf<List<Group>>(emptyList())
+    val createdGroups = mutableStateOf<List<Group>>(emptyList())
 
     init {
         loadGroups()
     }
 
     fun loadGroups() {
+        val currentUserId = groupRepository.auth.currentUser?.uid ?: return
 
-        val currentUserId = auth.currentUser?.uid ?: return
-
-        // TODO sửa lại
         // Load joined groups
-        db.collection("employee_group").whereEqualTo("employeeId", currentUserId)
-            .get()
-            .addOnSuccessListener { query ->
-                val groupIds = query.documents.map { it.getString("groupId") ?: "" }
-                loadGroupDetails(groupIds, joinedGroups)
-            }
+        groupRepository.loadCreatedGroups(currentUserId) { groups ->
+            createdGroups.value = groups
+        }
 
         // Load created groups
-        db.collection("groups")
-            .whereEqualTo("creator_id", currentUserId)
-            .get()
-            .addOnSuccessListener { query ->
-                createdGroups.clear()
-                for (doc in query.documents) {
-                    val group = doc.toObject(Group::class.java)
-                    fromDocument(doc)?.let { createdGroups.add(it) }
-                }
-            }
+        groupRepository.loadJoinedGroups{ groups ->
+            joinedGroups.value = groups
+        }
     }
 
-    private fun loadGroupDetails(ids: List<String>, targetList: MutableList<Group>) {
-        db.collection("groups")
-            .whereIn(FieldPath.documentId(), ids)
-            .get()
-            .addOnSuccessListener { query ->
-                targetList.clear()
-                for (doc in query.documents) {
-                    val group = doc.toObject(Group::class.java)
-                    group?.id = doc.id
-                    fromDocument(doc)?.let { targetList.add(it) }
-                }
-            }
-    }
+    fun searchGroupsByName(name: String) {
+        if (name.isEmpty()) {
+            loadGroups()
+            return
+        }
 
-    // TODO
-    fun leaveGroup(groupId: String) {
-        val currentUserId = auth.currentUser?.uid ?: return
-        db.collection("employee_group")
-            .whereEqualTo("employeeId", currentUserId)
-            .whereEqualTo("groupId", groupId)
-            .get()
-            .addOnSuccessListener { documents ->
-                if (documents.isEmpty) {
-                    return@addOnSuccessListener
-                }
-                for (document in documents) {
-                    document.reference.delete()
-                }
-                loadGroups()
-            }.addOnFailureListener { e ->
-
-            }
+        createdGroups.value = createdGroups.value.filter { it.name.contains(name, ignoreCase = true) }
+        joinedGroups.value = joinedGroups.value.filter { it.name.contains(name, ignoreCase = true) }
     }
 
     fun createGroup(group: Group) {
-        db.collection("groups").add(group)
-            .addOnSuccessListener { v ->
-                run {
-                    group.id = v.id
-                    createdGroups.add(group)
-                    JoinGroup(group.id, auth.currentUser?.uid ?: "")
-                }
-            }
+        groupRepository.createGroup(group) {
+            loadGroups()  // Reload groups after creating a new one
+        }
     }
 
-    private fun JoinGroup(groupId: String, userId: String) {
-        val employeeGroup = hashMapOf(
-            "employeeId" to userId,
-            "groupId" to groupId,
-            "status" to "accepted"
-        )
-        db.collection("employee_group").add(employeeGroup)
-            .addOnSuccessListener {
-                loadGroups()
-            }.addOnFailureListener { e ->
+    fun leaveGroup(groupId: String) {
+        val currentUserId = groupRepository.auth.currentUser?.uid ?: return
+        groupRepository.leaveGroup(groupId, currentUserId) {
+            loadGroups()  // Reload groups after leaving
+        }
+    }
 
-            }
+    // Gọi khi quản lý nhấn chấp nhận yêu cầu tham gia nhóm của nhân viên
+    fun joinGroup(groupId: String) {
+        val currentUserId = groupRepository.auth.currentUser?.uid ?: return
+        groupRepository.joinGroup(groupId, currentUserId) {
+            loadGroups()  // Reload groups after joining
+        }
     }
 }

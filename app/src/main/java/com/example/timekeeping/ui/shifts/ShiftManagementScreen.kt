@@ -1,11 +1,9 @@
-import android.adservices.ondevicepersonalization.TrainingInterval
-import android.util.Log
+package com.example.timekeeping.ui.shifts
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
@@ -13,11 +11,9 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
+import com.example.timekeeping.models.Shift
 import com.example.timekeeping.view_models.ShiftViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -25,6 +21,7 @@ import com.example.timekeeping.view_models.ShiftViewModel
 fun ShiftManagementScreen(
     onBackClick: () -> Unit,
     onEditClick: (String) -> Unit = {},
+    onDeleteClick: (String) -> Unit = {},
     onAddShiftClick: () -> Unit = {},
     viewModel: ShiftViewModel,
 ) {
@@ -56,11 +53,12 @@ fun ShiftManagementScreen(
                 .padding(paddingValues), // Đảm bảo padding được áp dụng đúng
             contentPadding = PaddingValues(16.dp)
         ) {
-            items(viewModel.shifts) { shift ->
-                ShiftItem(shift.name) {
-                    Log.d("ShiftManagementScreen", "Shift ID: ${shift.id}")
-                    onEditClick(shift.id)
-                }
+            items(viewModel.shifts.value) { shift ->
+                ShiftItem(
+                    shift,
+                    onEditClick = { onEditClick(shift.id) },
+                    onDeleteClick = { onDeleteClick(shift.id) }
+                )
             }
         }
     }
@@ -68,7 +66,11 @@ fun ShiftManagementScreen(
 
 
 @Composable
-fun ShiftItem(shiftName: String, onEditClick: () -> Unit) {
+fun ShiftItem(
+    shift: Shift,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -80,7 +82,7 @@ fun ShiftItem(shiftName: String, onEditClick: () -> Unit) {
             horizontalArrangement = Arrangement.Start
         ){
             Text(
-                text = shiftName,
+                text = shift.name,
                 modifier = Modifier.padding(0.dp).weight(1f)
             )
             Icon(
@@ -91,7 +93,12 @@ fun ShiftItem(shiftName: String, onEditClick: () -> Unit) {
                 }
             )
             Spacer(modifier = Modifier.width(16.dp))
-            Icon(Icons.Default.Delete, contentDescription = "Delete")
+            Icon(
+                Icons.Default.Delete, contentDescription = "Delete",
+                modifier = Modifier.padding(end = 8.dp).clickable {
+                    onDeleteClick()
+                }
+            )
         }
 
         Row(
@@ -101,13 +108,13 @@ fun ShiftItem(shiftName: String, onEditClick: () -> Unit) {
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "08:00 - 17:00")
-                Text(text = "Hệ số")
+                Text(text = "${shift.startTime} - ${shift.endTime}")
+                Text(text = "Hệ số: ${shift.coefficient}")
             }
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = "Phụ cấp")
+                Text(text = "Phụ cấp: ${shift.allowance}")
                 Text(text = "Trạng thái")
             }
         }

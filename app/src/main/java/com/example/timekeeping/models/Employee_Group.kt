@@ -8,7 +8,7 @@ class Employee_Group (
     var id: String = "",
     var employeeId: String = "",
     var groupId: String = "",
-    var status: String = "", // "pending", "accepted", "rejected"
+    //var status: String = "", // "pending", "accepted", "rejected"
     var role: String = "" // "admin", "member"
 ) {
 

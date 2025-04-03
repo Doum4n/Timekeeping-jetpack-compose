@@ -1,4 +1,4 @@
-package com.example.timekeeping
+package com.example.timekeeping.ui.groups
 
 import android.app.DatePickerDialog
 import android.content.Context

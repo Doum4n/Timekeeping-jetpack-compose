@@ -1,4 +1,4 @@
-package com.example.timekeeping
+package com.example.timekeeping.ui.employees
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.example.timekeeping.R
 import com.example.timekeeping.view_models.EmployeeViewModel
 import kotlinx.coroutines.launch
 
@@ -123,7 +124,7 @@ fun EmployeeManagementScreen(
                 when (page) {
                     0 -> UnlinkedEmployeesScreen()
                     1 -> MembersScreen(viewModel)
-                    2 -> ApprovalScreen()
+                    2 -> ApprovalScreen(viewModel)
                 }
             }
         }
@@ -156,9 +157,19 @@ fun MembersScreen(viewModel: EmployeeViewModel) {
 }
 
 @Composable
-fun ApprovalScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Xét duyệt")
+fun ApprovalScreen(viewModel: EmployeeViewModel) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+//                    .background(MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        items(viewModel.pendingEmployees) { employee ->
+            EmployeeCard(
+                employeeName = employee.name,
+                onActionClick = {}
+            )
+        }
     }
 }
 

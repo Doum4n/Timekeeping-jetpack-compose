@@ -1,34 +1,54 @@
 package com.example.timekeeping
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.timekeeping.models.Group
+import com.example.timekeeping.navigation.Screen
+import com.example.timekeeping.utils.NotificationButton
 import com.example.timekeeping.view_models.GroupViewModel
 import com.google.firebase.FirebaseApp
 import java.text.SimpleDateFormat
@@ -40,6 +60,8 @@ fun HomeScreen(
     viewModel: GroupViewModel
 ) {
     val context = LocalContext.current
+
+    var searchQuery by remember { mutableStateOf("") }
 
     FirebaseApp.initializeApp(context)
 
@@ -62,34 +84,75 @@ fun HomeScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-//                context.startActivity(Intent(context, AddGroupActivity::class.java))
-            }) {
-                Icon(Icons.Default.Add, contentDescription = "Thêm nhóm")
+            var expanded by remember { mutableStateOf(false) }
+
+            // Sử dụng Box làm container
+            Box {
+                // FloatingActionButton làm anchor
+                FloatingActionButton(
+                    onClick = { expanded = true } // Mở menu khi click
+                ) {
+                    Icon(Icons.Default.Menu, contentDescription = "Menu")
+                }
+
+                // DropdownMenu phải ở cùng cấp với FAB trong Box
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier.widthIn(min = 200.dp),
+                    offset = DpOffset(x = (-5).dp, y = (-180).dp)
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Thêm nhóm") },
+                        onClick = {
+                            expanded = false
+                            // Xử lý thêm nhóm
+                        },
+                        leadingIcon = { Icon(Icons.Default.Warning, null) }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Thêm tham gia nhóm") },
+                        onClick = {
+                            expanded = false
+                            navController.navigate(Screen.RequestJoinGroup.route)
+                        },
+                        leadingIcon = { Icon(Icons.Default.Warning, null) }
+                    )
+                }
             }
-        }
+        },
     ) { paddingValues ->
+        // Lấy bàn phím hiện tại
+        val keyboardController = LocalSoftwareKeyboardController.current
+
         Column(
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
 //                .verticalScroll(rememberScrollState())
         ) {
-            // Nút tham gia nhóm
-            Button(
-                onClick = {
-//                    context.startActivity(
-//                        Intent(context, ScannerActivity::class.java).apply {
-//                            putExtra("type", "JoinWorkGroup")
-//                        }
-//                    )
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                label = { Text("Tìm kiếm nhóm") },
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                trailingIcon = {
+                    IconButton(onClick = { viewModel.searchGroupsByName(searchQuery) }) {
+                        Icon(Icons.Default.Search, contentDescription = "Select Start Time")
+                    }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                Text("Tham gia công việc nhóm")
-            }
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Search // Hoặc ImeAction.Done nếu bạn thích
+                ),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        viewModel.searchGroupsByName(searchQuery)
+                        keyboardController?.hide() // Ẩn bàn phím khi nhấn Enter/Search
+                    }
+                ),
+                singleLine = true,
+                maxLines = 1
+            )
 
             // Danh sách nhóm đã tham gia
             Text(
@@ -101,13 +164,15 @@ fun HomeScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight()
+                    .height(250.dp)
 //                    .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                items(viewModel.joinedGroups) { group ->
-                    GroupItem(group) {
-                        navController.navigate( Screen.GroupDetail.createRoute(group.id))
-                    }
+                items(viewModel.joinedGroups.value) { group ->
+                    GroupItem(
+                        group,
+                        onClick = { navController.navigate( Screen.GroupDetail.createRoute(group.id)) },
+                        onCheckInClick = { navController.navigate( Screen.CheckIn.createRoute(group.id)) }
+                    )
                 }
             }
 
@@ -121,36 +186,23 @@ fun HomeScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight()
+                    .height(250.dp)
             ) {
-                items(viewModel.createdGroups) { group ->
-                    GroupItem(group) {
-                        navController.navigate("groupDetail/${group.id}")
-                    }
+                items(viewModel.createdGroups.value) { group ->
+                    GroupItem(
+                        group,
+                        onClick = { navController.navigate( Screen.GroupDetail.createRoute(group.id)) },
+                        onCheckInClick = { navController.navigate( Screen.CheckIn.createRoute(group.id)) }
+                    )
                 }
             }
 
-            // Nút chấm công
-            Button(
-                onClick = {
-//                    context.startActivity(
-//                        Intent(context, ScannerActivity::class.java).apply {
-//                            putExtra("type", "Timekeeping")
-//                        }
-//                    )
-                },
-                modifier = Modifier
-                    .padding(16.dp)
-                    .align(Alignment.End)
-            ) {
-                Text("Chấm công")
-            }
         }
     }
 }
 
 @Composable
-fun GroupItem(group: Group, onClick: () -> Unit) {
+fun GroupItem(group: Group, onClick: () -> Unit, onCheckInClick: () -> Unit = {}) {
     Card(
         onClick = onClick,
         modifier = Modifier
@@ -173,6 +225,14 @@ fun GroupItem(group: Group, onClick: () -> Unit) {
                     text = "Ngày thanh toán: ${SimpleDateFormat("dd/MM/yyyy").format(it)}",
                     style = MaterialTheme.typography.bodySmall
                 )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Button(
+                onClick = onCheckInClick,
+                modifier = Modifier.align(Alignment.Start),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+            ) {
+                Text("Châm công")
             }
         }
     }
