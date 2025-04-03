@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "593158234746",
+    "project_id": "timekeeping-74e5c",
+    "storage_bucket": "timekeeping-74e5c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:593158234746:android:95f8525e65125ef2d751c3",
+        "android_client_info": {
+          "package_name": "com.example.timekeeping"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWvD2iGYX2MZGiekQP8I7BF9AQnbvaJDw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
