@@ -1,12 +1,11 @@
 package com.example.timekeeping.models
 
 import com.google.firebase.firestore.Exclude
-import java.time.LocalTime
 
 data class Shift(
     @Exclude
     val id: String = "",
-    val name: String = "",
+    val shiftName: String = "",
     val startTime: String = "",
     val endTime: String = "",
     val allowance: Int = 0,

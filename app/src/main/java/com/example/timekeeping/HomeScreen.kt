@@ -142,7 +142,7 @@ fun HomeScreen(
                     }
                 },
                 keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Search // Hoặc ImeAction.Done nếu bạn thích
+                    imeAction = ImeAction.Search
                 ),
                 keyboardActions = KeyboardActions(
                     onSearch = {

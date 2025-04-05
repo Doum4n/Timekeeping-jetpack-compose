@@ -82,7 +82,7 @@ fun ShiftItem(
             horizontalArrangement = Arrangement.Start
         ){
             Text(
-                text = shift.name,
+                text = shift.shiftName,
                 modifier = Modifier.padding(0.dp).weight(1f)
             )
             Icon(

@@ -39,7 +39,7 @@ fun ShiftInputForm(
         Log.d("ShiftInputForm", "shiftId: $shiftId")
         if (shiftId != "") {
             ShiftViewModel(groupId = groupId).getShiftById(shiftId) { shift ->
-                name = TextFieldValue(shift.name)
+                name = TextFieldValue(shift.shiftName)
                 startTime = LocalTime.parse(shift.startTime)
                 endTime = LocalTime.parse(shift.endTime)
                 allowance = shift.allowance
@@ -170,7 +170,7 @@ fun ShiftInputForm(
                         val shift = Shift(
                             coefficient = salaryCoefficient.toDouble(),
                             allowance = allowance,
-                            name = name.text,
+                            shiftName = name.text,
                             startTime = startTime.toString(),
                             endTime = endTime.toString(),
                             groupId = groupId

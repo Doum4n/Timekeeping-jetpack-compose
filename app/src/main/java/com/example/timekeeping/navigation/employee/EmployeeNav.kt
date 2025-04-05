@@ -21,8 +21,9 @@ fun NavGraphBuilder.addEmployeeScreen(navController: NavHostController) {
             viewModel = EmployeeViewModel(groupId),
             onMenuItemClick = { menuItem ->
                 when (menuItem) {
-                    MenuItem.SEARCH -> {}
-                    MenuItem.MORE -> {}
+                    MenuItem.ADD -> {
+                        navController.navigate(Screen.EmployeeForm.createRoute(groupId))
+                    }
                 }
             },
         )

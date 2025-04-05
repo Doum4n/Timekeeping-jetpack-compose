@@ -34,16 +34,26 @@ fun MainScreen() {
     // Chỉ khởi tạo navController một lần ở cấp cao nhất
     val navController = rememberNavController()
 
+    // Lấy route hiện tại từ navController
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(
-                title = { Text("App Title") },
-                modifier = Modifier.fillMaxWidth()
-            )
+            // Hiển thị TopAppBar chỉ khi ở route "Home"
+            if (currentRoute == Screen.Home.route) {
+                TopAppBar(
+                    title = { Text("App Title") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         },
         bottomBar = {
-            BottomNavigationBar(navController)
+            // Hiển thị BottomNavigationBar chỉ khi ở route "Home"
+            if (currentRoute == Screen.Home.route) {
+                BottomNavigationBar(navController)
+            }
         },
         content = { paddingValues ->
             Box(modifier = Modifier.padding(paddingValues)) {

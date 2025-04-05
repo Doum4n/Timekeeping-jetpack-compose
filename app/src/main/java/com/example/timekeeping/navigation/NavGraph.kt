@@ -14,6 +14,7 @@ import com.example.timekeeping.HomeScreen
 import com.example.timekeeping.RequestJoinGroupScreen
 import com.example.timekeeping.ui.employees.MenuItem
 import com.example.timekeeping.navigation.auth.addAuthScreens
+import com.example.timekeeping.navigation.employee.addEmployeeFormScreen
 import com.example.timekeeping.navigation.employee.addEmployeeScreen
 import com.example.timekeeping.navigation.groups.addGroupFormScreen
 import com.example.timekeeping.navigation.groups.addGroupScreen
@@ -34,6 +35,7 @@ fun AppNavigation(navController: NavHostController) {
         addGroupScreen(navController)
         addGroupFormScreen(navController)
         addEmployeeScreen(navController)
+        addEmployeeFormScreen(navController)
 
         addHomeScreen(navController)
         addCheckInScreen(navController)

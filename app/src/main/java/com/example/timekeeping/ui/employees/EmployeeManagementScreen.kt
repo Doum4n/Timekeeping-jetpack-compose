@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,8 +19,11 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -28,6 +33,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
@@ -36,17 +42,25 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.timekeeping.R
+import com.example.timekeeping.models.Employee
 import com.example.timekeeping.view_models.EmployeeViewModel
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmployeeManagementScreen(
     viewModel: EmployeeViewModel,
@@ -56,6 +70,8 @@ fun EmployeeManagementScreen(
     val tabs = listOf("Chưa liên kết", "Thành viên", "Xét duyệt")
     val pagerState = rememberPagerState(initialPage = 0) { tabs.size }
     val scope = rememberCoroutineScope()
+
+    var searchText by remember { mutableStateOf("") }
 
     // Đồng bộ khi pager thay đổi
     LaunchedEffect(pagerState.currentPage) {
@@ -72,11 +88,8 @@ fun EmployeeManagementScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onMenuItemClick(MenuItem.SEARCH) }) {
-                        Icon(Icons.Default.Search, "Search")
-                    }
-                    IconButton(onClick = { onMenuItemClick(MenuItem.MORE) }) {
-                        Icon(Icons.Default.MoreVert, "More")
+                    IconButton(onClick = { onMenuItemClick(MenuItem.ADD) }) {
+                        Icon(Icons.Default.Add, "Add")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -87,11 +100,40 @@ fun EmployeeManagementScreen(
             )
         }
     ) { paddingValues ->
+
+        // Lấy bàn phím hiện tại
+        val keyboardController = LocalSoftwareKeyboardController.current
+
         Column(
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
         ) {
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = {searchText = it},
+                label = { Text("Tìm kiếm") },
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                trailingIcon = {
+                    IconButton(onClick = { viewModel.searchEmployeesByName(searchText) }) {
+                        Icon(Icons.Default.Search, contentDescription = "Select Start Time")
+                    }
+                },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Search
+                ),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        viewModel.searchEmployeesByName(searchText)
+                        keyboardController?.hide() // Ẩn bàn phím khi nhấn Enter/Search
+                    }
+                ),
+                singleLine = true,
+                maxLines = 1
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             ScrollableTabRow(
                 selectedTabIndex = pagerState.currentPage, // Sử dụng trực tiếp pagerState
                 edgePadding = 0.dp,
@@ -122,7 +164,7 @@ fun EmployeeManagementScreen(
                 modifier = Modifier.weight(1f)
             ) { page ->
                 when (page) {
-                    0 -> UnlinkedEmployeesScreen()
+                    0 -> UnlinkedEmployeesScreen(viewModel)
                     1 -> MembersScreen(viewModel)
                     2 -> ApprovalScreen(viewModel)
                 }
@@ -132,10 +174,18 @@ fun EmployeeManagementScreen(
 }
 
 @Composable
-fun UnlinkedEmployeesScreen() {
-    // Thay thế bằng nội dung thực tế
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Chưa liên kết")
+fun UnlinkedEmployeesScreen(viewModel: EmployeeViewModel) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+    ) {
+        items(viewModel.unlinkedEmployees.value) { employee ->
+            EmployeeCard(
+                employee = employee,
+                onLinkClick = {}
+            )
+        }
     }
 }
 
@@ -145,12 +195,10 @@ fun MembersScreen(viewModel: EmployeeViewModel) {
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
-//                    .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        items(viewModel.employees) { employee ->
+        items(viewModel.employees.value) { employee ->
             EmployeeCard(
-                employeeName = employee.name,
-                onActionClick = {}
+                employee = employee,
             )
         }
     }
@@ -162,27 +210,52 @@ fun ApprovalScreen(viewModel: EmployeeViewModel) {
         modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
-//                    .background(MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        items(viewModel.pendingEmployees) { employee ->
+        items(viewModel.pendingEmployees.value) { employee ->
             EmployeeCard(
-                employeeName = employee.name,
-                onActionClick = {}
+                employee = employee,
+                isPending = true,
+                onAcceptClick = {},
+                onRejectClick = {}
             )
         }
     }
 }
 
 sealed class MenuItem {
-    object SEARCH : MenuItem()
-    object MORE : MenuItem()
+    object ADD : MenuItem()
+  //  object MORE : MenuItem()
 }
 
 @Composable
 fun EmployeeCard(
-    employeeName: String,
-    onActionClick: () -> Unit
+    employee: Employee,
+    isPending: Boolean = false,
+    onLinkClick: () -> Unit = {},
+    onAcceptClick: () -> Unit = {},
+    onRejectClick: () -> Unit = {}
 ) {
+
+    var salary by remember { mutableStateOf<Double?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(employee.id) {
+        // Gọi hàm bất đồng bộ để lấy lương
+        try {
+            EmployeeViewModel().getSalaryById(employee.id, onSuccess = { fetchedSalary ->
+                salary = fetchedSalary
+                isLoading = false
+            }, onFailure = { exception ->
+                errorMessage = "Error: ${exception.message}"
+                isLoading = false
+            })
+        } catch (e: Exception) {
+            errorMessage = "Exception: ${e.message}"
+            isLoading = false
+        }
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -208,7 +281,7 @@ fun EmployeeCard(
                         .clip(CircleShape)
                 )
                 Text(
-                    text = employeeName,
+                    text = employee.fullName,
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -216,15 +289,50 @@ fun EmployeeCard(
             Column(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Text(text = "Thông tin bổ sung 1")
+                if (isLoading) {
+                    Text(text = "Loading salary...")
+                } else {
+                    if (salary != null) {
+                        Text(text = "${salary} VND")
+                    } else if (errorMessage != null) {
+                        Text(text = errorMessage ?: "Unknown error")
+                    }
+                }
                 Text(text = "Thông tin bổ sung 2")
             }
 
-            Button(
-                onClick = onActionClick,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Cấp quyền")
+            if (isPending) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = onAcceptClick,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Chấp nhận")
+                    }
+
+                    Button(
+                        onClick = onRejectClick,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Từ chối")
+                    }
+                }
+            }else if (employee.userId.isEmpty()) {
+                Button(
+                    onClick =  onLinkClick,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Liên kết")
+                }
+            }else {
+                Button(
+                    onClick = {},
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Xem thông tin")
+                }
             }
         }
     }

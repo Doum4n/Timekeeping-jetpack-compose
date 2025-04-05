@@ -13,7 +13,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.view_models.AuthViewModel
 import com.example.timekeeping.view_models.RegisterState
-import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun RegisterScreen(
@@ -153,9 +152,9 @@ fun RegisterScreen(
                 LaunchedEffect(Unit) {
                     onRegisterSuccess(
                         Employee(
-                            id = state.userId,
-                            name = fullName,
-                            email = email
+                            userId = state.userId,
+                            fullName = fullName,
+                            email = email,
                         )
                     )
                 }

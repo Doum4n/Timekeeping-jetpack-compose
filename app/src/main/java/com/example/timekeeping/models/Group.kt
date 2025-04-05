@@ -8,8 +8,7 @@ import java.util.Date
 
 class Group(
     @get:Exclude
-    var id: String = "",  // Không lưu vào Firestore
-    @PropertyName("creator_id")
+    var id: String = "",
     var creatorId: String = "",
     var name: String = "",
     var payday: Date? = null,
@@ -21,14 +20,6 @@ class Group(
                 id = document.id
             }
         }
-    }
-
-    fun toMap(): Map<String, Any?> {
-        return mapOf(
-            "creator_id" to creatorId,
-            "name" to name,
-            "payday" to payday
-        )
     }
 
     fun delete(onSuccess: () -> Unit, onFailure: (Exception) -> Unit){
