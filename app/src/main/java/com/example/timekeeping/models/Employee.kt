@@ -2,11 +2,7 @@ package com.example.timekeeping.models
 
 import com.google.firebase.firestore.Exclude
 
-/**
- * Nếu nhân viên chưa liên kết tài khoản thì khi truy xuất sẽ lấy `var`,
- * ngược lại lấy `userId`.
- */
-data class Employee (
+data class Employee(
     @Exclude
     var id: String = "",
     val userId: String = "",
@@ -22,6 +18,11 @@ data class Employee (
     val salaryType: String = "",
     @Exclude
     val role: String = "",
+
+    @Exclude
+    val status: Status = Status.PENDING,
+    @Exclude
+    val isCreator: Boolean = false,
 ) {
     fun toMap(): Map<String, Any?> {
         return mapOf(
@@ -32,6 +33,14 @@ data class Employee (
             "phone" to phone,
             "address" to address
             // Không bao gồm salary, salaryType và role ở đây
+        )
+    }
+
+    fun toEmployeeData(): Map<String, Any?> {
+        return mapOf(
+            "name" to fullName,
+            "status" to status.toString(),
+            "isCreator" to isCreator
         )
     }
 }

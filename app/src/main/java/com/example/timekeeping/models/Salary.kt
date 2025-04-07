@@ -6,6 +6,7 @@ import java.util.Locale
 
 class Salary(
     val employeeId: String,
+    val groupId: String,
     val salaryType: String, // Phương thức tính lương
     val salary: Int,
     val createdAt: Date, // Ngày tạo

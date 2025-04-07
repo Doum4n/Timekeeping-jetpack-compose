@@ -9,7 +9,6 @@ import java.util.Date
 class Group(
     @get:Exclude
     var id: String = "",
-    var creatorId: String = "",
     var name: String = "",
     var payday: Date? = null,
 ) {

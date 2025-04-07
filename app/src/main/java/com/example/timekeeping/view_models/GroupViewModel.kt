@@ -17,10 +17,8 @@ class GroupViewModel(
     }
 
     fun loadGroups() {
-        val currentUserId = groupRepository.auth.currentUser?.uid ?: return
-
         // Load joined groups
-        groupRepository.loadCreatedGroups(currentUserId) { groups ->
+        groupRepository.loadCreatedGroups { groups ->
             createdGroups.value = groups
         }
 
@@ -41,7 +39,10 @@ class GroupViewModel(
     }
 
     fun createGroup(group: Group) {
-        groupRepository.createGroup(group) {
+        groupRepository.createGroup(
+            group,
+            onSuccess = {}
+        ) {
             loadGroups()  // Reload groups after creating a new one
         }
     }
@@ -50,14 +51,6 @@ class GroupViewModel(
         val currentUserId = groupRepository.auth.currentUser?.uid ?: return
         groupRepository.leaveGroup(groupId, currentUserId) {
             loadGroups()  // Reload groups after leaving
-        }
-    }
-
-    // Gọi khi quản lý nhấn chấp nhận yêu cầu tham gia nhóm của nhân viên
-    fun joinGroup(groupId: String) {
-        val currentUserId = groupRepository.auth.currentUser?.uid ?: return
-        groupRepository.joinGroup(groupId, currentUserId) {
-            loadGroups()  // Reload groups after joining
         }
     }
 }

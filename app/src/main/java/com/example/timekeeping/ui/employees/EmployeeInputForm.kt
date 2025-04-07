@@ -1,6 +1,5 @@
 package com.example.timekeeping.ui.employees
 
-import android.widget.Spinner
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,14 +8,12 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.timekeeping.models.Employee
+import com.example.timekeeping.models.Status
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,7 +21,10 @@ fun EmployeeInputForm(
     onBackClick: () -> Unit,
     onSave: (List<Employee>) -> Unit,
 ) {
-    val employees = remember { mutableStateListOf(Employee()) }
+    val employees = remember { mutableStateListOf(Employee(
+        status = Status.PENDING,
+        isCreator = false
+    )) }
 
     // Scaffold chứa TopAppBar, BottomBar, và phần nội dung chính
     Scaffold(
@@ -69,7 +69,10 @@ fun EmployeeInputForm(
 
                 item {
                     Button(
-                        onClick = { employees.add(Employee()) },
+                        onClick = { employees.add(Employee(
+                            status = Status.PENDING,
+                            isCreator = false
+                        )) },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(Icons.Filled.Add, contentDescription = "Add Employee")

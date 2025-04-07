@@ -11,6 +11,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.timekeeping.models.Employee
+import com.example.timekeeping.models.Status
 import com.example.timekeeping.view_models.AuthViewModel
 import com.example.timekeeping.view_models.RegisterState
 
@@ -111,7 +112,7 @@ fun RegisterScreen(
         Button(
             onClick = {
                 if (!passwordError && email.isNotEmpty() && password.isNotEmpty() && fullName.isNotEmpty()) {
-                    viewModel.registerUser(email, password)
+                    viewModel.registerUser(fullName, email, password)
                 }
             },
             modifier = Modifier.fillMaxWidth(),
@@ -155,6 +156,8 @@ fun RegisterScreen(
                             userId = state.userId,
                             fullName = fullName,
                             email = email,
+                            status = Status.PENDING,
+                            isCreator = false,
                         )
                     )
                 }

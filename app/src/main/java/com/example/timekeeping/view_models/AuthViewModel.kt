@@ -29,9 +29,9 @@ class AuthViewModel(
     }
 
     // Đăng ký người dùng
-    fun registerUser(email: String, password: String) = viewModelScope.launch {
+    fun registerUser(fullName: String, email: String, password: String) = viewModelScope.launch {
         _registerState.value = RegisterState.Loading
-        val result = authRepository.registerUser(email, password)
+        val result = authRepository.registerUser(fullName, email, password)
         if (result.isSuccess) {
             _registerState.value = RegisterState.Success(result.getOrDefault(""))
         } else {

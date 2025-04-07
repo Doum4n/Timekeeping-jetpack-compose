@@ -21,6 +21,7 @@ enum class Status {
 class Employee_Group (
     var employeeId: String = "",
     var groupId: String = "",
+    val isCreator: Boolean = false,
     val dayJoined: Date = Date(),
     var role: Role = Role.MEMBER,
     var status: Status = Status.PENDING,

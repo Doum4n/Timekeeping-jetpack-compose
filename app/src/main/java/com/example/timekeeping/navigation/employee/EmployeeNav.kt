@@ -26,6 +26,7 @@ fun NavGraphBuilder.addEmployeeScreen(navController: NavHostController) {
                     }
                 }
             },
+            groupId = groupId,
         )
     }
 }

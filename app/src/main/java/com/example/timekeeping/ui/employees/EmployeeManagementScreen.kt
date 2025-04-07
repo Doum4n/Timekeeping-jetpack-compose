@@ -1,5 +1,6 @@
 package com.example.timekeeping.ui.employees
 
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -63,6 +64,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmployeeManagementScreen(
+    groupId: String,
     viewModel: EmployeeViewModel,
     onBackClick: () -> Unit,
     onMenuItemClick: (MenuItem) -> Unit
@@ -164,9 +166,9 @@ fun EmployeeManagementScreen(
                 modifier = Modifier.weight(1f)
             ) { page ->
                 when (page) {
-                    0 -> UnlinkedEmployeesScreen(viewModel)
-                    1 -> MembersScreen(viewModel)
-                    2 -> ApprovalScreen(viewModel)
+                    0 -> UnlinkedEmployeesScreen(viewModel, groupId)
+                    1 -> MembersScreen(viewModel, groupId)
+                    2 -> ApprovalScreen(viewModel, groupId)
                 }
             }
         }
@@ -174,7 +176,7 @@ fun EmployeeManagementScreen(
 }
 
 @Composable
-fun UnlinkedEmployeesScreen(viewModel: EmployeeViewModel) {
+fun UnlinkedEmployeesScreen(viewModel: EmployeeViewModel, groupId: String) {
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -182,6 +184,7 @@ fun UnlinkedEmployeesScreen(viewModel: EmployeeViewModel) {
     ) {
         items(viewModel.unlinkedEmployees.value) { employee ->
             EmployeeCard(
+                groupId = groupId,
                 employee = employee,
                 onLinkClick = {}
             )
@@ -190,7 +193,7 @@ fun UnlinkedEmployeesScreen(viewModel: EmployeeViewModel) {
 }
 
 @Composable
-fun MembersScreen(viewModel: EmployeeViewModel) {
+fun MembersScreen(viewModel: EmployeeViewModel, groupId: String) {
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -198,6 +201,7 @@ fun MembersScreen(viewModel: EmployeeViewModel) {
     ) {
         items(viewModel.employees.value) { employee ->
             EmployeeCard(
+                groupId = groupId,
                 employee = employee,
             )
         }
@@ -205,7 +209,7 @@ fun MembersScreen(viewModel: EmployeeViewModel) {
 }
 
 @Composable
-fun ApprovalScreen(viewModel: EmployeeViewModel) {
+fun ApprovalScreen(viewModel: EmployeeViewModel, groupId: String) {
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -215,7 +219,9 @@ fun ApprovalScreen(viewModel: EmployeeViewModel) {
             EmployeeCard(
                 employee = employee,
                 isPending = true,
-                onAcceptClick = {},
+                onAcceptClick = {
+                    viewModel.acceptJoinGroup(groupId, employee.userId)
+                },
                 onRejectClick = {}
             )
         }
@@ -229,6 +235,7 @@ sealed class MenuItem {
 
 @Composable
 fun EmployeeCard(
+    groupId: String = "",
     employee: Employee,
     isPending: Boolean = false,
     onLinkClick: () -> Unit = {},
@@ -242,18 +249,18 @@ fun EmployeeCard(
 
     LaunchedEffect(employee.id) {
         // Gọi hàm bất đồng bộ để lấy lương
-        try {
-            EmployeeViewModel().getSalaryById(employee.id, onSuccess = { fetchedSalary ->
+//        try {
+            EmployeeViewModel().getSalaryById(employee.id, groupId, onSuccess = { fetchedSalary ->
                 salary = fetchedSalary
                 isLoading = false
             }, onFailure = { exception ->
                 errorMessage = "Error: ${exception.message}"
                 isLoading = false
             })
-        } catch (e: Exception) {
-            errorMessage = "Exception: ${e.message}"
-            isLoading = false
-        }
+//        } catch (e: Exception) {
+//            errorMessage = "Exception: ${e.message}"
+//            isLoading = false
+//        }
     }
 
     Card(
@@ -296,6 +303,7 @@ fun EmployeeCard(
                         Text(text = "${salary} VND")
                     } else if (errorMessage != null) {
                         Text(text = errorMessage ?: "Unknown error")
+                        Log.e("EmployeeCard", errorMessage ?: "Unknown error")
                     }
                 }
                 Text(text = "Thông tin bổ sung 2")

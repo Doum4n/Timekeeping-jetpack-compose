@@ -54,7 +54,6 @@ fun GroupFormScreen(
         Button(
             onClick = {
                 val group = Group(
-                    creatorId = creatorId,
                     name = nameState.value,
                     payday = paydayState.value
                 )

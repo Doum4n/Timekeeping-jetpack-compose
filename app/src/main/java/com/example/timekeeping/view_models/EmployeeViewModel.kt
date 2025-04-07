@@ -69,9 +69,9 @@ class EmployeeViewModel(
         employeeRepository.acceptJoinGroup(groupId, employeeId)
     }
 
-    fun getSalaryById(employeeId: String, onSuccess: (Double) -> Unit, onFailure: (Exception) -> Unit){
+    fun getSalaryById(employeeId: String,groupId: String, onSuccess: (Double) -> Unit, onFailure: (Exception) -> Unit){
         load()
-        employeeRepository.getSalaryById(employeeId, onSuccess, onFailure)
+        employeeRepository.getSalaryById(employeeId, groupId, onSuccess, onFailure)
     }
 
     fun searchEmployeesByName(searchText: String) {
