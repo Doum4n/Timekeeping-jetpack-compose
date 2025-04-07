@@ -29,6 +29,9 @@ fun NavGraphBuilder.addGroupScreen(navController: NavHostController) {
             },
             onSettingsClick = {
                 navController.navigate(Screen.GroupSettings.createRoute(groupId))
+            },
+            onScheduleClick = {
+                navController.navigate(Screen.Schedule.createRoute(groupId))
             }
         )
     }

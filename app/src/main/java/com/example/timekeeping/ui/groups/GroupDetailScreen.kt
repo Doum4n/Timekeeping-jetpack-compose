@@ -48,6 +48,7 @@ fun GroupDetailScreen(
     onBackClick: () -> Unit,
     onEmployeeManagementClick: () -> Unit,
     onShiftManagementClick: () -> Unit,
+    onScheduleClick: () -> Unit,
     onCheckInClick: () -> Unit,
     onSettingsClick: () -> Unit
 ) {
@@ -128,9 +129,9 @@ fun GroupDetailScreen(
                         label = "Chấm công"
                     )
                     IconButtonWithLabel(
-                        onClick = { /* Handle button 2 */ },
+                        onClick = { onScheduleClick() },
                         icon = Icons.Default.Warning,
-                        label = "Button 2"
+                        label = "Xếp lịch"
                     )
                     IconButtonWithLabel(
                         onClick = { /* Handle button 3 */ },
