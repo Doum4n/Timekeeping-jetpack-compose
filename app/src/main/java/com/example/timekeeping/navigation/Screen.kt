@@ -6,6 +6,14 @@ sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
 
+    object TeamManagement : Screen("teamManagement/{groupId}") {
+        fun createRoute(groupId: String) = "teamManagement/$groupId"
+    }
+
+    object TeamForm : Screen("teamForm/{groupId}") {
+        fun createRoute(groupId: String) = "teamForm/$groupId"
+    }
+
     object GroupDetail : Screen("groupDetail/{groupId}") {
         fun createRoute(groupId: String) = "groupDetail/$groupId"
     }
@@ -22,8 +30,8 @@ sealed class Screen(val route: String) {
         fun createRoute(groupId: String) = "employeeForm/$groupId"
     }
 
-    object Schedule : Screen("schedule/{groupId}") {
-        fun createRoute(groupId: String) = "schedule/$groupId"
+    object Schedule : Screen("assignment/{groupId}/{employeeId}") {
+        fun createRoute(groupId: String, employeeId: String) = "assignment/$groupId/$employeeId"
     }
     object GroupForm : Screen("groupForm")
 

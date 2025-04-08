@@ -6,15 +6,25 @@ import com.example.timekeeping.repositories.AssignmentRepo
 
 class AssignmentViewModel(
     private val employeeId: String,
-    private val assignmentRepo: AssignmentRepo
+    private val assignmentRepo: AssignmentRepo = AssignmentRepo()
 ): ViewModel() {
 
-    fun getAssignments() {
-        assignmentRepo.getAssignments(employeeId = employeeId)
+    fun getAssignments(callback: (List<Assignment>) -> Unit) {
+        assignmentRepo.getAssignments(
+            employeeId = employeeId,
+            callback = callback
+        )
     }
 
     fun addAssignment(assignment: Assignment) {
         assignmentRepo.addAssignment(assignment = assignment)
+    }
+
+    fun updateAssignment(assignmentId: String, assignment: Assignment) {
+        assignmentRepo.updateAssignment(
+            assignment = assignment,
+            assignmentId = assignmentId
+        )
     }
 
 }

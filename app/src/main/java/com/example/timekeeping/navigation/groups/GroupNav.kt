@@ -8,6 +8,7 @@ import androidx.navigation.navArgument
 import com.example.timekeeping.ui.groups.GroupDetailScreen
 import com.example.timekeeping.ui.groups.GroupSettingsScreen
 import com.example.timekeeping.navigation.Screen
+import com.google.firebase.auth.FirebaseAuth
 
 fun NavGraphBuilder.addGroupScreen(navController: NavHostController) {
     composable(
@@ -31,7 +32,7 @@ fun NavGraphBuilder.addGroupScreen(navController: NavHostController) {
                 navController.navigate(Screen.GroupSettings.createRoute(groupId))
             },
             onScheduleClick = {
-                navController.navigate(Screen.Schedule.createRoute(groupId))
+                navController.navigate(Screen.Schedule.createRoute(groupId, FirebaseAuth.getInstance().currentUser?.uid ?: ""))
             }
         )
     }

@@ -1,7 +1,9 @@
 package com.example.timekeeping.ui.assignment
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -16,13 +18,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.timekeeping.models.Assignment
 import com.example.timekeeping.ui.calender.CalendarState
+import com.example.timekeeping.view_models.AssignmentViewModel
 import com.example.timekeeping.view_models.ShiftViewModel
+import com.example.timekeeping.view_models.TeamViewModel
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
-data class CalendarDay(val day: String, val isSelected: Boolean, val isAssigned: Boolean = false)
+data class CalendarDay(val day: String, var isSelected: Boolean, val isAssigned: Boolean = false)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,8 +36,34 @@ fun AssignmentScreen(
     state: CalendarState,
     onDone: () -> Unit,
     onBackClick: () -> Unit,
-    viewModel: ShiftViewModel
+    onChooseTeamClick: () -> Unit,
+    shiftViewModel: ShiftViewModel,
+    teamViewModel: TeamViewModel,
+    viewModel: AssignmentViewModel
 ) {
+    var calendarDays by remember { mutableStateOf(listOf<CalendarDay>()) }
+    var assignmentDates by remember { mutableStateOf(listOf<DayOfWeek>()) }
+    var assignmentId by remember { mutableStateOf("") }
+
+    Log.d("AssignmentScreen", "assignmentDates: $assignmentDates")
+
+    LaunchedEffect(Unit) {
+        viewModel.getAssignments { assignments ->
+            if (assignments.isNotEmpty()) {
+                val currentYearMonth = YearMonth.now()
+                assignmentDates = assignments
+                    .flatMap { it.dates }
+                    .map { day -> currentYearMonth.atDay(day).dayOfWeek }
+                    .distinct()
+
+                assignmentId = assignments.first().id
+            } else {
+                assignmentDates = emptyList()
+                assignmentId = "" // hoặc null nếu bạn dùng nullable String
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -42,7 +74,36 @@ fun AssignmentScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onDone) {
+                    IconButton(onClick = {
+                        if (calendarDays.count { it.isAssigned && !it.isSelected } < calendarDays.size) {
+                            if(assignmentId.isEmpty()){
+                                viewModel.addAssignment(
+                                    Assignment(
+                                        shiftId = shiftViewModel.shifts.value.first().id,
+                                        employeeId = "userId",
+                                        teamId = "teamId",
+                                        month = state.visibleMonth.month,
+                                        year = java.time.Year.of(state.visibleMonth.year).value,
+                                        dates = calendarDays.filter { it.isSelected || it.isAssigned }
+                                            .map { it.day.toInt() }
+                                    )
+                                )
+                            }else{
+                                viewModel.updateAssignment(
+                                    assignmentId = assignmentId,
+                                    Assignment(
+                                        shiftId = shiftViewModel.shifts.value.first().id,
+                                        employeeId = "userId",
+                                        teamId = "teamId",
+                                        month = state.visibleMonth.month,
+                                        year = java.time.Year.of(state.visibleMonth.year).value,
+                                        dates = calendarDays.filter { it.isSelected || it.isAssigned }
+                                            .map { it.day.toInt() }
+                                    )
+                                )
+                            }
+                        }
+                    }) {
                         Icon(Icons.Default.Done, "Done")
                     }
                 }
@@ -53,11 +114,14 @@ fun AssignmentScreen(
         val selectedWeekdays = remember { mutableStateListOf<DayOfWeek>() }
 
         Column(modifier = Modifier.padding(paddingValues)) {
+
+            Text(text = "Chọn ca", modifier = Modifier.padding(16.dp))
+
             Row (
                 modifier = Modifier.padding(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                viewModel.shifts.value.forEach { shift ->
+                shiftViewModel.shifts.value.forEach { shift ->
                     ShiftItem(shift.shiftName, shift.startTime, shift.endTime)
                 }
             }
@@ -81,7 +145,7 @@ fun AssignmentScreen(
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
                 getWeekdays().forEach { dayOfWeek ->
-                    val isChecked = selectedWeekdays.contains(dayOfWeek)
+                    val isChecked = assignmentDates.contains(dayOfWeek)
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.weight(1f)
@@ -101,8 +165,8 @@ fun AssignmentScreen(
 
             // TODO
             // Calendar Grid
-            val calendarDays =
-                if (expanded.value) getDaysOfMonthExpanded(selectedWeekdays, listOf())
+             calendarDays =
+                if (expanded.value) getDaysOfMonthExpanded(selectedWeekdays, assignmentDates)
                 else getDaysOfMonthShrunk(selectedWeekdays)
 
             LazyVerticalGrid(
@@ -123,11 +187,39 @@ fun AssignmentScreen(
                                     calendarDay.isAssigned -> Color.LightGray // ✅ hiển thị ngày đã phân công
                                     else -> Color.Transparent
                                 }
-                            ),
-                        contentAlignment = Alignment.Center
+                            ).clickable {
+                                calendarDays = calendarDays.map {
+                                    if (it.day == calendarDay.day) {
+                                        it.copy(isSelected = !it.isSelected)
+                                    } else {
+                                        it
+                                    }
+                                }
+                            },
+                            contentAlignment = Alignment.Center,
                     ) {
                         Text(text = calendarDay.day)
                     }
+                }
+            }
+
+
+            Row (
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = "Chọn tổ", modifier = Modifier.padding(16.dp).weight(1f))
+                Button(onClick = { onChooseTeamClick() }) {
+                    Text(text = "Quản lý tổ")
+                }
+            }
+
+            Row (
+                modifier = Modifier.padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                teamViewModel.teams.value.forEach { team ->
+                    TeamItem(team.name)
                 }
             }
         }
@@ -174,7 +266,7 @@ fun getShortNameFor(dayOfWeek: DayOfWeek): String {
 @SuppressLint("SimpleDateFormat")
 fun getDaysOfMonthExpanded(
     selectedWeekdays: List<DayOfWeek>,
-    assignedDates: List<LocalDate>
+    assignedDates: List<DayOfWeek>
 ): List<CalendarDay> {
     val now = LocalDate.now()
     val firstDay = now.withDayOfMonth(1)
@@ -191,8 +283,8 @@ fun getDaysOfMonthExpanded(
     for (day in 1..lastDay.dayOfMonth) {
         val date = now.withDayOfMonth(day)
         val isSelected = selectedWeekdays.contains(date.dayOfWeek)
-        val isAssigned = assignedDates.contains(date)
-        days.add(CalendarDay(day.toString(), isSelected))
+        val isAssigned = assignedDates.contains(date.dayOfWeek)
+        days.add(CalendarDay(day.toString(), isSelected, isAssigned))
     }
 
     return days
@@ -217,6 +309,8 @@ fun getDaysOfMonthShrunk(selectedWeekdays: List<DayOfWeek>): List<CalendarDay> {
     return days
 }
 
+//fun checkDayOfWeek(selectedWeekdays: List<DayOfWeek>, )
+
 @Composable
 fun ShiftItem(
     shiftName: String,
@@ -229,6 +323,21 @@ fun ShiftItem(
         ) {
             Text(text = shiftName)
             Text(text = "$startTime - $endTime")
+        }
+    }
+}
+
+@Composable
+fun TeamItem(
+    teamName: String
+){
+    Card(
+        modifier = Modifier.padding(16.dp)
+    ) {
+        Box(
+            modifier = Modifier.padding(16.dp)
+        ){
+            Text(text = teamName)
         }
     }
 }

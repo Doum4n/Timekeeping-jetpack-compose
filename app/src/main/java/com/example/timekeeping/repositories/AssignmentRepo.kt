@@ -8,17 +8,18 @@ import com.google.firebase.firestore.FirebaseFirestore
 class AssignmentRepo(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
-    fun getAssignments(employeeId: String) {
+    fun getAssignments(employeeId: String, callback: (List<Assignment>) -> Unit) {
         db.collection("assignments")
             .whereEqualTo("employeeId", employeeId)
             .get()
             .addOnSuccessListener { documents ->
-                for (document in documents) {
-                    val assignment = document.toObject(Assignment::class.java)
-                    // Handle the assignment data
+                val assignments = documents.map { doc ->
+                    val assignment = doc.toObject(Assignment::class.java)
+                    assignment.copy(id = doc.id)
                 }
-            }.addOnFailureListener { exception ->
-                // Handle the exception
+                callback(assignments)
+            }
+            .addOnFailureListener { exception ->
                 Log.e("AssignmentRepo", "Error getting assignments", exception)
             }
     }
@@ -32,6 +33,19 @@ class AssignmentRepo(
             }.addOnFailureListener { exception ->
                 // Handle the exception
                 Log.e("AssignmentRepo", "Error adding assignment", exception)
+            }
+    }
+
+    fun updateAssignment(assignmentId: String, assignment: Assignment) {
+        db.collection("assignments")
+            .document(assignmentId)
+            .set(assignment)
+            .addOnSuccessListener {
+                // Handle the success
+                Log.d("AssignmentRepo", "Assignment updated with ID: ${assignment.id}")
+            }.addOnFailureListener { exception ->
+                // Handle the exception
+                Log.e("AssignmentRepo", "Error updating assignment", exception)
             }
     }
 }

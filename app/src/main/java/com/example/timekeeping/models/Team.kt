@@ -1,8 +1,13 @@
 package com.example.timekeeping.models
 
-class Team(
-    val teamName: String,
-    val description: String,
-    val members: List<String>
+import com.google.firebase.firestore.Exclude
+
+data class Team(
+    @Exclude
+    val id: String = "",
+    val name: String = "",
+    val groupId: String = "",
+    val description: String = "",
+    val members: List<String> = emptyList(),
 ) {
 }

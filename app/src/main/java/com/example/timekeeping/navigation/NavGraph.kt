@@ -21,6 +21,8 @@ import com.example.timekeeping.navigation.groups.addGroupScreen
 import com.example.timekeeping.navigation.schedule.addScheduleScreen
 import com.example.timekeeping.navigation.shifts.addShiftFormScreen
 import com.example.timekeeping.navigation.shifts.addShiftScreen
+import com.example.timekeeping.navigation.team.addTeamFormScreen
+import com.example.timekeeping.navigation.team.addTeamScreen
 import com.example.timekeeping.view_models.EmployeeViewModel
 import com.example.timekeeping.view_models.GroupViewModel
 
@@ -38,6 +40,8 @@ fun AppNavigation(navController: NavHostController) {
         addEmployeeScreen(navController)
         addEmployeeFormScreen(navController)
         addScheduleScreen(navController)
+        addTeamScreen(navController)
+        addTeamFormScreen(navController)
 
         addHomeScreen(navController)
         addCheckInScreen(navController)
