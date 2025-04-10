@@ -1,7 +1,6 @@
 package com.example.timekeeping.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -9,10 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.timekeeping.CheckInScreen
-import com.example.timekeeping.ui.employees.EmployeeManagementScreen
-import com.example.timekeeping.HomeScreen
 import com.example.timekeeping.RequestJoinGroupScreen
-import com.example.timekeeping.ui.employees.MenuItem
 import com.example.timekeeping.navigation.auth.addAuthScreens
 import com.example.timekeeping.navigation.employee.addEmployeeFormScreen
 import com.example.timekeeping.navigation.employee.addEmployeeScreen
@@ -23,8 +19,7 @@ import com.example.timekeeping.navigation.shifts.addShiftFormScreen
 import com.example.timekeeping.navigation.shifts.addShiftScreen
 import com.example.timekeeping.navigation.team.addTeamFormScreen
 import com.example.timekeeping.navigation.team.addTeamScreen
-import com.example.timekeeping.view_models.EmployeeViewModel
-import com.example.timekeeping.view_models.GroupViewModel
+import com.example.timekeeping.ui.home.HomeScreen
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
@@ -56,11 +51,7 @@ fun AppNavigation(navController: NavHostController) {
 
 private fun NavGraphBuilder.addHomeScreen(navController: NavHostController) {
     composable(Screen.Home.route) {
-        val viewModel: GroupViewModel = viewModel()
-        HomeScreen(
-            navController = navController,
-            viewModel = viewModel
-        )
+        HomeScreen(navController = navController)
     }
 }
 

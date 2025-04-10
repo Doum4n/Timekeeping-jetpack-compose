@@ -5,9 +5,11 @@ import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -19,8 +21,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.timekeeping.models.Assignment
+import com.example.timekeeping.models.Employee
+import com.example.timekeeping.ui.assignment.components.ScheduleCalenda
+import com.example.timekeeping.ui.assignment.utils.getDaysOfMonthExpanded
+import com.example.timekeeping.ui.assignment.utils.getDaysOfMonthShrunk
+import com.example.timekeeping.ui.assignment.utils.getShortNameFor
+import com.example.timekeeping.ui.assignment.utils.getWeekdays
 import com.example.timekeeping.ui.calender.CalendarState
 import com.example.timekeeping.view_models.AssignmentViewModel
+import com.example.timekeeping.view_models.EmployeeViewModel
 import com.example.timekeeping.view_models.ShiftViewModel
 import com.example.timekeeping.view_models.TeamViewModel
 import java.time.DayOfWeek
@@ -30,22 +39,31 @@ import java.time.format.DateTimeFormatter
 
 data class CalendarDay(val day: String, var isSelected: Boolean, val isAssigned: Boolean = false)
 
+data class AssignmentState(
+    val teamId: String,
+    val assignment: Assignment,
+    var isModified: Boolean = false,
+    var isNew: Boolean = true
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AssignmentScreen(
     state: CalendarState,
-    onDone: () -> Unit,
+    onDone: (List<Assignment>) -> Unit,
     onBackClick: () -> Unit,
     onChooseTeamClick: () -> Unit,
     shiftViewModel: ShiftViewModel,
     teamViewModel: TeamViewModel,
+    employeeViewModel: EmployeeViewModel,
     viewModel: AssignmentViewModel
 ) {
+    var employees by remember { mutableStateOf(listOf<Employee>()) }
+    var assignments by remember { mutableStateOf(listOf<AssignmentState>()) }
     var calendarDays by remember { mutableStateOf(listOf<CalendarDay>()) }
     var assignmentDates by remember { mutableStateOf(listOf<DayOfWeek>()) }
-    var assignmentId by remember { mutableStateOf("") }
-
-    Log.d("AssignmentScreen", "assignmentDates: $assignmentDates")
+    var assignmentsId by remember { mutableStateOf(listOf("")) }
+    var selectedShiftId by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         viewModel.getAssignments { assignments ->
@@ -56,10 +74,10 @@ fun AssignmentScreen(
                     .map { day -> currentYearMonth.atDay(day).dayOfWeek }
                     .distinct()
 
-                assignmentId = assignments.first().id
+                assignmentsId = assignments.map { it.id }
             } else {
                 assignmentDates = emptyList()
-                assignmentId = "" // hoặc null nếu bạn dùng nullable String
+                assignmentsId = listOf() // hoặc null nếu bạn dùng nullable String
             }
         }
     }
@@ -75,34 +93,36 @@ fun AssignmentScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        if (calendarDays.count { it.isAssigned && !it.isSelected } < calendarDays.size) {
-                            if(assignmentId.isEmpty()){
-                                viewModel.addAssignment(
-                                    Assignment(
-                                        shiftId = shiftViewModel.shifts.value.first().id,
-                                        employeeId = "userId",
-                                        teamId = "teamId",
-                                        month = state.visibleMonth.month,
-                                        year = java.time.Year.of(state.visibleMonth.year).value,
-                                        dates = calendarDays.filter { it.isSelected || it.isAssigned }
-                                            .map { it.day.toInt() }
-                                    )
-                                )
-                            }else{
-                                viewModel.updateAssignment(
-                                    assignmentId = assignmentId,
-                                    Assignment(
-                                        shiftId = shiftViewModel.shifts.value.first().id,
-                                        employeeId = "userId",
-                                        teamId = "teamId",
-                                        month = state.visibleMonth.month,
-                                        year = java.time.Year.of(state.visibleMonth.year).value,
-                                        dates = calendarDays.filter { it.isSelected || it.isAssigned }
-                                            .map { it.day.toInt() }
-                                    )
-                                )
-                            }
-                        }
+//                        if (calendarDays.count { it.isAssigned && !it.isSelected } < calendarDays.size) {
+//                            if(assignmenstId.isEmpty()){
+//                                viewModel.addAssignment(
+//                                    Assignment(
+//                                        shiftId = shiftViewModel.shifts.value.first().id,
+//                                        employeeId = "userId",
+//                                        teamId = "teamId",
+//                                        month = state.visibleMonth.month,
+//                                        year = java.time.Year.of(state.visibleMonth.year).value,
+//                                        dates = calendarDays.filter { it.isSelected || it.isAssigned }
+//                                            .map { it.day.toInt() }
+//                                    )
+//                                )
+//                            }else{
+//                                assignmentsId.forEach { assignmentId ->
+//                                    viewModel.updateAssignment(
+//                                        assignmentId = assignmentId,
+//                                        Assignment(
+//                                            shiftId = shiftViewModel.shifts.value.first().id,
+//                                            employeeId = "userId",
+//                                            teamId = "teamId",
+//                                            month = state.visibleMonth.month,
+//                                            year = java.time.Year.of(state.visibleMonth.year).value,
+//                                            dates = calendarDays.filter { it.isSelected || it.isAssigned }
+//                                                .map { it.day.toInt() }
+//                                        )
+//                                    )
+//                                }
+//                            }
+//                        }
                     }) {
                         Icon(Icons.Default.Done, "Done")
                     }
@@ -122,7 +142,7 @@ fun AssignmentScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 shiftViewModel.shifts.value.forEach { shift ->
-                    ShiftItem(shift.shiftName, shift.startTime, shift.endTime)
+                    ShiftItem(onShiftClick = { selectedShiftId = shift.id }, shift.id, shift.shiftName, shift.startTime, shift.endTime)
                 }
             }
 
@@ -169,40 +189,8 @@ fun AssignmentScreen(
                 if (expanded.value) getDaysOfMonthExpanded(selectedWeekdays, assignmentDates)
                 else getDaysOfMonthShrunk(selectedWeekdays)
 
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(7),
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                userScrollEnabled = false
-            ) {
-                items(calendarDays) { calendarDay ->
-                    Box(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .aspectRatio(1f)
-                            .background(
-                                color = when {
-                                    calendarDay.isSelected -> MaterialTheme.colorScheme.primary
-                                    calendarDay.isAssigned -> Color.LightGray // ✅ hiển thị ngày đã phân công
-                                    else -> Color.Transparent
-                                }
-                            ).clickable {
-                                calendarDays = calendarDays.map {
-                                    if (it.day == calendarDay.day) {
-                                        it.copy(isSelected = !it.isSelected)
-                                    } else {
-                                        it
-                                    }
-                                }
-                            },
-                            contentAlignment = Alignment.Center,
-                    ) {
-                        Text(text = calendarDay.day)
-                    }
-                }
-            }
 
+            ScheduleCalenda(calendarDays = calendarDays)
 
             Row (
                 modifier = Modifier.padding(16.dp),
@@ -220,6 +208,20 @@ fun AssignmentScreen(
             ) {
                 teamViewModel.teams.value.forEach { team ->
                     TeamItem(team.name)
+                }
+            }
+
+            employeeViewModel.loadEmployeeByShiftId(
+                selectedShiftId,
+                onSuccess = {
+                    employees += it
+                    Log.d("AssignmentScreen", "Loaded employees: $employees")
+                }
+            )
+
+            LazyColumn {
+                items(employees) { employee ->
+                    EmployeeItem(employee)
                 }
             }
         }
@@ -246,78 +248,19 @@ fun CalendarHeader(state: CalendarState) {
     }
 }
 
-fun getWeekdays(): List<DayOfWeek> = listOf(
-    DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
-    DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY
-)
-
-fun getShortNameFor(dayOfWeek: DayOfWeek): String {
-    return when (dayOfWeek) {
-        DayOfWeek.MONDAY -> "T2"
-        DayOfWeek.TUESDAY -> "T3"
-        DayOfWeek.WEDNESDAY -> "T4"
-        DayOfWeek.THURSDAY -> "T5"
-        DayOfWeek.FRIDAY -> "T6"
-        DayOfWeek.SATURDAY -> "T7"
-        DayOfWeek.SUNDAY -> "CN"
-    }
-}
-
-@SuppressLint("SimpleDateFormat")
-fun getDaysOfMonthExpanded(
-    selectedWeekdays: List<DayOfWeek>,
-    assignedDates: List<DayOfWeek>
-): List<CalendarDay> {
-    val now = LocalDate.now()
-    val firstDay = now.withDayOfMonth(1)
-    val lastDay = now.withDayOfMonth(now.lengthOfMonth())
-
-    val startOffset = (firstDay.dayOfWeek.value + 5) % 6
-    val days = mutableListOf<CalendarDay>()
-
-    // Add prefix empty cells
-    repeat(startOffset) {
-        days.add(CalendarDay("", false))
-    }
-
-    for (day in 1..lastDay.dayOfMonth) {
-        val date = now.withDayOfMonth(day)
-        val isSelected = selectedWeekdays.contains(date.dayOfWeek)
-        val isAssigned = assignedDates.contains(date.dayOfWeek)
-        days.add(CalendarDay(day.toString(), isSelected, isAssigned))
-    }
-
-    return days
-}
-
-fun getDaysOfMonthShrunk(selectedWeekdays: List<DayOfWeek>): List<CalendarDay> {
-    val now = LocalDate.now()
-    val days = mutableListOf<CalendarDay>()
-    val firstDay = now.withDayOfMonth(1)
-    val startOffset = (firstDay.dayOfWeek.value + 5) % 6
-
-    repeat(startOffset) {
-        days.add(CalendarDay("", false))
-    }
-
-    for (i in 1..6) {
-        val date = now.plusDays(i.toLong())
-        val isSelected = selectedWeekdays.contains(date.dayOfWeek)
-        days.add(CalendarDay(i.toString(), isSelected))
-    }
-
-    return days
-}
-
 //fun checkDayOfWeek(selectedWeekdays: List<DayOfWeek>, )
 
 @Composable
 fun ShiftItem(
+    onShiftClick: (String) -> Unit,
+    id: String,
     shiftName: String,
     startTime: String,
     endTime: String,
 ){
-    Card {
+    Card(
+        onClick = { onShiftClick(id) },
+    ) {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
@@ -338,6 +281,21 @@ fun TeamItem(
             modifier = Modifier.padding(16.dp)
         ){
             Text(text = teamName)
+        }
+    }
+}
+
+@Composable
+fun EmployeeItem(
+    employee: Employee
+) {
+    Card(
+        modifier = Modifier.padding(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(text = employee.fullName)
         }
     }
 }

@@ -6,12 +6,12 @@ import com.example.timekeeping.repositories.AuthRepository
 import com.example.timekeeping.ui.auth.state.LoginUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
     private val authRepository: AuthRepository = AuthRepository()
 ) : ViewModel() {
-
     private val _loginUiState = MutableStateFlow(LoginUiState())
     val loginUiState: StateFlow<LoginUiState> = _loginUiState
 
@@ -22,15 +22,16 @@ class AuthViewModel(
     fun loginUser(email: String, password: String) = viewModelScope.launch {
         _loginUiState.value = _loginUiState.value.copy(
             isLoading = true,
-            errorMessage = null
+            errorMessage = null,
         )
 
         val result = authRepository.loginUser(email, password)
         if (result.isSuccess) {
             _loginUiState.value = _loginUiState.value.copy(
-                isLoading = false
+                isLoading = false,
+                isSuccess = true
             )
-            // Có thể trigger 1 event riêng nếu cần
+            //_isLoggedIn.value = true
         } else {
             _loginUiState.value = _loginUiState.value.copy(
                 isLoading = false,
@@ -64,6 +65,12 @@ class AuthViewModel(
 
     fun logoutUser() {
         authRepository.logoutUser()
+    }
+
+    fun resetLoginState() {
+        _loginUiState.update {
+            it.copy(isSuccess = false, isLoading = false, errorMessage = null)
+        }
     }
 }
 

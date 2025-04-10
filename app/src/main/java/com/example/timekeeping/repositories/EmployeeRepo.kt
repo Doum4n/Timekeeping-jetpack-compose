@@ -5,10 +5,12 @@ import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Status
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
+import javax.inject.Inject
 
-class EmployeeRepository(
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
+class EmployeeRepository (
+    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) {
 
     fun loadEmployees(groupId: String, onResult: (List<Employee>) -> Unit) {
@@ -65,6 +67,32 @@ class EmployeeRepository(
         db.collection("employees").add(employee)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it) }
+    }
+
+    fun loadEmployeeByShiftId(shiftId: String, onResult: (List<Employee>) -> Unit) {
+        db.collection("assignments").whereEqualTo("shiftId", shiftId).get()
+            .addOnSuccessListener { querySnapshot ->
+                if (querySnapshot.isEmpty) {
+                    Log.e("EmployeeRepository", "No employee found for shiftId: $shiftId")
+                    return@addOnSuccessListener
+                }
+                val employeeId = querySnapshot.documents.map {
+                    it.getString("employeeId")
+                }.toList()
+                loadEmployeeById(employeeId, onResult)
+            }.addOnFailureListener { exception ->
+                Log.e("EmployeeRepository", "Error loading employee by shiftId", exception)
+            }
+    }
+
+    private fun loadEmployeeById(employeesId: List<String?>, onResult: (List<Employee>) -> Unit) {
+        db.collection("employees").whereIn(FieldPath.documentId(), employeesId).get()
+            .addOnSuccessListener { document ->
+                val employee = document.toObjects(Employee::class.java).toList()
+                onResult(employee)
+            }.addOnFailureListener { exception ->
+                Log.e("EmployeeRepository", "Error loading employee by id", exception)
+            }
     }
 
     fun requestJoinGroup(groupId: String, employeeId: String) {
