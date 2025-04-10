@@ -21,8 +21,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.timekeeping.ui.shifts.ShiftItem
+import com.example.timekeeping.models.Team
+import com.example.timekeeping.ui.components.TopBarWithAddAction
 import com.example.timekeeping.view_models.TeamViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,37 +35,44 @@ fun TeamManagementScreen(
     onAddTeamClick: (String) -> Unit,
     onBackClick: () -> Unit,
 ) {
+    TeamManagementScreen(
+        groupId = groupId,
+        teams = viewModel.teams.value,
+        onAddTeamClick = onAddTeamClick,
+        onBackClick = onBackClick
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TeamManagementScreen(
+    groupId: String,
+    teams: List<Team>, // giả sử bạn có model Team(name: String)
+    onAddTeamClick: (String) -> Unit,
+    onBackClick: () -> Unit,
+) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Quản lý tổ") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { onAddTeamClick(groupId) }) {
-                        Icon(Icons.Default.Add, "Add")
-                    }
-                }
+            TopBarWithAddAction(
+                title = "Tổ làm việc",
+                onBackClick = onBackClick,
+                onAddShiftClick = { onAddTeamClick(groupId) }
             )
         }
-    ){
-        paddingValues ->
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues), // Đảm bảo padding được áp dụng đúng
-                contentPadding = PaddingValues(16.dp)
-            ) {
-                items(viewModel.teams.value) { team ->
-                    Log.d("TeamManagementScreen", "Team: ${team.name}")
-                    TeamItem(team.name)
-                }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentPadding = PaddingValues(16.dp)
+        ) {
+            items(teams) { team ->
+                TeamItem(team.name)
             }
+        }
     }
 }
+
 
 @Composable
 fun TeamItem(
@@ -81,3 +90,20 @@ fun TeamItem(
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun TeamManagementScreenPreview() {
+    val sampleTeams = listOf(
+        Team("1", "Tổ A"),
+        Team("2", "Tổ B"),
+        Team("3", "Tổ C")
+    )
+    TeamManagementScreen(
+        groupId = "1",
+        teams = sampleTeams,
+        onAddTeamClick = {},
+        onBackClick = {}
+    )
+}
+

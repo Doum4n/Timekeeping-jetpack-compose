@@ -58,7 +58,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.timekeeping.R
 import com.example.timekeeping.models.Employee
+import com.example.timekeeping.ui.components.EntityList
+import com.example.timekeeping.ui.employees.components.SearchBar
 import com.example.timekeeping.view_models.EmployeeViewModel
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,16 +72,30 @@ fun EmployeeManagementScreen(
     onBackClick: () -> Unit,
     onMenuItemClick: (MenuItem) -> Unit
 ) {
-    val tabs = listOf("Chưa liên kết", "Thành viên", "Xét duyệt")
-    val pagerState = rememberPagerState(initialPage = 0) { tabs.size }
-    val scope = rememberCoroutineScope()
 
-    var searchText by remember { mutableStateOf("") }
+    EmployeeManagementScreen(
+        groupId = groupId,
+        employees = viewModel.employees.value,
+        unlinkedEmployees = viewModel.unlinkedEmployees.value,
+        pendingEmployees = viewModel.pendingEmployees.value,
+        onSearch = { searchText -> viewModel.searchEmployeesByName(searchText) },
+        onBackClick = onBackClick,
+        onMenuItemClick = onMenuItemClick
+    )
+}
 
-    // Đồng bộ khi pager thay đổi
-    LaunchedEffect(pagerState.currentPage) {
-        // Không cần thực hiện gì vì TabRow tự động theo pagerState.currentPage
-    }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EmployeeManagementScreen(
+    groupId: String,
+    employees: List<Employee>,
+    unlinkedEmployees: List<Employee>,
+    pendingEmployees: List<Employee>,
+    onSearch: (String) -> Unit,
+    onBackClick: () -> Unit,
+    onMenuItemClick: (MenuItem) -> Unit
+) {
+    val searchText = remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -102,246 +119,106 @@ fun EmployeeManagementScreen(
             )
         }
     ) { paddingValues ->
-
-        // Lấy bàn phím hiện tại
-        val keyboardController = LocalSoftwareKeyboardController.current
-
-        Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-        ) {
-            OutlinedTextField(
-                value = searchText,
-                onValueChange = {searchText = it},
-                label = { Text("Tìm kiếm") },
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
-                trailingIcon = {
-                    IconButton(onClick = { viewModel.searchEmployeesByName(searchText) }) {
-                        Icon(Icons.Default.Search, contentDescription = "Select Start Time")
-                    }
-                },
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Search
-                ),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        viewModel.searchEmployeesByName(searchText)
-                        keyboardController?.hide() // Ẩn bàn phím khi nhấn Enter/Search
-                    }
-                ),
-                singleLine = true,
-                maxLines = 1
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            ScrollableTabRow(
-                selectedTabIndex = pagerState.currentPage, // Sử dụng trực tiếp pagerState
-                edgePadding = 0.dp,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary,
-                divider = {
-//                    TabRowDefaults.Divider(
-//                        thickness = 2.dp,
-//                        color = MaterialTheme.colorScheme.primary
-//                    )
+        Column(modifier = Modifier.padding(paddingValues)) {
+            SearchBar(
+                searchText = searchText.value,
+                onSearch = { onSearch(searchText.value) },
+                onTextChanged = {
+                    searchText.value = it
                 }
-            ) {
-                tabs.forEachIndexed { index, title ->
-                    Tab(
-                        selected = pagerState.currentPage == index,
-                        onClick = {
-                            scope.launch {
-                                pagerState.animateScrollToPage(index)
-                            }
-                        },
-                        text = { Text(title) }
-                    )
-                }
-            }
-
-            HorizontalPager(
-                state = pagerState, // Sử dụng chung state
-                modifier = Modifier.weight(1f)
-            ) { page ->
-                when (page) {
-                    0 -> UnlinkedEmployeesScreen(viewModel, groupId)
-                    1 -> MembersScreen(viewModel, groupId)
-                    2 -> ApprovalScreen(viewModel, groupId)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun UnlinkedEmployeesScreen(viewModel: EmployeeViewModel, groupId: String) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-    ) {
-        items(viewModel.unlinkedEmployees.value) { employee ->
-            EmployeeCard(
-                groupId = groupId,
-                employee = employee,
-                onLinkClick = {}
             )
-        }
-    }
-}
 
-@Composable
-fun MembersScreen(viewModel: EmployeeViewModel, groupId: String) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-    ) {
-        items(viewModel.employees.value) { employee ->
-            EmployeeCard(
-                groupId = groupId,
-                employee = employee,
-            )
-        }
-    }
-}
-
-@Composable
-fun ApprovalScreen(viewModel: EmployeeViewModel, groupId: String) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-    ) {
-        items(viewModel.pendingEmployees.value) { employee ->
-            EmployeeCard(
-                employee = employee,
-                isPending = true,
-                onAcceptClick = {
-                    viewModel.acceptJoinGroup(groupId, employee.userId)
-                },
-                onRejectClick = {}
-            )
-        }
-    }
-}
-
-sealed class MenuItem {
-    object ADD : MenuItem()
-  //  object MORE : MenuItem()
-}
-
-@Composable
-fun EmployeeCard(
-    groupId: String = "",
-    employee: Employee,
-    isPending: Boolean = false,
-    onLinkClick: () -> Unit = {},
-    onAcceptClick: () -> Unit = {},
-    onRejectClick: () -> Unit = {}
-) {
-
-    var salary by remember { mutableStateOf<Double?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(employee.id) {
-        // Gọi hàm bất đồng bộ để lấy lương
-//        try {
-            EmployeeViewModel().getSalaryById(employee.id, groupId, onSuccess = { fetchedSalary ->
-                salary = fetchedSalary
-                isLoading = false
-            }, onFailure = { exception ->
-                errorMessage = "Error: ${exception.message}"
-                isLoading = false
-            })
-//        } catch (e: Exception) {
-//            errorMessage = "Exception: ${e.message}"
-//            isLoading = false
-//        }
-    }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp),
-        shape = RoundedCornerShape(10.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_background),
-                    contentDescription = "Avatar",
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
+            val pages = listOf(
+                EmployeePage.Unlinked(unlinkedEmployees),
+                EmployeePage.Members(employees),
+                EmployeePage.Approval(
+                    pendingEmployees,
+                    onAcceptClick = {},
+                    onRejectClick = {}
                 )
-                Text(
-                    text = employee.fullName,
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
+            )
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                if (isLoading) {
-                    Text(text = "Loading salary...")
-                } else {
-                    if (salary != null) {
-                        Text(text = "${salary} VND")
-                    } else if (errorMessage != null) {
-                        Text(text = errorMessage ?: "Unknown error")
-                        Log.e("EmployeeCard", errorMessage ?: "Unknown error")
-                    }
-                }
-                Text(text = "Thông tin bổ sung 2")
-            }
-
-            if (isPending) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = onAcceptClick,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Chấp nhận")
-                    }
-
-                    Button(
-                        onClick = onRejectClick,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Từ chối")
-                    }
-                }
-            }else if (employee.userId.isEmpty()) {
-                Button(
-                    onClick =  onLinkClick,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Liên kết")
-                }
-            }else {
-                Button(
-                    onClick = {},
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Xem thông tin")
-                }
-            }
+            EmployeePagerContent(
+                pages = pages,
+                groupId = groupId,
+                currentPage = 1, // ví dụ đang ở tab "Thành viên"
+                onTabSelected = { pageIndex -> /* xử lý chọn tab */ }
+            )
         }
     }
+}
+
+@Composable
+fun UnlinkedEmployeesScreen(unlinkedEmployees: List<Employee>, groupId: String) {
+    EntityList(
+        unlinkedEmployees,
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+    ){
+        EmployeeCard(
+            groupId = groupId,
+            employee = it,
+            onLinkClick = {}
+        )
+    }
+}
+
+@Composable
+fun MembersScreen(employees: List<Employee>, groupId: String) {
+    EntityList(
+        employees,
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+    ){
+        EmployeeCard(
+            groupId = groupId,
+            employee = it,
+        )
+    }
+}
+
+@Composable
+fun ApprovalScreen(pendingEmployees: List<Employee>, groupId: String, onAcceptClick: () -> Unit = {}) {
+    EntityList(
+        pendingEmployees,
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight()
+    ){
+        EmployeeCard(
+            groupId = groupId,
+            employee = it,
+            onAcceptClick = onAcceptClick,
+            onRejectClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun EmployeeManagementScreenPreview() {
+    val sampleEmployees = listOf(
+        Employee("1", "John Doe", "john.doe@example.com", "", "1"),
+        Employee("2", "Jane Smith", "jane.smith@example.com", "", "1"),
+        Employee("3", "Peter Jones", "peter.jones@example.com", "", "1")
+    )
+    val sampleUnlinkedEmployees = listOf(
+        Employee("4", "Alice Brown", "alice.brown@example.com", "", ""),
+        Employee("5", "Bob White", "bob.white@example.com", "", "")
+    )
+    val samplePendingEmployees = listOf(
+        Employee("6", "Charlie Green", "charlie.green@example.com", "", ""),
+        Employee("7", "David Black", "david.black@example.com", "", "")
+    )
+    EmployeeManagementScreen(
+        groupId = "1",
+        employees = sampleEmployees,
+        unlinkedEmployees = sampleUnlinkedEmployees,
+        pendingEmployees = samplePendingEmployees,
+        onSearch = {},
+        onBackClick = {},
+        onMenuItemClick = {}
+    )
 }

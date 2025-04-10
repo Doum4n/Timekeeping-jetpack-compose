@@ -25,11 +25,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TeamInputFormScreen(
-    groupId: String,
     onSubmit: (name: String, description: String) -> Unit,
     onCancel: () -> Unit = {}
 ) {
@@ -82,4 +83,12 @@ fun TeamInputFormScreen(
             }
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewTeamInputFormScreen() {
+    TeamInputFormScreen(
+        onSubmit = { name, description -> println("Name: $name, Description: $description") },
+    )
 }

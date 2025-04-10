@@ -11,6 +11,8 @@ import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Status
@@ -212,3 +214,26 @@ fun InputFormCard(
         }
     }
 }
+
+@Preview
+@Composable
+fun InputFormCardPreview() {
+    InputFormCard(
+        employee = Employee(
+            fullName = "Nguyen Van A",
+            role = "Quản lý",
+            salaryType = "Giờ",
+            salary = 100
+        ),
+        onEmployeeChange = {}
+    )
+}
+
+
+@Preview
+@Composable
+fun EmployeeInputFormPreview() {
+    EmployeeInputForm(onBackClick = { }, onSave = { }
+    )
+}
+

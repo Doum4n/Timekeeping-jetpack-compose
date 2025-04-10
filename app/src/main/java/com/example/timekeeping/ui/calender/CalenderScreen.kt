@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+
 
 @Composable
 fun CalendarScreen() {
@@ -22,3 +24,10 @@ fun CalendarScreen() {
         // Các thành phần UI khác
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun CalendarScreenPreview() {
+    CalendarScreen()
+}
+

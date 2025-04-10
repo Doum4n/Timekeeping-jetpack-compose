@@ -17,7 +17,6 @@ fun NavGraphBuilder.addTeamFormScreen(navController: NavController) {
     ) {
         val groupId = it.arguments?.getString("groupId") ?: ""
         TeamInputFormScreen(
-            groupId,
             onSubmit = { name, description ->
                 TeamViewModel(groupId).createTeam(Team(
                     name = name,
