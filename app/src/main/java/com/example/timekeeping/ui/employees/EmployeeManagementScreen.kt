@@ -88,9 +88,11 @@ fun EmployeeManagementScreen(
 @Composable
 fun EmployeeManagementScreen(
     groupId: String,
+
     employees: List<Employee>,
     unlinkedEmployees: List<Employee>,
     pendingEmployees: List<Employee>,
+
     onSearch: (String) -> Unit,
     onBackClick: () -> Unit,
     onMenuItemClick: (MenuItem) -> Unit

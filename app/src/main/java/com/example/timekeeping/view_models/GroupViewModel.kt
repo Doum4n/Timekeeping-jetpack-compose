@@ -4,9 +4,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.timekeeping.models.Group
 import com.example.timekeeping.repositories.GroupRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class GroupViewModel(
-    private val groupRepository: GroupRepository = GroupRepository()
+@HiltViewModel
+class GroupViewModel @Inject constructor(
+    private val groupRepository: GroupRepository
 ) : ViewModel() {
 
     val joinedGroups = mutableStateOf<List<Group>>(emptyList())
@@ -16,11 +19,11 @@ class GroupViewModel(
         loadGroups()
     }
 
-    fun loadGroups() {
+    private fun loadGroups() {
         // Load joined groups
-        groupRepository.loadCreatedGroups { groups ->
-            createdGroups.value = groups
-        }
+//        groupRepository.loadCreatedGroups { groups ->
+//            createdGroups.value = groups
+//        }
 
         // Load created groups
         groupRepository.loadJoinedGroups{ groups ->

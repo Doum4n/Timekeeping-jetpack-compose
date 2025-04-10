@@ -86,4 +86,8 @@ class EmployeeViewModel(
         pendingEmployees.value = pendingEmployees.value.filter { it.fullName.contains(searchText, ignoreCase = true) }
         unlinkedEmployees.value = unlinkedEmployees.value.filter { it.fullName.contains(searchText, ignoreCase = true) }
     }
+
+    fun loadEmployeeByShiftId(shiftId: String, onSuccess: (List<Employee>) -> Unit){
+        employeeRepository.loadEmployeeByShiftId(shiftId, onSuccess)
+    }
 }

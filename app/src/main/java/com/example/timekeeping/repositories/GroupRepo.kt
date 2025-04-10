@@ -6,77 +6,83 @@ import com.example.timekeeping.models.Group.Companion.fromDocument
 import com.example.timekeeping.models.Status
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
+import javax.inject.Singleton
+import javax.inject.Inject
 
-class GroupRepository(
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
-    val auth: FirebaseAuth = FirebaseAuth.getInstance()
+class GroupRepository @Inject constructor (
+    val db: FirebaseFirestore,
+    val auth: FirebaseAuth
 ) {
     val currentUserId = auth.currentUser?.uid ?: ""
 
-    // Load joined groups (trạng thái ACCEPTED)
     fun loadJoinedGroups(onResult: (List<Group>) -> Unit) {
-        db.collection("groups")
-            .get()
-            .addOnSuccessListener { snapshot ->
-                val joinedGroups = mutableListOf<Group>()
-
-                val tasks = snapshot.documents.map { doc ->
-                    val employeeRef = doc.reference.collection("employees").document(currentUserId)
-                    employeeRef.get().continueWith { task ->
-                        if (task.isSuccessful) {
-                            val status = task.result?.getString("status")
-                            if (status == Status.ACCEPTED.toString()) {
-                                fromDocument(doc)?.let { joinedGroups.add(it) }
-                            }
-                        }
-                    }
+        db.collection("employee_group")
+            .whereEqualTo("employeeId", currentUserId)
+            .whereEqualTo("status", Status.ACCEPTED.toString())
+            .addSnapshotListener { snapshot, error ->
+                error?.let {
+                    Log.e("GroupRepository", "Failed to load joined groups", it)
+                    onResult(emptyList())
+                    return@addSnapshotListener
                 }
 
-                // Chờ tất cả các task hoàn thành
-                Tasks.whenAllComplete(tasks).addOnSuccessListener {
-                    onResult(joinedGroups)
-                }
+                snapshot?.let { processSnapshot(it, onResult) }
+            }
+    }
+
+    private fun processSnapshot(snapshot: QuerySnapshot, onResult: (List<Group>) -> Unit) {
+        val groupRefs = snapshot.documents.mapNotNull { it.getDocumentReference("groupId") }
+
+        if (groupRefs.isEmpty()) {
+            onResult(emptyList())
+            return
+        }
+
+        val tasks = groupRefs.map { it.get() }
+
+        Tasks.whenAllSuccess<com.google.firebase.firestore.DocumentSnapshot>(tasks)
+            .addOnSuccessListener { documents ->
+                val groups = documents.mapNotNull { it.toObject(Group::class.java) }
+                onResult(groups)
+                Log.d("GroupRepository", "Loaded ${groups.size} joined groups.")
             }
             .addOnFailureListener {
-                Log.e("GroupRepository", "Failed to load joined groups", it)
+                Log.e("GroupRepository", "Failed to get group details", it)
                 onResult(emptyList())
             }
     }
 
+
     // BỎ
     fun loadCreatedGroups(onResult: (List<Group>) -> Unit) {
-//        val currentUserId = auth.currentUser?.uid ?: ""
-//        val groupRef = db.collection("groups")
-//
-//            groupRef.get().addOnSuccessListener { snapshot ->
-//
-//            }
+
     }
 
     // Create a new group
     fun createGroup(group: Group, onSuccess: () -> Unit, onFailure: (Exception) -> Unit = {}) {
-        val groupRef = db.collection("groups").document() // Tạo document mới và lấy ID
-        val currentUserId = auth.currentUser?.uid ?: ""
-        // Gán id cho group nếu cần sử dụng sau này
-        group.id = groupRef.id
+        val newGroupRef = db.collection("groups").document()  // <-- tạo document trước để lấy ID
 
-        groupRef.set(group)
+        newGroupRef.set(group)                               // <-- lưu group
             .addOnSuccessListener {
-                // Thêm creator vào subcollection "employees"
-                val employeeData = hashMapOf(
-                    "status" to Status.ACCEPTED.toString(),
-                    "isCreator" to true
-                )
-                groupRef.collection("employees")
-                    .document(currentUserId)
-                    .set(employeeData)
-                    .addOnSuccessListener {
-                        onSuccess()
-                    }
-                    .addOnFailureListener { onFailure(it) }
+                // Sau khi lưu group thành công, thêm vào bảng liên kết
+                db.collection("employee_group").add(
+                    mapOf(
+                        "employeeId" to currentUserId,
+                        "groupId" to newGroupRef,                // <-- dùng ID ở đây
+                        "status" to Status.ACCEPTED.toString()
+                    )
+                ).addOnSuccessListener {
+                    onSuccess()
+                }.addOnFailureListener {
+                    onFailure(it)
+                }
             }
-            .addOnFailureListener { onFailure(it) }
+            .addOnFailureListener {
+                onFailure(it)
+            }
     }
 
 
@@ -96,16 +102,7 @@ class GroupRepository(
 
     // Leave group
     fun leaveGroup(groupId: String, userId: String, onSuccess: () -> Unit) {
-        db.collection("groups")
-            .document(groupId)
-            .collection("employees")
-            .document(userId)
-            .delete()
-            .addOnSuccessListener {
-                onSuccess()
-            }
-            .addOnFailureListener {
-                Log.e("GroupRepository", "Failed to leave group", it)
-            }
+
     }
 }
+

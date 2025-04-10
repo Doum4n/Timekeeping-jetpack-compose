@@ -3,6 +3,13 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.dagger.hilt)
+    id("kotlin-kapt")
+    kotlin("kapt")
+}
+
+hilt {
+    enableAggregatingTask = false
 }
 
 android {
@@ -69,6 +76,9 @@ dependencies {
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.firebase.database.ktx)
     implementation(libs.firebase.messaging.ktx)
+    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

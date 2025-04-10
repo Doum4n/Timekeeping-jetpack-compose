@@ -13,7 +13,7 @@ fun NavGraphBuilder.addGroupFormScreen(navController: NavHostController) {
         val auth = FirebaseAuth.getInstance()
         GroupFormScreen(
             onSubmit = { group ->
-                GroupViewModel().createGroup(group)
+//                GroupViewModel().createGroup(group)
                 navController.popBackStack()
             },
             creatorId = auth.currentUser?.uid ?: "",

@@ -9,6 +9,7 @@ import com.example.timekeeping.navigation.Screen
 import com.example.timekeeping.ui.assignment.AssignmentScreen
 import com.example.timekeeping.ui.calender.CalendarState
 import com.example.timekeeping.view_models.AssignmentViewModel
+import com.example.timekeeping.view_models.EmployeeViewModel
 import com.example.timekeeping.view_models.ShiftViewModel
 import com.example.timekeeping.view_models.TeamViewModel
 
@@ -29,7 +30,8 @@ fun NavGraphBuilder.addScheduleScreen(navController: NavHostController) {
             shiftViewModel = ShiftViewModel(groupId = groupId),
             teamViewModel = TeamViewModel(groupId = groupId),
             viewModel = AssignmentViewModel(employeeId = employeeId),
-            state = CalendarState()
+            state = CalendarState(),
+            employeeViewModel = EmployeeViewModel(groupId = groupId)
         )
     }
 }

@@ -21,6 +21,14 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.loginUiState.collectAsState()
 
+    // Sử dụng LaunchedEffect để xử lý side effect
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            onLoginSuccess()
+            viewModel.resetLoginState() // Thêm hàm reset state trong ViewModel
+        }
+    }
+
     LoginScreenContent(
         state = uiState,
         onEmailChange = viewModel::onEmailChange,
@@ -28,9 +36,4 @@ fun LoginScreen(
         onLoginClick = { viewModel.loginUser(uiState.email, uiState.password) },
         onNavigateToRegister = onNavigateToRegister
     )
-
-    // Điều hướng khi login thành công (nếu bạn có trigger logic ở nơi khác)
-    if (!uiState.isLoading && uiState.errorMessage == null && uiState.email.isNotEmpty() && uiState.password.isNotEmpty()) {
-        onLoginSuccess()
-    }
 }
