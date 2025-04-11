@@ -1,5 +1,7 @@
 package com.example.timekeeping.navigation.shifts
 
+import android.util.Log
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.timekeeping.ui.shifts.ShiftManagementScreen
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -16,9 +18,11 @@ fun NavGraphBuilder.addShiftScreen(navController: NavController) {
         arguments = listOf(navArgument("groupId") { type = NavType.StringType })
     ) { backStackEntry ->
         val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
+
+        val shiftViewModel: ShiftViewModel = hiltViewModel()
+
         ShiftManagementScreen(
             onBackClick = { navController.popBackStack() },
-            viewModel = ShiftViewModel(groupId = groupId),
             onAddShiftClick = {
                 navController.navigate(Screen.ShiftInputForm.createRoute(groupId))
             },
@@ -26,45 +30,8 @@ fun NavGraphBuilder.addShiftScreen(navController: NavController) {
                 navController.navigate(Screen.ShiftEditForm.createRoute(groupId, shiftId))
             },
             onDeleteClick = { shiftId ->
-                ShiftViewModel(groupId = groupId).delete(shiftId)
+                shiftViewModel.delete(shiftId)
             }
         )
     }
-
-    composable(
-        route = Screen.ShiftInputForm.route,
-        arguments = listOf(navArgument("groupId") { type = NavType.StringType })
-    ) { backStackEntry ->
-        val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
-        ShiftInputForm(
-            onSave = { shift ->
-                ShiftViewModel(groupId = groupId).create(shift)
-                navController.popBackStack()
-            },
-            groupId = groupId,
-            onBackClick = { navController.popBackStack() }
-        )
-    }
-
-    composable(
-        route = Screen.ShiftEditForm.route,
-        arguments = listOf(
-            navArgument("groupId") { type = NavType.StringType },
-            navArgument("shiftId") { type = NavType.StringType }
-        )
-    ) { backStackEntry ->
-        val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
-        val shiftId = backStackEntry.arguments?.getString("shiftId") ?: ""
-
-        ShiftInputForm(
-            onSave = { shift ->
-                ShiftViewModel(groupId = groupId).update(shiftId, shift)
-                navController.popBackStack()
-            },
-            groupId = groupId,
-            shiftId = shiftId,
-            onBackClick = { navController.popBackStack() }
-        )
-    }
-
 }

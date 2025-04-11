@@ -1,5 +1,7 @@
 package com.example.timekeeping.navigation.employee
 
+import android.util.Log
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -18,7 +20,6 @@ fun NavGraphBuilder.addEmployeeScreen(navController: NavHostController) {
         val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
         EmployeeManagementScreen(
             onBackClick = { navController.popBackStack() },
-            viewModel = EmployeeViewModel(groupId),
             onMenuItemClick = { menuItem ->
                 when (menuItem) {
                     MenuItem.ADD -> {
@@ -26,7 +27,6 @@ fun NavGraphBuilder.addEmployeeScreen(navController: NavHostController) {
                     }
                 }
             },
-            groupId = groupId,
         )
     }
 }

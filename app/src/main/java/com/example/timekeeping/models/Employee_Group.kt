@@ -1,5 +1,6 @@
 package com.example.timekeeping.models
 
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.Date
@@ -19,8 +20,8 @@ enum class Status {
 }
 
 class Employee_Group (
-    var employeeId: String = "",
-    var groupId: String = "",
+    var employeeId: DocumentReference = FirebaseFirestore.getInstance().collection("employees").document(),
+    var groupId: DocumentReference = FirebaseFirestore.getInstance().collection("groups").document(),
     val isCreator: Boolean = false,
     val dayJoined: Date = Date(),
     var role: Role = Role.MEMBER,

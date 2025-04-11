@@ -24,7 +24,6 @@ import com.example.timekeeping.ui.groups.components.IconButtonWithLabel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupDetailScreen(
-    groupId: String,
     onBackClick: () -> Unit,
     onEmployeeManagementClick: () -> Unit,
     onShiftManagementClick: () -> Unit,
@@ -69,7 +68,7 @@ fun GroupDetailScreen(
 @Composable
 fun GroupDetailScreenPreview() {
     GroupDetailScreen(
-        groupId = "1",
+        //groupId = "1",
         onBackClick = { /*TODO*/ },
         onEmployeeManagementClick = { /*TODO*/ },
         onShiftManagementClick = { /*TODO*/ },

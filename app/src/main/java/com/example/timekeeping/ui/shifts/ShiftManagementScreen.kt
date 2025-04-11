@@ -8,6 +8,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.timekeeping.models.Shift
 import com.example.timekeeping.ui.components.EntityList
@@ -22,7 +23,7 @@ fun ShiftManagementScreen(
     onEditClick: (String) -> Unit = {},
     onDeleteClick: (String) -> Unit = {},
     onAddShiftClick: () -> Unit = {},
-    viewModel: ShiftViewModel = viewModel(),
+    viewModel: ShiftViewModel = hiltViewModel(),
 ) {
     val shifts by viewModel.shifts
     ShiftManagementScreen(

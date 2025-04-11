@@ -18,11 +18,11 @@ data class Employee(
     val salaryType: String = "",
     @Exclude
     val role: String = "",
-
     @Exclude
     val status: Status = Status.PENDING,
     @Exclude
     val isCreator: Boolean = false,
+
 ) {
     fun toMap(): Map<String, Any?> {
         return mapOf(
@@ -32,15 +32,6 @@ data class Employee(
             "email" to email,
             "phone" to phone,
             "address" to address
-            // Không bao gồm salary, salaryType và role ở đây
-        )
-    }
-
-    fun toEmployeeData(): Map<String, Any?> {
-        return mapOf(
-            "name" to fullName,
-            "status" to status.toString(),
-            "isCreator" to isCreator
         )
     }
 }

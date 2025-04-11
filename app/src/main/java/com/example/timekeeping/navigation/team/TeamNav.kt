@@ -17,7 +17,6 @@ fun NavGraphBuilder.addTeamScreen(navController: NavController) {
         val groupId = it.arguments?.getString("groupId") ?: ""
         TeamManagementScreen(
             groupId = groupId,
-            viewModel = TeamViewModel(groupId),
             onBackClick = { navController.popBackStack() },
             onAddTeamClick = { navController.navigate(Screen.TeamForm.createRoute(groupId)) }
         )

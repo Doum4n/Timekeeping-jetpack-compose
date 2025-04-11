@@ -77,7 +77,7 @@ fun AssignmentScreen(
                 assignmentsId = assignments.map { it.id }
             } else {
                 assignmentDates = emptyList()
-                assignmentsId = listOf() // hoặc null nếu bạn dùng nullable String
+                assignmentsId = listOf()
             }
         }
     }

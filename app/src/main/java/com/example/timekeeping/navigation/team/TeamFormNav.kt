@@ -1,5 +1,6 @@
 package com.example.timekeeping.navigation.team
 
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -16,9 +17,12 @@ fun NavGraphBuilder.addTeamFormScreen(navController: NavController) {
         arguments = listOf(navArgument("groupId") { type = NavType.StringType })
     ) {
         val groupId = it.arguments?.getString("groupId") ?: ""
+
+        val teamViewModel: TeamViewModel = hiltViewModel()
+
         TeamInputFormScreen(
             onSubmit = { name, description ->
-                TeamViewModel(groupId).createTeam(Team(
+                teamViewModel.createTeam(Team(
                     name = name,
                     description = description,
                     groupId = groupId

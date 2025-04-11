@@ -1,6 +1,7 @@
 package com.example.timekeeping.navigation.employee
 
 import android.widget.Toast
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -16,11 +17,14 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
         arguments = listOf(navArgument("groupId") { type = NavType.StringType })
     ) {
         val groupId = it.arguments?.getString("groupId") ?: ""
+
+        val employeeViewModel: EmployeeViewModel = hiltViewModel()
+
         EmployeeInputForm(
             onBackClick = { navController.popBackStack() },
             onSave = {
                 employees ->
-                EmployeeViewModel().saveEmployees(employees, groupId,
+                employeeViewModel.saveEmployees(employees,
                     onSuccess = {
                         Toast.makeText(navController.context, "Employees saved successfully", Toast.LENGTH_SHORT).show()
                         navController.popBackStack()

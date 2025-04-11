@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.SavedStateHandle
 import com.example.timekeeping.models.Shift
 import com.example.timekeeping.view_models.ShiftViewModel
 import java.time.LocalTime
@@ -21,8 +23,7 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShiftInputForm(
-    shiftId: String = "",
-    groupId: String,
+    shiftViewModel: ShiftViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
     onSave: (Shift) -> Unit
 ) {
@@ -35,10 +36,9 @@ fun ShiftInputForm(
 
     val context = LocalContext.current
 
-    LaunchedEffect(shiftId) {
-        Log.d("ShiftInputForm", "shiftId: $shiftId")
-        if (shiftId != "") {
-            ShiftViewModel(groupId = groupId).getShiftById(shiftId) { shift ->
+    LaunchedEffect(Unit) {
+        if (shiftViewModel.shiftId != "") {
+            shiftViewModel.getShiftById { shift ->
                 name = TextFieldValue(shift.shiftName)
                 startTime = LocalTime.parse(shift.startTime)
                 endTime = LocalTime.parse(shift.endTime)
@@ -173,7 +173,7 @@ fun ShiftInputForm(
                             shiftName = name.text,
                             startTime = startTime.toString(),
                             endTime = endTime.toString(),
-                            groupId = groupId
+                            groupId = shiftViewModel.groupId
                         )
                         onSave(shift) // Handle the save action
                     },

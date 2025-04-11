@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.timekeeping.models.Team
 import com.example.timekeeping.ui.components.TopBarWithAddAction
 import com.example.timekeeping.view_models.TeamViewModel
@@ -31,7 +32,7 @@ import com.example.timekeeping.view_models.TeamViewModel
 @Composable
 fun TeamManagementScreen(
     groupId: String,
-    viewModel: TeamViewModel,
+    viewModel: TeamViewModel = hiltViewModel(),
     onAddTeamClick: (String) -> Unit,
     onBackClick: () -> Unit,
 ) {

@@ -27,6 +27,7 @@ fun AppNavigation(navController: NavHostController) {
         navController = navController,
         startDestination = Screen.Login.route
     ) {
+        addHomeScreen(navController)
         addAuthScreens(navController)
         addShiftScreen(navController)
         addShiftFormScreen(navController)
@@ -38,7 +39,6 @@ fun AppNavigation(navController: NavHostController) {
         addTeamScreen(navController)
         addTeamFormScreen(navController)
 
-        addHomeScreen(navController)
         addCheckInScreen(navController)
         addProfileScreen()
 

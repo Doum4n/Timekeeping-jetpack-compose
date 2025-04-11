@@ -1,5 +1,6 @@
 package com.example.timekeeping.navigation.auth
 
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -12,21 +13,17 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 fun NavGraphBuilder.addAuthScreens(navController: NavHostController) {
     composable(Screen.Login.route) {
-        val viewModel: AuthViewModel = viewModel()
         LoginScreen(
-            viewModel = viewModel,
             onLoginSuccess = { navController.navigate(Screen.Home.route) },
             onNavigateToRegister = { navController.navigate(Screen.Register.route) }
         )
     }
 
     composable(Screen.Register.route) {
-        val viewModel: AuthViewModel = viewModel()
         val db = FirebaseFirestore.getInstance()
         RegisterScreen(
-            viewModel = viewModel,
             onRegisterSuccess = { employee ->
-                db.collection("employees").document().set(employee)
+                db.collection("employees").document().set(employee.toMap())
                     .addOnSuccessListener { navController.navigate(Screen.Login.route) }
                     .addOnFailureListener { }
             },

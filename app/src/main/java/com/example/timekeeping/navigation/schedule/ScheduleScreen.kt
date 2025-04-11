@@ -1,5 +1,6 @@
 package com.example.timekeeping.navigation.schedule
 
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -27,11 +28,11 @@ fun NavGraphBuilder.addScheduleScreen(navController: NavHostController) {
             onBackClick = { navController.popBackStack() },
             onDone = {},
             onChooseTeamClick = { navController.navigate(Screen.TeamManagement.createRoute(groupId)) },
-            shiftViewModel = ShiftViewModel(groupId = groupId),
-            teamViewModel = TeamViewModel(groupId = groupId),
-            viewModel = AssignmentViewModel(employeeId = employeeId),
+            shiftViewModel = hiltViewModel(),
+            teamViewModel = hiltViewModel(),
+            viewModel = hiltViewModel(),
             state = CalendarState(),
-            employeeViewModel = EmployeeViewModel(groupId = groupId)
+            employeeViewModel = hiltViewModel()
         )
     }
 }

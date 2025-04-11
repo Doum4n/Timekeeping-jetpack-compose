@@ -1,6 +1,7 @@
 package com.example.timekeeping.ui.auth
 
 import androidx.compose.runtime.*
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Status
@@ -12,7 +13,7 @@ import com.example.timekeeping.view_models.RegisterState
 fun RegisterScreen(
     onRegisterSuccess: (Employee) -> Unit,
     onNavigateToLogin: () -> Unit,
-    viewModel: AuthViewModel = viewModel()
+    viewModel: AuthViewModel = hiltViewModel()
 ) {
     val registerState by viewModel.registerState.collectAsState()
 
@@ -30,17 +31,15 @@ fun RegisterScreen(
         }
 
         is RegisterState.Success -> {
-            LaunchedEffect(Unit) {
+
                 onRegisterSuccess(
                     Employee(
                         userId = state.userId,
                         fullName = uiState.fullName,
                         email = uiState.email,
-                        status = Status.PENDING,
-                        isCreator = false
                     )
                 )
-            }
+
         }
 
         is RegisterState.Loading -> {

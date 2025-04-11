@@ -56,6 +56,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.timekeeping.R
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.ui.components.EntityList
@@ -64,17 +65,14 @@ import com.example.timekeeping.view_models.EmployeeViewModel
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmployeeManagementScreen(
-    groupId: String,
-    viewModel: EmployeeViewModel,
+    viewModel: EmployeeViewModel = hiltViewModel(),
     onBackClick: () -> Unit,
     onMenuItemClick: (MenuItem) -> Unit
 ) {
-
-    EmployeeManagementScreen(
-        groupId = groupId,
+    EmployeeManagementContentScreen(
+        groupId = viewModel.groupId,
         employees = viewModel.employees.value,
         unlinkedEmployees = viewModel.unlinkedEmployees.value,
         pendingEmployees = viewModel.pendingEmployees.value,
@@ -86,7 +84,7 @@ fun EmployeeManagementScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EmployeeManagementScreen(
+fun EmployeeManagementContentScreen(
     groupId: String,
 
     employees: List<Employee>,
@@ -159,7 +157,6 @@ fun UnlinkedEmployeesScreen(unlinkedEmployees: List<Employee>, groupId: String) 
             .fillMaxHeight()
     ){
         EmployeeCard(
-            groupId = groupId,
             employee = it,
             onLinkClick = {}
         )
@@ -175,7 +172,6 @@ fun MembersScreen(employees: List<Employee>, groupId: String) {
             .fillMaxHeight()
     ){
         EmployeeCard(
-            groupId = groupId,
             employee = it,
         )
     }
@@ -190,7 +186,6 @@ fun ApprovalScreen(pendingEmployees: List<Employee>, groupId: String, onAcceptCl
             .fillMaxHeight()
     ){
         EmployeeCard(
-            groupId = groupId,
             employee = it,
             onAcceptClick = onAcceptClick,
             onRejectClick = {}
@@ -214,7 +209,7 @@ fun EmployeeManagementScreenPreview() {
         Employee("6", "Charlie Green", "charlie.green@example.com", "", ""),
         Employee("7", "David Black", "david.black@example.com", "", "")
     )
-    EmployeeManagementScreen(
+    EmployeeManagementContentScreen(
         groupId = "1",
         employees = sampleEmployees,
         unlinkedEmployees = sampleUnlinkedEmployees,

@@ -34,7 +34,6 @@ import com.example.timekeeping.view_models.EmployeeViewModel
 
 @Composable
 fun EmployeeCard(
-    groupId: String = "",
     employee: Employee,
     isPending: Boolean = false,
     onLinkClick: () -> Unit = {},
@@ -49,17 +48,17 @@ fun EmployeeCard(
     LaunchedEffect(employee.id) {
         // Gọi hàm bất đồng bộ để lấy lương
 //        try {
-        EmployeeViewModel().getSalaryById(employee.id, groupId, onSuccess = { fetchedSalary ->
-            salary = fetchedSalary
-            isLoading = false
-        }, onFailure = { exception ->
-            errorMessage = "Error: ${exception.message}"
-            isLoading = false
-        })
-//        } catch (e: Exception) {
-//            errorMessage = "Exception: ${e.message}"
+//        EmployeeViewModel().getSalaryById(employee.id, groupId, onSuccess = { fetchedSalary ->
+//            salary = fetchedSalary
 //            isLoading = false
-//        }
+//        }, onFailure = { exception ->
+//            errorMessage = "Error: ${exception.message}"
+//            isLoading = false
+//        })
+////        } catch (e: Exception) {
+////            errorMessage = "Exception: ${e.message}"
+////            isLoading = false
+////        }
     }
 
     Card(

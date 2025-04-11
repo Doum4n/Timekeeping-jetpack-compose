@@ -17,7 +17,6 @@ fun NavGraphBuilder.addGroupScreen(navController: NavHostController) {
     ) { backStackEntry ->
         val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
         GroupDetailScreen(
-            groupId = groupId,
             onEmployeeManagementClick = {
                 navController.navigate(Screen.EmployeeManagement.createRoute(groupId))
             },
