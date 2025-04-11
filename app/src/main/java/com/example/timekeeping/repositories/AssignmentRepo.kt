@@ -4,9 +4,10 @@ import android.util.Log
 import com.example.timekeeping.models.Assignment
 import com.example.timekeeping.models.Employee
 import com.google.firebase.firestore.FirebaseFirestore
+import javax.inject.Inject
 
-class AssignmentRepo(
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+class AssignmentRepo @Inject constructor(
+    private val db: FirebaseFirestore
 ) {
     fun getAssignments(employeeId: String, callback: (List<Assignment>) -> Unit) {
         db.collection("assignments")

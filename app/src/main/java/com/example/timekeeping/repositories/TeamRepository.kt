@@ -3,9 +3,10 @@ package com.example.timekeeping.repositories
 import android.util.Log
 import com.example.timekeeping.models.Team
 import com.google.firebase.firestore.FirebaseFirestore
+import javax.inject.Inject
 
-class TeamRepo(
-    private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
+class TeamRepository @Inject constructor(
+    private val firestore: FirebaseFirestore
 ) {
     fun loadTeams(groupId: String, onSuccess: (List<Team>) -> Unit) {
         firestore.collection("teams")

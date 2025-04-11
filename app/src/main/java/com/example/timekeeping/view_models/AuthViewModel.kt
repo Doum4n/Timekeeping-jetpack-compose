@@ -2,15 +2,19 @@ package com.example.timekeeping.view_models
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.timekeeping.models.Employee
 import com.example.timekeeping.repositories.AuthRepository
 import com.example.timekeeping.ui.auth.state.LoginUiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AuthViewModel(
-    private val authRepository: AuthRepository = AuthRepository()
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val authRepository: AuthRepository
 ) : ViewModel() {
     private val _loginUiState = MutableStateFlow(LoginUiState())
     val loginUiState: StateFlow<LoginUiState> = _loginUiState
@@ -40,16 +44,18 @@ class AuthViewModel(
         }
     }
 
-    // Đăng ký
     fun registerUser(fullName: String, email: String, password: String) = viewModelScope.launch {
         _registerState.value = RegisterState.Loading
         val result = authRepository.registerUser(fullName, email, password)
-        _registerState.value = if (result.isSuccess) {
-            RegisterState.Success(result.getOrDefault(""))
+
+        if (result.isSuccess) {
+            val userId = result.getOrNull() ?: return@launch
+            _registerState.value = RegisterState.Success(userId)
         } else {
-            RegisterState.Error(result.exceptionOrNull()?.message ?: "Đã xảy ra lỗi")
+            _registerState.value = RegisterState.Error(result.exceptionOrNull()?.message ?: "Đã xảy ra lỗi")
         }
     }
+
 
     fun onEmailChange(newEmail: String) {
         _loginUiState.value = _loginUiState.value.copy(email = newEmail)

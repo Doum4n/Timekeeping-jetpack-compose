@@ -6,15 +6,21 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.repositories.EmployeeRepository
 import com.example.timekeeping.utils.sendNotification
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class EmployeeViewModel(
-    private val groupId: String = "",
-    private val employeeRepository: EmployeeRepository = EmployeeRepository()
+@HiltViewModel
+class EmployeeViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+    private val employeeRepository: EmployeeRepository
 ) : ViewModel() {
+
+    val groupId: String = savedStateHandle.get<String>("groupId") ?: ""
 
     val employees = mutableStateOf<List<Employee>>(emptyList())
     val pendingEmployees = mutableStateOf<List<Employee>>(emptyList())
@@ -25,8 +31,8 @@ class EmployeeViewModel(
     }
 
     private fun load(){
-        loadEmployees(groupId)
-        loadPendingEmployees(groupId)
+        loadEmployees()
+        loadPendingEmployees()
         loadUnlinkedEmployees()
     }
 
@@ -34,25 +40,25 @@ class EmployeeViewModel(
         employeeRepository.saveEmployee(employee, onSuccess, onFailure)
     }
 
-    fun saveEmployees(employees: List<Employee>, groupId: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+    fun saveEmployees(employees: List<Employee>, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         employeeRepository.saveEmployees(employees, groupId, onSuccess, onFailure)
     }
 
     // Load accepted employees for the given groupId
-    private fun loadEmployees(groupId: String) {
+    private fun loadEmployees() {
         employeeRepository.loadEmployees(groupId) { employeesList ->
             employees.value = employeesList
         }
     }
 
-    fun requestJoinGroup(groupId: String, employeeId: String, context: Context) {
+    fun requestJoinGroup(employeeId: String) {
         employeeRepository.requestJoinGroup(groupId, employeeId)
 
         //sendNotification(context)
     }
 
     // Load pending employees (this method can be implemented further)
-    private fun loadPendingEmployees(groupId: String) {
+    private fun loadPendingEmployees() {
         employeeRepository.loadPendingEmployees(groupId) { pendingList ->
            pendingEmployees.value = pendingList
         }
@@ -76,8 +82,8 @@ class EmployeeViewModel(
 
     fun searchEmployeesByName(searchText: String) {
         if (searchText.isEmpty()) {
-            loadEmployees(groupId)
-            loadPendingEmployees(groupId)
+            loadEmployees()
+            loadPendingEmployees()
             loadUnlinkedEmployees()
             return
         }

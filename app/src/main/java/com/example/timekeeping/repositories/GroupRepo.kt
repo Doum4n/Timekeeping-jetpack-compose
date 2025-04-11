@@ -1,11 +1,14 @@
 package com.example.timekeeping.repositories
 
 import android.util.Log
+import androidx.compose.ui.platform.LocalContext
 import com.example.timekeeping.models.Group
 import com.example.timekeeping.models.Group.Companion.fromDocument
 import com.example.timekeeping.models.Status
+import com.example.timekeeping.utils.SessionManager
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
@@ -14,23 +17,30 @@ import javax.inject.Inject
 
 class GroupRepository @Inject constructor (
     val db: FirebaseFirestore,
-    val auth: FirebaseAuth
+    val auth: FirebaseAuth,
+    val session: SessionManager
 ) {
     val currentUserId = auth.currentUser?.uid ?: ""
 
     fun loadJoinedGroups(onResult: (List<Group>) -> Unit) {
-        db.collection("employee_group")
-            .whereEqualTo("employeeId", currentUserId)
-            .whereEqualTo("status", Status.ACCEPTED.toString())
-            .addSnapshotListener { snapshot, error ->
-                error?.let {
-                    Log.e("GroupRepository", "Failed to load joined groups", it)
-                    onResult(emptyList())
-                    return@addSnapshotListener
-                }
+        session.getEmployeeReferenceByUserId(currentUserId) { employeeRef ->
+            if (employeeRef != null) {
+                db.collection("employee_group")
+                    .whereEqualTo("employeeId", employeeRef)
+                    .whereEqualTo("status", Status.ACCEPTED.toString())
+                    .addSnapshotListener { snapshot, error ->
+                        error?.let {
+                            Log.e("GroupRepository", "Failed to load joined groups", it)
+                            onResult(emptyList())
+                            return@addSnapshotListener
+                        }
 
-                snapshot?.let { processSnapshot(it, onResult) }
+                        snapshot?.let { processSnapshot(it, onResult) }
+                    }
+            } else {
+                Log.e("TAG", "Không tìm thấy employee với userId=$currentUserId")
             }
+        }
     }
 
     private fun processSnapshot(snapshot: QuerySnapshot, onResult: (List<Group>) -> Unit) {
@@ -45,7 +55,9 @@ class GroupRepository @Inject constructor (
 
         Tasks.whenAllSuccess<com.google.firebase.firestore.DocumentSnapshot>(tasks)
             .addOnSuccessListener { documents ->
-                val groups = documents.mapNotNull { it.toObject(Group::class.java) }
+                val groups = documents.mapNotNull { doc ->
+                    doc.toObject(Group::class.java)?.apply { id = doc.id }
+                }
                 onResult(groups)
                 Log.d("GroupRepository", "Loaded ${groups.size} joined groups.")
             }

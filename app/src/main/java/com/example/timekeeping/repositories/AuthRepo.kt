@@ -6,9 +6,10 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class AuthRepository(
-    private val auth: FirebaseAuth = Firebase.auth
+class AuthRepository @Inject constructor(
+    private val auth: FirebaseAuth
 ) {
 
     // Đăng nhập người dùng

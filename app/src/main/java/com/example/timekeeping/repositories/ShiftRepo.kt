@@ -4,9 +4,10 @@ import android.util.Log
 import com.example.timekeeping.models.Shift
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
+import javax.inject.Inject
 
-class ShiftRepository(
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+class ShiftRepository @Inject constructor(
+    private val db: FirebaseFirestore
 ) {
 
     // Load shifts by groupId
@@ -22,17 +23,6 @@ class ShiftRepository(
                 val shiftsList = snapshots?.documents?.mapNotNull { doc ->
                     doc.toObject(Shift::class.java)?.copy(id = doc.id) // Ensure id is updated
                 } ?: emptyList()
-
-                // temp
-                FirebaseMessaging.getInstance().subscribeToTopic("news")
-                    .addOnCompleteListener { task ->
-                        var msg = "Subscribed to topic"
-                        if (!task.isSuccessful) {
-                            msg = "Subscription failed"
-                        }
-                        Log.d("FirebaseMessaging", msg)
-                    }
-
 
                 onResult(shiftsList) // Return list of shifts
             }

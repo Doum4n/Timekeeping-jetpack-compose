@@ -2,15 +2,18 @@ package com.example.timekeeping.repositories
 
 import android.util.Log
 import com.example.timekeeping.models.Employee
+import com.example.timekeeping.models.Employee_Group
+import com.example.timekeeping.models.Role
 import com.example.timekeeping.models.Status
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.type.DateTime
 import javax.inject.Inject
 
-class EmployeeRepository (
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+class EmployeeRepository @Inject constructor (
+    private val db: FirebaseFirestore
 ) {
 
     fun loadEmployees(groupId: String, onResult: (List<Employee>) -> Unit) {
@@ -29,38 +32,41 @@ class EmployeeRepository (
         groupId: String,
         status: Status,
         onResult: (List<Employee>) -> Unit,
-    ){
+    ) {
         if (groupId.isBlank()) {
             Log.e("EmployeeRepository", "Invalid groupId: empty or null")
             return
         }
 
-        val groupRef = db.collection("groups").document(groupId)
-
-        // Lấy creatorId trước
-        groupRef.get().addOnSuccessListener { groupSnapshot ->
-            // Lấy danh sách nhân viên đã ACCEPTED trong subcollection "employees"
-            groupRef.collection("employees")
-                .whereEqualTo("status", status)
-                .get()
-                .addOnSuccessListener { querySnapshot ->
-                    val employeeList = querySnapshot.documents.map { doc ->
-                        Employee(
-                            id = doc.id,
-                            fullName = doc.getString("name") ?: "",
-                            status = status,
-                            isCreator = false,
-                        )
-                    }
-
-                    onResult(employeeList)
-                }
-                .addOnFailureListener { exception ->
+        db.collection("employee_group")
+            .whereEqualTo("groupId", db.collection("groups").document(groupId))
+            .whereEqualTo("status", status.toString())
+            .addSnapshotListener { snapshot, exception ->
+                if (exception != null) {
                     Log.e("EmployeeRepository", "Error loading employees", exception)
+                    return@addSnapshotListener
                 }
-        }.addOnFailureListener { exception ->
-            Log.e("EmployeeRepository", "Error getting group", exception)
-        }
+
+                val tasks = snapshot?.documents?.mapNotNull {
+                    it.getDocumentReference("employeeId")?.get()
+                }
+
+                if (tasks != null) {
+                    com.google.android.gms.tasks.Tasks.whenAllSuccess<com.google.firebase.firestore.DocumentSnapshot>(tasks)
+                        .addOnSuccessListener { documents ->
+                            val employees = documents.mapNotNull { doc ->
+                                Log.d("EmployeeRepository", "Loaded employee: ${doc.id}")
+                                doc.toObject(Employee::class.java)?.apply {
+                                    id = doc.id
+                                }
+                            }
+                            onResult(employees)
+                        }
+                        .addOnFailureListener { exception ->
+                            Log.e("EmployeeRepository", "Error loading employees", exception)
+                        }
+                }
+            }
     }
 
     fun saveEmployee(employee: Employee, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
@@ -96,39 +102,11 @@ class EmployeeRepository (
     }
 
     fun requestJoinGroup(groupId: String, employeeId: String) {
-        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        val employeeData = Employee(
-            userId = currentUserId,
-            status = Status.PENDING,
-            isCreator = false
-        )
 
-        db.collection("groups")
-            .document(groupId)
-            .collection("employees")
-            .document()
-            .set(employeeData)
-            .addOnSuccessListener {
-                Log.d("EmployeeRepository", "Join request sent for employeeId: $employeeId")
-            }
-            .addOnFailureListener { exception ->
-                Log.e("EmployeeRepository", "Failed to request join group", exception)
-            }
     }
 
     fun acceptJoinGroup(groupId: String, employeeId: String) {
-        val employeeRef = db.collection("groups")
-            .document(groupId)
-            .collection("employees")
-            .document(employeeId)
 
-        employeeRef.update("status", Status.ACCEPTED.toString())
-            .addOnSuccessListener {
-                Log.d("EmployeeRepository", "Employee accepted into group: $employeeId")
-            }
-            .addOnFailureListener { exception ->
-                Log.e("EmployeeRepository", "Error accepting join group", exception)
-            }
     }
 
     fun getSalaryById(
@@ -162,21 +140,22 @@ class EmployeeRepository (
         onFailure: (Exception) -> Unit
     ) {
         val batch = db.batch()
-        val groupRef = db.collection("groups").document(groupId)
 
         employees.forEach { employee ->
-            // Tạo document cho nhân viên trong subcollection "employees" của group
+            val employeeGroupRef = db.collection("employee_group").document()
             val employeeId = employee.id.ifEmpty { db.collection("employees").document().id }
-            val employeeRef = groupRef.collection("employees").document(employeeId)
+            val employeeRef = db.collection("employees").document(employeeId)
 
-            val employeeData = hashMapOf(
-                "name" to employee.fullName,
-                "status" to Status.UNAUTHORIZED.toString(),
-                "isCreator" to false
+            val employeeData = Employee_Group(
+                employeeId = employeeRef,
+                groupId = employeeGroupRef,
+                status = Status.UNAUTHORIZED,
+                isCreator = false,
+                dayJoined = Timestamp.now().toDate(),
+                role = Role.MEMBER
             )
-            batch.set(employeeRef, employeeData)
+            batch.set(employeeGroupRef, employeeData)
 
-            // Tạo document lương trong subcollection "salaries" của nhân viên
             val salaryRef = employeeRef.collection("salaries").document()
             val salaryData = hashMapOf(
                 "salaryType" to employee.salaryType,
@@ -185,6 +164,7 @@ class EmployeeRepository (
                 "approveAt" to Timestamp.now()
             )
             batch.set(salaryRef, salaryData)
+            batch.set(employeeRef, employee)
         }
 
         batch.commit()

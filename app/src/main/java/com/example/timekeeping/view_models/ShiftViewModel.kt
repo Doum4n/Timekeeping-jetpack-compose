@@ -1,23 +1,33 @@
 package com.example.timekeeping.view_models
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.example.timekeeping.models.Shift
 import com.example.timekeeping.repositories.ShiftRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class ShiftViewModel(
-    groupId: String,
-    private val shiftRepository: ShiftRepository = ShiftRepository()
+@HiltViewModel
+class ShiftViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+    private val shiftRepository: ShiftRepository
 ) : ViewModel() {
+
+    val groupId: String = savedStateHandle["groupId"] ?: ""
+    val shiftId: String = savedStateHandle["shiftId"] ?: ""
 
     private val _shifts = mutableStateOf<List<Shift>>(emptyList())
     val shifts = _shifts
 
     init {
-        loadShifts(groupId)
+        loadShifts()
+
+        Log.d("ShiftViewModel", "groupId: $groupId, shiftId: $shiftId")
     }
 
-    private fun loadShifts(groupId: String) {
+    private fun loadShifts() {
         shiftRepository.loadShifts(groupId) { shiftsList ->
             _shifts.value = shiftsList // Gán danh sách Shift vào _shifts
         }
@@ -25,13 +35,13 @@ class ShiftViewModel(
 
     fun create(shift: Shift) {
         shiftRepository.createShift(shift) {
-            loadShifts(shift.groupId) // Reload shifts after creation
+            loadShifts() // Reload shifts after creation
         }
     }
 
-    fun update(shiftId: String, shift: Shift) {
+    fun update(shift: Shift) {
         shiftRepository.updateShift(shiftId, shift) {
-            loadShifts(shift.groupId) // Reload shifts after update
+            loadShifts() // Reload shifts after update
         }
     }
 
@@ -41,7 +51,7 @@ class ShiftViewModel(
         }
     }
 
-    fun getShiftById(shiftId: String, callback: (Shift) -> Unit) {
+    fun getShiftById(callback: (Shift) -> Unit) {
         shiftRepository.getShiftById(shiftId) { shift ->
             shift?.let { callback(it) }
         }

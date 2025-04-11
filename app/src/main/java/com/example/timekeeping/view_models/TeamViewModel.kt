@@ -1,15 +1,21 @@
 package com.example.timekeeping.view_models
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.example.timekeeping.models.Shift
 import com.example.timekeeping.models.Team
-import com.example.timekeeping.repositories.TeamRepo
+import com.example.timekeeping.repositories.TeamRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class TeamViewModel(
-    private val groupId: String,
-    private val teamRepository: TeamRepo = TeamRepo()
+@HiltViewModel
+class TeamViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
+    private val teamRepository: TeamRepository
 ) : ViewModel() {
+
+    private val groupId = savedStateHandle.get<String>("groupId") ?: ""
+
     private val _teams = mutableStateOf<List<Team>>(emptyList())
     val teams = _teams
 
