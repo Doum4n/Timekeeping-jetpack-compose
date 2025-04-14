@@ -1,7 +1,12 @@
 package com.example.timekeeping.repositories
 
 import android.util.Log
+import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Team
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import javax.inject.Inject
 
@@ -50,6 +55,34 @@ class TeamRepository @Inject constructor(
             Log.e("TeamRepo", "Error deleting team", exception)
             throw exception
         }
+    }
+
+    fun getEmployees(teamId: String, callback: (List<Employee>) -> Unit) {
+        firestore.collection("teams").document(teamId).get()
+            .addOnSuccessListener { document ->
+                val members = document.get("members") as? List<DocumentReference> ?: emptyList()
+
+                // Gọi .get() cho từng DocumentReference
+                val tasks = members.map { it.get() }
+
+                // Đợi tất cả task thành công
+                Tasks.whenAllSuccess<DocumentSnapshot>(tasks)
+                    .addOnSuccessListener { documents ->
+                        val employees = documents.mapNotNull { doc ->
+                            doc.toObject(Employee::class.java)?.apply { id = doc.id }
+                        }
+                        callback(employees)
+                        Log.d("TeamRepo", "Employees loaded: $employees")
+                    }
+                    .addOnFailureListener { exception ->
+                        Log.e("TeamRepo", "Error getting employees", exception)
+                        callback(emptyList()) // để không bị crash nếu lỗi
+                    }
+            }
+            .addOnFailureListener { exception ->
+                Log.e("TeamRepo", "Error getting team", exception)
+                callback(emptyList())
+            }
     }
 
 }

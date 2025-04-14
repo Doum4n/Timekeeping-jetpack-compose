@@ -4,12 +4,14 @@ import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -20,8 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.timekeeping.models.Assignment
 import com.example.timekeeping.models.Employee
+import com.example.timekeeping.models.Team
 import com.example.timekeeping.ui.assignment.components.ScheduleCalenda
 import com.example.timekeeping.ui.assignment.utils.getDaysOfMonthExpanded
 import com.example.timekeeping.ui.assignment.utils.getDaysOfMonthShrunk
@@ -53,10 +57,10 @@ fun AssignmentScreen(
     onDone: (List<Assignment>) -> Unit,
     onBackClick: () -> Unit,
     onChooseTeamClick: () -> Unit,
-    shiftViewModel: ShiftViewModel,
-    teamViewModel: TeamViewModel,
-    employeeViewModel: EmployeeViewModel,
-    viewModel: AssignmentViewModel
+    shiftViewModel: ShiftViewModel = hiltViewModel(),
+    teamViewModel: TeamViewModel = hiltViewModel(),
+    employeeViewModel: EmployeeViewModel = hiltViewModel(),
+    viewModel: AssignmentViewModel = hiltViewModel()
 ) {
     var employees by remember { mutableStateOf(listOf<Employee>()) }
     var assignments by remember { mutableStateOf(listOf<AssignmentState>()) }
@@ -64,6 +68,7 @@ fun AssignmentScreen(
     var assignmentDates by remember { mutableStateOf(listOf<DayOfWeek>()) }
     var assignmentsId by remember { mutableStateOf(listOf("")) }
     var selectedShiftId by remember { mutableStateOf("") }
+    var selectedTeamId by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         viewModel.getAssignments { assignments ->
@@ -130,99 +135,123 @@ fun AssignmentScreen(
             )
         }
     ) { paddingValues ->
-        val expanded = remember { mutableStateOf(false) }
+        var expanded by remember { mutableStateOf(false) }
         val selectedWeekdays = remember { mutableStateListOf<DayOfWeek>() }
 
-        Column(modifier = Modifier.padding(paddingValues)) {
-
-            Text(text = "Chọn ca", modifier = Modifier.padding(16.dp))
-
-            Row (
-                modifier = Modifier.padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                shiftViewModel.shifts.value.forEach { shift ->
-                    ShiftItem(onShiftClick = { selectedShiftId = shift.id }, shift.id, shift.shiftName, shift.startTime, shift.endTime)
-                }
-            }
-
-            // Calendar Header + Expand Button
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(modifier = Modifier.weight(1f)) {
-                    CalendarHeader(state)
-                }
-                Button(onClick = { expanded.value = !expanded.value }) {
-                    Text(text = if (expanded.value) "Thu gọn" else "Mở rộng")
-                }
-            }
-
-            // Weekday Selector
-            Row(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceAround
-            ) {
-                getWeekdays().forEach { dayOfWeek ->
-                    val isChecked = assignmentDates.contains(dayOfWeek)
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            // Shift Selection
+            item {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(text = "Chọn ca", modifier = Modifier.padding(16.dp))
+                    Row(
+                        modifier = Modifier
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text(text = getShortNameFor(dayOfWeek))
-                        Checkbox(
-                            checked = isChecked,
-                            onCheckedChange = {
-                                if (isChecked) selectedWeekdays.remove(dayOfWeek)
-                                else selectedWeekdays.add(dayOfWeek)
-                            },
-                            modifier = Modifier.size(20.dp)
-                        )
+                        shiftViewModel.shifts.value.forEach { shift ->
+                            ShiftItem(
+                                onShiftClick = { selectedShiftId = shift.id },
+                                id = shift.id,
+                                shiftName = shift.shiftName,
+                                startTime = shift.startTime,
+                                endTime = shift.endTime
+                            )
+                        }
                     }
                 }
             }
 
-            // TODO
-            // Calendar Grid
-             calendarDays =
-                if (expanded.value) getDaysOfMonthExpanded(selectedWeekdays, assignmentDates)
-                else getDaysOfMonthShrunk(selectedWeekdays)
+            // Calendar Header + Expand Button + Weekdays
+            item {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            CalendarHeader(state)
+                        }
+                        Button(onClick = { expanded = !expanded }) {
+                            Text(text = if (expanded) "Thu gọn" else "Mở rộng")
+                        }
+                    }
 
+                    // Weekday Selector
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.SpaceAround
+                    ) {
+                        getWeekdays().forEach { dayOfWeek ->
+                            val isChecked = assignmentDates.contains(dayOfWeek)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(text = getShortNameFor(dayOfWeek))
+                                Checkbox(
+                                    checked = isChecked,
+                                    onCheckedChange = {
+                                        if (isChecked) selectedWeekdays.remove(dayOfWeek)
+                                        else selectedWeekdays.add(dayOfWeek)
+                                    },
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
 
-            ScheduleCalenda(calendarDays = calendarDays)
+                    // Update calendar days
+                    calendarDays =
+                        if (expanded) getDaysOfMonthExpanded(selectedWeekdays, assignmentDates)
+                        else getDaysOfMonthShrunk(selectedWeekdays)
 
-            Row (
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(text = "Chọn tổ", modifier = Modifier.padding(16.dp).weight(1f))
-                Button(onClick = { onChooseTeamClick() }) {
-                    Text(text = "Quản lý tổ")
+                    ScheduleCalenda(calendarDays = calendarDays)
                 }
             }
 
-            Row (
-                modifier = Modifier.padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                teamViewModel.teams.value.forEach { team ->
-                    TeamItem(team.name)
+            // Team Selection Section
+            item {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Chọn tổ",
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .weight(1f)
+                        )
+                        Button(onClick = { onChooseTeamClick() }) {
+                            Text(text = "Quản lý tổ")
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        teamViewModel.teams.value.forEach { team ->
+                            TeamItem(
+                                team = team,
+                                onTeamClick = { teamId -> selectedTeamId = teamId }
+                            )
+                        }
+                    }
                 }
             }
 
-            employeeViewModel.loadEmployeeByShiftId(
-                selectedShiftId,
-                onSuccess = {
-                    employees += it
-                    Log.d("AssignmentScreen", "Loaded employees: $employees")
-                }
-            )
-
-            LazyColumn {
-                items(employees) { employee ->
-                    EmployeeItem(employee)
-                }
+            // Employee list
+            items(teamViewModel.employees.value) { employee ->
+                EmployeeItem(
+                    employee = employee,
+                    calendarDays = calendarDays,
+                )
             }
         }
     }
@@ -272,22 +301,25 @@ fun ShiftItem(
 
 @Composable
 fun TeamItem(
-    teamName: String
+    team: Team,
+    onTeamClick: (String) -> Unit
 ){
     Card(
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier.padding(16.dp),
+        onClick = { onTeamClick(team.id) }
     ) {
         Box(
             modifier = Modifier.padding(16.dp)
         ){
-            Text(text = teamName)
+            Text(text = team.name)
         }
     }
 }
 
 @Composable
 fun EmployeeItem(
-    employee: Employee
+    employee: Employee,
+    calendarDays: List<CalendarDay> = listOf()
 ) {
     Card(
         modifier = Modifier.padding(16.dp)
@@ -296,6 +328,8 @@ fun EmployeeItem(
             modifier = Modifier.padding(16.dp)
         ) {
             Text(text = employee.fullName)
+            ScheduleCalenda(calendarDays = calendarDays)
         }
     }
 }
+

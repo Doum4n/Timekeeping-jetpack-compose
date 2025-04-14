@@ -25,21 +25,10 @@ object RepositoryModule {
 
     @Provides
     @Singleton
-    fun provideSessionManager(
-        @ApplicationContext context: Context
-    ): SessionManager {
-        return SessionManager(context)
-    }
-
-    @Provides
-    @Singleton
-    fun provideGroupRepository(
-        sessionManager: SessionManager
-    ): GroupRepository {
+    fun provideGroupRepository(): GroupRepository {
         return GroupRepository(
             FirebaseFirestore.getInstance(),
             FirebaseAuth.getInstance(),
-            sessionManager
         )
     }
 

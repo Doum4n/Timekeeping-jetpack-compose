@@ -32,5 +32,4 @@ class AssignmentViewModel @Inject constructor(
             assignmentId = assignmentId
         )
     }
-
 }

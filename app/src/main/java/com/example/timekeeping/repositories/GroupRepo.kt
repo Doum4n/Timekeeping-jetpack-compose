@@ -18,24 +18,23 @@ import javax.inject.Inject
 class GroupRepository @Inject constructor (
     val db: FirebaseFirestore,
     val auth: FirebaseAuth,
-    val session: SessionManager
 ) {
     val currentUserId = auth.currentUser?.uid ?: ""
 
     fun loadJoinedGroups(onResult: (List<Group>) -> Unit) {
-        session.getEmployeeReferenceByUserId(currentUserId) { employeeRef ->
+        SessionManager.getEmployeeReferenceByUserId(currentUserId) { employeeRef ->
             if (employeeRef != null) {
                 db.collection("employee_group")
                     .whereEqualTo("employeeId", employeeRef)
                     .whereEqualTo("status", Status.ACCEPTED.toString())
-                    .addSnapshotListener { snapshot, error ->
-                        error?.let {
-                            Log.e("GroupRepository", "Failed to load joined groups", it)
-                            onResult(emptyList())
-                            return@addSnapshotListener
-                        }
-
-                        snapshot?.let { processSnapshot(it, onResult) }
+                    .get()
+                    .addOnSuccessListener { snapshot ->
+                        processSnapshot(snapshot, onResult)
+                    }
+                    .addOnFailureListener {
+                        Log.e("GroupRepository", "Failed to load joined groups", it)
+                        onResult(emptyList())
+                        it.printStackTrace()
                     }
             } else {
                 Log.e("TAG", "Không tìm thấy employee với userId=$currentUserId")

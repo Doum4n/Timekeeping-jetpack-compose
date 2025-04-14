@@ -3,6 +3,7 @@ package com.example.timekeeping.view_models
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Team
 import com.example.timekeeping.repositories.TeamRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,8 +20,12 @@ class TeamViewModel @Inject constructor(
     private val _teams = mutableStateOf<List<Team>>(emptyList())
     val teams = _teams
 
+    private val _employees = mutableStateOf<List<Employee>>(emptyList())
+    val employees = _employees
+
     init {
         loadTeams()
+        getEmployees()
     }
 
     fun loadTeams() {
@@ -45,6 +50,16 @@ class TeamViewModel @Inject constructor(
     fun deleteTeam(teamId: String) {
         teamRepository.deleteTeam(teamId) {
             _teams.value = _teams.value.filter { it.id != teamId }
+        }
+    }
+
+    fun getEmployees(teamId: String? = "DeatdekLGJyLxCbdHV6h") {
+        teamId?.let {
+            teamRepository.getEmployees(it) { result ->
+                _employees.value = result
+            }
+        } ?: run {
+            _employees.value = emptyList() // Không có team → không có nhân viên
         }
     }
 }

@@ -28,11 +28,7 @@ fun NavGraphBuilder.addScheduleScreen(navController: NavHostController) {
             onBackClick = { navController.popBackStack() },
             onDone = {},
             onChooseTeamClick = { navController.navigate(Screen.TeamManagement.createRoute(groupId)) },
-            shiftViewModel = hiltViewModel(),
-            teamViewModel = hiltViewModel(),
-            viewModel = hiltViewModel(),
             state = CalendarState(),
-            employeeViewModel = hiltViewModel()
         )
     }
 }

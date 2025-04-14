@@ -23,3 +23,7 @@ import java.util.Locale
 //            onResult(null)
 //        }
 //}
+
+fun String.convertToReference(collectionName: String): DocumentReference {
+    return FirebaseFirestore.getInstance().collection(collectionName).document(this)
+}

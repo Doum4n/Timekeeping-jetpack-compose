@@ -5,7 +5,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -26,6 +29,7 @@ fun ScheduleCalenda(
         columns = GridCells.Fixed(7),
         modifier = Modifier
             .padding(16.dp)
+            .heightIn(max = 300.dp)
             .fillMaxWidth(),
         userScrollEnabled = false
     ) {
