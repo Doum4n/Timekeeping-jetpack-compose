@@ -26,7 +26,6 @@ fun NavGraphBuilder.addScheduleScreen(navController: NavHostController) {
         val employeeId = it.arguments?.getString("employeeId") ?: ""
         AssignmentScreen(
             onBackClick = { navController.popBackStack() },
-            onDone = {},
             onChooseTeamClick = { navController.navigate(Screen.TeamManagement.createRoute(groupId)) },
             state = CalendarState(),
         )

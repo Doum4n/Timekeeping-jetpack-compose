@@ -13,9 +13,9 @@ class AssignmentViewModel @Inject constructor(
     private val assignmentRepo: AssignmentRepo
 ): ViewModel() {
 
-    private val employeeId: String = savedStateHandle["employeeId"] ?: ""
+//    private val employeeId: String = savedStateHandle["employeeId"] ?: ""
 
-    fun getAssignments(callback: (List<Assignment>) -> Unit) {
+    fun getAssignments(employeeId: String, callback: (List<Assignment>) -> Unit) {
         assignmentRepo.getAssignments(
             employeeId = employeeId,
             callback = callback

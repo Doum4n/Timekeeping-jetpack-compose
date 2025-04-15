@@ -1,7 +1,6 @@
 package com.example.timekeeping.ui.assignment.utils
 
 import android.annotation.SuppressLint
-import com.example.timekeeping.ui.assignment.CalendarDay
 import java.time.DayOfWeek
 import java.time.LocalDate
 
@@ -25,8 +24,9 @@ fun getShortNameFor(dayOfWeek: DayOfWeek): String {
 
 @SuppressLint("SimpleDateFormat")
 fun getDaysOfMonthExpanded(
+    selectedDays: List<String>,
     selectedWeekdays: List<DayOfWeek>,
-    assignedDates: List<DayOfWeek>
+    assignedDates: List<Int>
 ): List<CalendarDay> {
     val now = LocalDate.now()
     val firstDay = now.withDayOfMonth(1)
@@ -42,15 +42,19 @@ fun getDaysOfMonthExpanded(
 
     for (day in 1..lastDay.dayOfMonth) {
         val date = now.withDayOfMonth(day)
-        val isSelected = selectedWeekdays.contains(date.dayOfWeek)
-        val isAssigned = assignedDates.contains(date.dayOfWeek)
+        val isSelected = selectedWeekdays.contains(date.dayOfWeek).xor(selectedDays.contains(date.dayOfMonth.toString()))
+        val isAssigned = assignedDates.contains(date.dayOfMonth)
         days.add(CalendarDay(day.toString(), isSelected, isAssigned))
     }
 
     return days
 }
 
-fun getDaysOfMonthShrunk(selectedWeekdays: List<DayOfWeek>): List<CalendarDay> {
+fun getDaysOfMonthShrunk(
+    selectedDays: List<String>,
+    selectedWeekdays: List<DayOfWeek>,
+    assignedDates: List<Int>
+): List<CalendarDay> {
     val now = LocalDate.now()
     val days = mutableListOf<CalendarDay>()
     val firstDay = now.withDayOfMonth(1)
@@ -60,10 +64,11 @@ fun getDaysOfMonthShrunk(selectedWeekdays: List<DayOfWeek>): List<CalendarDay> {
         days.add(CalendarDay("", false))
     }
 
-    for (i in 1..6) {
-        val date = now.plusDays(i.toLong())
-        val isSelected = selectedWeekdays.contains(date.dayOfWeek)
-        days.add(CalendarDay(i.toString(), isSelected))
+    for (day in 1..6) {
+        val date = now.withDayOfMonth(day)
+        val isSelected = selectedWeekdays.contains(date.dayOfWeek).xor(selectedDays.contains(date.dayOfMonth.toString()))
+        val isAssigned = assignedDates.contains(date.dayOfMonth)
+        days.add(CalendarDay(day.toString(), isSelected))
     }
 
     return days
