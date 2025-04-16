@@ -101,4 +101,8 @@ class EmployeeViewModel @Inject constructor(
     fun loadEmployeeByShiftId(shiftId: String, onSuccess: (List<Employee>) -> Unit){
         employeeRepository.loadEmployeeByShiftId(shiftId, onSuccess)
     }
+
+    fun updateEmployee(employee: Employee, salary: Salary) {
+        employeeRepository.updateEmployee(employee, salary)
+    }
 }

@@ -120,7 +120,9 @@ class EmployeeRepository @Inject constructor (
         db.collection("salaries").whereEqualTo("employeeId", employeeId)
             .whereEqualTo("groupId", groupId).get()
             .addOnSuccessListener { document ->
-                val salary = document.toObjects(Salary::class.java).firstOrNull()
+                val salary = document.toObjects(Salary::class.java).firstOrNull().apply {
+                    this?.id = document.documents.first().id
+                }
                 if (salary != null) {
                     onSuccess(salary)
                 } else {
@@ -193,4 +195,9 @@ class EmployeeRepository @Inject constructor (
             }
     }
 
+    fun updateEmployee(employee: Employee, salary: Salary) {
+        db.collection("employees").document(employee.id).set(employee.toMap())
+        db.collection("salaries").document(salary.id).set(salary)
+
+    }
 }

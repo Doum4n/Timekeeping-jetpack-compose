@@ -46,8 +46,12 @@ fun EmployeeInfoScreen(
     }
 
     val pages = listOf(
-        EmployeeInfoPage.PersonalInfo(employee),
-        EmployeeInfoPage.SalaryInfo(salary)
+        EmployeeInfoPage.PersonalInfo(employee, onEmployeeChange = {
+            employee = it
+        }),
+        EmployeeInfoPage.SalaryInfo(salary, onSalaryChange = {
+            salary = it
+        })
     )
 
     Scaffold(
@@ -55,7 +59,10 @@ fun EmployeeInfoScreen(
             TopBarWithDoneAction(
                 title = "Thông tin nhân viên",
                 onBackClick = onBackClick,
-                onDoneClick = { /* xử lý khi nhấn nút Done */ }
+                onDoneClick = {
+                    employeeViewModel.updateEmployee(employee, salary)
+                    onBackClick()
+                }
             )
         }
     ) { paddingValues ->

@@ -25,8 +25,8 @@ fun EmployeeInfoPageScreen(
         onTabSelected = onTabSelected,
         employeeInfoByPage = pages.map { page ->
             when (page) {
-                is EmployeeInfoPage.PersonalInfo -> { { PersonalInfoScreen(page.employee) } }
-                is EmployeeInfoPage.SalaryInfo -> { { SalaryInfoScreen(page.salary) } }
+                is EmployeeInfoPage.PersonalInfo -> { { PersonalInfoScreen(page.employee, page.onEmployeeChange) } }
+                is EmployeeInfoPage.SalaryInfo -> { { SalaryInfoScreen(page.salary, page.onSalaryChange) } }
             }
         }
     )
