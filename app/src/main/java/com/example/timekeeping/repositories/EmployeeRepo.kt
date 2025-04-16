@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Employee_Group
 import com.example.timekeeping.models.Role
+import com.example.timekeeping.models.Salary
 import com.example.timekeeping.models.Status
 import com.example.timekeeping.utils.convertToReference
 import com.google.firebase.Timestamp
@@ -113,24 +114,23 @@ class EmployeeRepository @Inject constructor (
     fun getSalaryById(
         employeeId: String,
         groupId: String,
-        onSuccess: (Double) -> Unit,
+        onSuccess: (Salary) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        db.collection("groups")
-            .document(groupId)
-            .collection("employees")
-            .document(employeeId)
-            .collection("salaries").get().addOnSuccessListener { querySnapshot ->
-                if (querySnapshot.isEmpty) {
-                    onFailure(Exception("No salary found for the employee"))
-                    return@addOnSuccessListener
+        db.collection("salaries").whereEqualTo("employeeId", employeeId)
+            .whereEqualTo("groupId", groupId).get()
+            .addOnSuccessListener { document ->
+                val salary = document.toObjects(Salary::class.java).firstOrNull()
+                if (salary != null) {
+                    onSuccess(salary)
+                } else {
+                    onFailure(Exception("Salary not found"))
+                    Log.e("EmployeeRepository", "Salary not found for employeeId: $employeeId and groupId: $groupId")
                 }
-                val salary = querySnapshot.documents.first().getDouble("salary") ?: 0.0
-                Log.d("EmployeeRepository", "Loaded salary: $salary")
-                onSuccess(salary)
-            }
-            .addOnFailureListener { exception ->
+            }.addOnFailureListener { exception ->
                 onFailure(exception)
+                Log.e("EmployeeRepository", "Error loading salary", exception)
+                exception.printStackTrace()
             }
     }
 
@@ -157,20 +157,40 @@ class EmployeeRepository @Inject constructor (
             )
             batch.set(employeeGroupRef, employeeData)
 
-            val salaryRef = employeeRef.collection("salaries").document()
+            val salaryRef = db.collection("salaries").document()
             val salaryData = hashMapOf(
+                "employeeId" to employeeId,
+                "groupId" to groupId,
                 "salaryType" to employee.salaryType,
                 "salary" to employee.salary,
                 "createdAt" to Timestamp.now(),
                 "approveAt" to Timestamp.now()
             )
             batch.set(salaryRef, salaryData)
-            batch.set(employeeRef, employee)
+            batch.set(employeeRef, employee.toMap())
         }
 
         batch.commit()
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { onFailure(it) }
+    }
+
+    fun getEmployeeById(
+        employeeId: String,
+        onSuccess: (Employee) -> Unit,
+        onFailure: (Exception) -> Unit
+    ) {
+        db.collection("employees").document(employeeId).get()
+            .addOnSuccessListener { document ->
+                val employee = document.toObject(Employee::class.java)
+                if (employee != null) {
+                    employee.id = document.id
+                    onSuccess(employee)
+                    Log.d("EmployeeRepository", "Loaded employee: $employee")
+                } else {
+                    onFailure(Exception("Employee not found"))
+                }
+            }
     }
 
 }

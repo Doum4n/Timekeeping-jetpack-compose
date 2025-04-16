@@ -9,6 +9,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.example.timekeeping.models.Employee
+import com.example.timekeeping.models.Salary
 import com.example.timekeeping.repositories.EmployeeRepository
 import com.example.timekeeping.utils.sendNotification
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,6 +35,10 @@ class EmployeeViewModel @Inject constructor(
         loadEmployees()
         loadPendingEmployees()
         loadUnlinkedEmployees()
+    }
+
+    fun getEmployeeById(employeeId: String, onSuccess: (Employee) -> Unit, onFailure: (Exception) -> Unit) {
+        employeeRepository.getEmployeeById(employeeId, onSuccess, onFailure)
     }
 
     fun saveEmployee(employee: Employee, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
@@ -75,7 +80,7 @@ class EmployeeViewModel @Inject constructor(
         employeeRepository.acceptJoinGroup(groupId, employeeId)
     }
 
-    fun getSalaryById(employeeId: String,groupId: String, onSuccess: (Double) -> Unit, onFailure: (Exception) -> Unit){
+    fun getSalaryById(employeeId: String,groupId: String, onSuccess: (Salary) -> Unit, onFailure: (Exception) -> Unit){
         load()
         employeeRepository.getSalaryById(employeeId, groupId, onSuccess, onFailure)
     }

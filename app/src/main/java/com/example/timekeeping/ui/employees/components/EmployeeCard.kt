@@ -1,4 +1,4 @@
-package com.example.timekeeping.ui.employees
+package com.example.timekeeping.ui.employees.components
 
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -10,9 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,12 +34,12 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.example.timekeeping.R
 import com.example.timekeeping.models.Employee
-import com.example.timekeeping.view_models.EmployeeViewModel
 
 @Composable
 fun EmployeeCard(
     employee: Employee,
     isPending: Boolean = false,
+    onClick: (String) -> Unit = {},
     onLinkClick: () -> Unit = {},
     onAcceptClick: () -> Unit = {},
     onRejectClick: () -> Unit = {}
@@ -46,19 +50,7 @@ fun EmployeeCard(
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(employee.id) {
-        // Gọi hàm bất đồng bộ để lấy lương
-//        try {
-//        EmployeeViewModel().getSalaryById(employee.id, groupId, onSuccess = { fetchedSalary ->
-//            salary = fetchedSalary
-//            isLoading = false
-//        }, onFailure = { exception ->
-//            errorMessage = "Error: ${exception.message}"
-//            isLoading = false
-//        })
-////        } catch (e: Exception) {
-////            errorMessage = "Exception: ${e.message}"
-////            isLoading = false
-////        }
+
     }
 
     Card(
@@ -78,17 +70,34 @@ fun EmployeeCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_background),
-                    contentDescription = "Avatar",
+                Row (
                     modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
-                )
-                Text(
-                    text = employee.fullName,
-                    style = MaterialTheme.typography.titleMedium
-                )
+                        .size(48.dp)
+                        .weight(1f),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_launcher_background),
+                        contentDescription = "Avatar",
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                    )
+                    Text(
+                        text = employee.fullName,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                IconButton(
+                    onClick = {onClick(employee.id)},
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "Settings",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
 
             Column(

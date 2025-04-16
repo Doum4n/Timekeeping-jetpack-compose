@@ -9,7 +9,6 @@ import androidx.navigation.navArgument
 import com.example.timekeeping.models.Team
 import com.example.timekeeping.navigation.Screen
 import com.example.timekeeping.ui.teams.TeamInputFormScreen
-import com.example.timekeeping.view_models.EmployeeViewModel
 import com.example.timekeeping.view_models.TeamViewModel
 
 fun NavGraphBuilder.addTeamFormScreen(navController: NavController) {

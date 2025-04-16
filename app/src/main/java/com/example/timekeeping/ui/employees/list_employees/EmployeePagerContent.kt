@@ -1,4 +1,4 @@
-package com.example.timekeeping.ui.employees
+package com.example.timekeeping.ui.employees.list_employees
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,8 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.timekeeping.models.Employee
-import com.example.timekeeping.view_models.EmployeeViewModel
+import com.example.timekeeping.ui.employees.ApprovalScreen
+import com.example.timekeeping.ui.employees.MembersScreen
+import com.example.timekeeping.ui.employees.UnlinkedEmployeesScreen
 import kotlinx.coroutines.launch
 
 @Composable
@@ -20,7 +21,8 @@ fun EmployeePagerContent(
     pages: List<EmployeePage>,
     groupId: String,
     currentPage: Int,
-    onTabSelected: (Int) -> Unit
+    onTabSelected: (Int) -> Unit,
+    onEmployeeClick: (String) -> Unit
 ) {
     val tabs = listOf("Chưa liên kết", "Thành viên", "Xét duyệt")
 
@@ -32,7 +34,9 @@ fun EmployeePagerContent(
             {
                 when (page) {
                     is EmployeePage.Unlinked -> UnlinkedEmployeesScreen(page.employees, groupId)
-                    is EmployeePage.Members -> MembersScreen(page.employees, groupId)
+                    is EmployeePage.Members -> MembersScreen(page.employees, groupId){
+                        onEmployeeClick(it)
+                    }
                     is EmployeePage.Approval -> ApprovalScreen(
                         pendingEmployees = page.employees,
                         groupId = groupId,

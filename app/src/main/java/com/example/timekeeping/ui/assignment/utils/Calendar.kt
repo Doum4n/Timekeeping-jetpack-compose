@@ -17,7 +17,7 @@ data class CalendarDay(
     val isAssigned: Boolean = false
 )
 
-sealed class Calendar {
+sealed class Calendar  {
     class Shared(
         val selectedDays: MutableList<String>,
         val selectedWeekdays: MutableList<DayOfWeek>,
@@ -40,7 +40,7 @@ sealed class Calendar {
         val calendarByEmployee: MutableMap<String, SnapshotStateList<CalendarDay>>
     ) : Calendar() {
 
-        fun selectDay(day: CalendarDay) {
+         fun selectDay(day: CalendarDay) {
             val calendar = calendarByEmployee[employeeId] ?: return
 
             val index = calendar.indexOfFirst { it.day == day.day }
