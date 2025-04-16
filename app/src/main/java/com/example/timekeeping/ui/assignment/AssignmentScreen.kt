@@ -17,6 +17,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.timekeeping.models.Assignment
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Team
+import com.example.timekeeping.ui.assignment.components.EmployeeItem
 import com.example.timekeeping.ui.assignment.components.ScheduleCalenda
 import com.example.timekeeping.ui.assignment.components.ShiftSection
 import com.example.timekeeping.ui.assignment.components.TeamSection
@@ -24,6 +25,7 @@ import com.example.timekeeping.ui.assignment.utils.Calendar
 import com.example.timekeeping.ui.assignment.utils.CalendarDay
 import com.example.timekeeping.ui.assignment.utils.getDaysOfMonthExpanded
 import com.example.timekeeping.ui.assignment.utils.getDaysOfMonthShrunk
+import com.example.timekeeping.ui.assignment.utils.isEmployeeCalendarModified
 import com.example.timekeeping.ui.calender.CalendarState
 import com.example.timekeeping.view_models.AssignmentViewModel
 import com.example.timekeeping.view_models.ShiftViewModel
@@ -54,11 +56,10 @@ fun AssignmentScreen(
     var isSharedCalendar by remember { mutableStateOf(true) }
     val selectedDays = remember { mutableStateListOf<String>() }
     var sharedCalendarDays by remember { mutableStateOf(listOf<CalendarDay>()) }
-    var assignmentStates = remember {  mutableStateMapOf<String, SnapshotStateList<String>>() }
+    val assignmentStates = remember {  mutableStateMapOf<String, SnapshotStateList<String>>() }
 
     var calendarByEmployee = remember { mutableStateMapOf<String, SnapshotStateList<CalendarDay>>() }
     val weekdayByEmployee = remember { mutableStateMapOf<String, SnapshotStateList<DayOfWeek>>() }
-    val CalendaByEmployee = remember { mutableStateMapOf<String, SnapshotStateList<String>>() }
 
     val selectedWeekdays = remember { mutableStateListOf<DayOfWeek>() }
     var assignmentDates by remember { mutableStateOf(listOf<Int>()) }
@@ -67,8 +68,14 @@ fun AssignmentScreen(
 
     var selectedShift by remember { mutableStateOf<String?>(null) }
 
+    val initialCalendarByEmployee = remember { mutableStateMapOf<String, List<CalendarDay>>() } // Dùng List để tránh bị mutate
+
+    val employees = teamViewModel.employees.collectAsState().value
+
+    val employeeId_assignmentId = remember { mutableStateMapOf<String, String>() }
+
     // Load assignment dates
-    LaunchedEffect(Unit) {
+    LaunchedEffect(employees) {
         teamViewModel.employees.value.forEach {
             viewModel.getAssignments(it.id) { assignments ->
                 val currentMonth = YearMonth.now()
@@ -76,13 +83,17 @@ fun AssignmentScreen(
                     it.id,
                     {
                         assignments
-                        .flatMap { it.dates }
-                        .map { day -> currentMonth.atDay(day).dayOfMonth.toString() }
+                        .flatMap {  it.dates }
+                        .map { date -> currentMonth.atDay(date).dayOfMonth.toString()
+                    }
                         .toMutableStateList()
                     }
                 )
                 assignmentDates = assignmentStates[it.id]?.map { it.toInt() } ?: listOf()
-                Log.d("AssignmentScreen", "assignmentDates: $assignmentDates")
+
+                initialCalendarByEmployee[it.id] = getDaysOfMonthExpanded(selectedDays, selectedWeekdays, assignmentStates[it.id]?.map { it.toInt() } ?: listOf())
+
+                employeeId_assignmentId[it.id] = assignments.firstOrNull()?.id ?: ""
             }
         }
     }
@@ -108,11 +119,23 @@ fun AssignmentScreen(
                 actions = {
                     IconButton(onClick = {
                         calendarByEmployee.forEach({ assignment ->
-                            viewModel.addAssignment(Assignment(
-                                employeeId = assignment.key,
-                                shiftId = selectedShift!!,
-                                dates = assignment.value.filter { it.day.isNotBlank() && it.isSelected }.map { it.day.toInt() }.toList()
-                            ))
+                            if(isEmployeeCalendarModified(assignment.key, initialCalendarByEmployee, calendarByEmployee)) {
+                                viewModel.updateAssignment(
+                                    employeeId_assignmentId[assignment.key]!!,
+                                    Assignment(
+                                    employeeId = assignment.key,
+                                    shiftId = selectedShift!!,
+                                    dates = assignment.value.filter { it.day.isNotBlank() && it.isSelected || it.isAssigned }.map { it.day.toInt() }.toList()
+                                ))
+                            }else{
+                                viewModel.addAssignment(
+                                    Assignment(
+                                        employeeId = assignment.key,
+                                        shiftId = selectedShift!!,
+                                        dates = assignment.value.filter { it.day.isNotBlank() && it.isSelected || it.isAssigned }.map { it.day.toInt() }.toList()
+                                    )
+                                )
+                            }
                         })
                     }) {
                         Icon(Icons.Default.Done, contentDescription = "Done")
@@ -162,8 +185,10 @@ fun AssignmentScreen(
 
             items(teamViewModel.employees.value) { employee ->
 
-
-                calendarByEmployee[employee.id] = sharedCalendarDays.map { it.copy() }.toMutableStateList()
+                if(isSharedCalendar)
+                    calendarByEmployee[employee.id] = sharedCalendarDays.map { it.copy() }.toMutableStateList()
+                else
+                    calendarByEmployee[employee.id] = getDaysOfMonthExpanded(selectedDays, selectedWeekdays, assignmentStates[employee.id]!!.map { it.toInt() }).map { it.copy() }.toMutableStateList()
 
                 weekdayByEmployee[employee.id] = selectedWeekdays.toList().toMutableStateList()
 
@@ -194,93 +219,3 @@ fun AssignmentScreen(
         }
     }
 }
-
-
-@Composable
-fun ShiftItem(
-    onShiftClick: (String) -> Unit,
-    id: String,
-    shiftName: String,
-    startTime: String,
-    endTime: String,
-){
-    Card(
-        onClick = { onShiftClick(id) },
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(text = shiftName)
-            Text(text = "$startTime - $endTime")
-        }
-    }
-}
-
-@Composable
-fun TeamItem(
-    team: Team,
-    onTeamClick: (String) -> Unit
-){
-    Card(
-        modifier = Modifier.padding(16.dp),
-        onClick = { onTeamClick(team.id) }
-    ) {
-        Box(
-            modifier = Modifier.padding(16.dp)
-        ){
-            Text(text = team.name)
-        }
-    }
-}
-
-@Composable
-fun EmployeeItem(
-    state: CalendarState,
-    employee: Employee,
-    calendar: Calendar.Individual,
-    onSharedCalendarClick: () -> Unit = {},
-    onCalendarByEmployeeClick: () -> Unit = {},
-    expanded: Boolean = false,
-    onClick: (CalendarDay) -> Unit = {},
-    onWeekdayToggle: (DayOfWeek) -> Unit = {},
-    isEnableToggleWeekday: Boolean = true
-) {
-    Card(
-        modifier = Modifier.padding(16.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                Text(text = employee.fullName)
-                Button(
-                    modifier = Modifier.wrapContentSize(),
-                    onClick = onSharedCalendarClick
-                ) {
-                    Text(text = "Phân theo tổ")
-                }
-                Button(
-                    modifier = Modifier.wrapContentSize(),
-                    onClick = onCalendarByEmployeeClick
-                ) {
-                    Text(text = "Phân theo cá nhân")
-                }
-            }
-
-            ScheduleCalenda(
-                state = state,
-                expanded = expanded,
-                calendar = calendar,
-                onClick = { clickedDay ->
-                    onClick(clickedDay)
-                },
-                onWeekdayToggle = { onWeekdayToggle(it) },
-                enableToggleWeekday = isEnableToggleWeekday
-            )
-
-        }
-    }
-}
-

@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.timekeeping.models.Team
-import com.example.timekeeping.ui.assignment.TeamItem
 
 @Composable
 fun TeamSection(

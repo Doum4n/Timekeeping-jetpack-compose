@@ -3,6 +3,7 @@ package com.example.timekeeping.ui.teams
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -92,6 +93,23 @@ fun TeamInputFormScreen(
                     EmployeeItem(
                         employee,
                         onCheckedChange = { employeeId -> 
+                            if (employees.contains(employeeId)) {
+                                employees -= employeeId
+                            } else {
+                                employees += employeeId
+                            }
+                        }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            LazyColumn {
+                items(viewModel.unlinkedEmployees.value) { employee ->
+                    EmployeeItem(
+                        employee,
+                        onCheckedChange = { employeeId ->
                             if (employees.contains(employeeId)) {
                                 employees -= employeeId
                             } else {

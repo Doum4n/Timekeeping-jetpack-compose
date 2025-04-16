@@ -74,3 +74,15 @@ fun getDaysOfMonthShrunk(
     return days
 }
 
+fun isEmployeeCalendarModified(employeeId: String, initialCalendarByEmployee: Map<String, List<CalendarDay>>, calendarByEmployee: Map<String, List<CalendarDay>>): Boolean {
+    val original = initialCalendarByEmployee[employeeId]
+    val current = calendarByEmployee[employeeId]
+
+    // Nếu một trong hai không tồn tại thì coi như có thay đổi
+    if (original == null || current == null || original.size != current.size) return true
+
+    return original.zip(current).any { (orig, curr) ->
+        orig.isSelected != curr.isSelected ||
+                orig.isAssigned != curr.isAssigned
+    }
+}

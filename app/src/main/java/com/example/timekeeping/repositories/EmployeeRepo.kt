@@ -5,6 +5,7 @@ import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Employee_Group
 import com.example.timekeeping.models.Role
 import com.example.timekeeping.models.Status
+import com.example.timekeeping.utils.convertToReference
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldPath
@@ -148,7 +149,7 @@ class EmployeeRepository @Inject constructor (
 
             val employeeData = Employee_Group(
                 employeeId = employeeRef,
-                groupId = employeeGroupRef,
+                groupId = groupId.convertToReference("groups"),
                 status = Status.UNAUTHORIZED,
                 isCreator = false,
                 dayJoined = Timestamp.now().toDate(),

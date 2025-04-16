@@ -24,7 +24,7 @@ sealed class Calendar {
         val calendarDay: List<CalendarDay>,
     ) : Calendar() {
         fun selectDay(day: CalendarDay) {
-            if (day.isSelected) selectedDays.remove(day.day)
+            if (day.isSelected.xor(day.isAssigned)) selectedDays.remove(day.day)
             else selectedDays.add(day.day)
         }
 
@@ -46,8 +46,10 @@ sealed class Calendar {
             val index = calendar.indexOfFirst { it.day == day.day }
             if (index != -1) {
                 val current = calendar[index]
-                val updated = current.copy(isSelected = !current.isSelected)
-                calendar[index] = updated
+                calendar[index] = current.copy(
+                    isSelected = !current.isSelected,
+                    isAssigned = !current.isSelected
+                )
             }
         }
 

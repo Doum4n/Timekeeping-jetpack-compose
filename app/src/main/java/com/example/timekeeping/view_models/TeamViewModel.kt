@@ -7,6 +7,8 @@ import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Team
 import com.example.timekeeping.repositories.TeamRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 @HiltViewModel
@@ -20,8 +22,8 @@ class TeamViewModel @Inject constructor(
     private val _teams = mutableStateOf<List<Team>>(emptyList())
     val teams = _teams
 
-    private val _employees = mutableStateOf<List<Employee>>(emptyList())
-    val employees = _employees
+    private val _employees = MutableStateFlow<List<Employee>>(emptyList())
+    val employees: StateFlow<List<Employee>> = _employees
 
     init {
         loadTeams()

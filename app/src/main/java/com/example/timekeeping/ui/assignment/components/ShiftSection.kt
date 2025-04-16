@@ -8,7 +8,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.timekeeping.ui.assignment.ShiftItem
 import com.example.timekeeping.view_models.ShiftViewModel
 
 @Composable
