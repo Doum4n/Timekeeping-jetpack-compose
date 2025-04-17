@@ -25,7 +25,7 @@ fun NavGraphBuilder.addGroupScreen(navController: NavHostController) {
                 navController.navigate(Screen.ShiftManagement.createRoute(groupId))
             },
             onCheckInClick = {
-                navController.navigate(Screen.CheckIn.createRoute(groupId))
+                navController.navigate(Screen.CheckInManagement.createRoute(groupId))
             },
             onSettingsClick = {
                 navController.navigate(Screen.GroupSettings.createRoute(groupId))

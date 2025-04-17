@@ -3,6 +3,8 @@ package com.example.timekeeping.repositories
 import android.util.Log
 import com.example.timekeeping.models.Assignment
 import com.example.timekeeping.models.Employee
+import com.example.timekeeping.utils.convertToReference
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import javax.inject.Inject
 

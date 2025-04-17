@@ -1,7 +1,11 @@
 package com.example.timekeeping.repositories
 
 import android.util.Log
+import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Shift
+import com.example.timekeeping.utils.convertToReference
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import javax.inject.Inject
@@ -59,5 +63,26 @@ class ShiftRepository @Inject constructor(
             val shift = document.toObject(Shift::class.java)
             callback(shift)
         }
+    }
+
+    fun loadEmployees(shiftId: String, onResult: (List<Employee>) -> Unit) {
+        db.collection("assignments")
+            .whereEqualTo("shiftId", shiftId.convertToReference("shifts"))
+            .get()
+            .addOnSuccessListener { assignments ->
+                val tasks = assignments?.documents?.mapNotNull {
+                    it.getDocumentReference("employeeId")?.get()
+                }
+                Tasks.whenAllSuccess<DocumentSnapshot>(tasks).addOnSuccessListener { documents ->
+                    val employees = documents.mapNotNull { doc ->
+                        doc.toObject(Employee::class.java)?.apply {
+                            id = doc.id
+                        }
+                    }
+                    onResult(employees)
+                }
+            }.addOnFailureListener { e ->
+                Log.e("ShiftRepository", "Load employees failed", e)
+            }
     }
 }

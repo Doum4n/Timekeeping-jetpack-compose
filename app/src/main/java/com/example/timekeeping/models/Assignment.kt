@@ -1,6 +1,8 @@
 package com.example.timekeeping.models
 
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.Exclude
+import com.google.firebase.firestore.FirebaseFirestore
 import java.time.Month
 import java.time.Year
 
@@ -8,8 +10,8 @@ import java.time.Year
 data class Assignment(
     @Exclude
     val id: String = "",
-    val shiftId: String = "",
-    val employeeId: String = "",
+    val shiftId: DocumentReference = FirebaseFirestore.getInstance().collection("shifts").document(),
+    val employeeId: DocumentReference = FirebaseFirestore.getInstance().collection("employees").document(),
     val teamId: String = "",
     val month: Month = Month.JANUARY,
     val year: Int = Year.now().value,

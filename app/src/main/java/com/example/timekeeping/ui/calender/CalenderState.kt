@@ -13,13 +13,16 @@ class CalendarState(
 ) {
     var selectedDate by mutableStateOf(initialDate)
     var visibleMonth by mutableStateOf(YearMonth.from(initialDate))
+    var visibleDate by mutableStateOf(initialDate)
 
     fun nextMonth() {
         visibleMonth = visibleMonth.plusMonths(1)
+        visibleDate = visibleDate.plusDays(1)
     }
 
     fun prevMonth() {
         visibleMonth = visibleMonth.minusMonths(1)
+        visibleDate = visibleDate.minusDays(1)
     }
 }
 

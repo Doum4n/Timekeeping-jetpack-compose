@@ -27,6 +27,7 @@ import com.example.timekeeping.ui.assignment.utils.getDaysOfMonthExpanded
 import com.example.timekeeping.ui.assignment.utils.getDaysOfMonthShrunk
 import com.example.timekeeping.ui.assignment.utils.isEmployeeCalendarModified
 import com.example.timekeeping.ui.calender.CalendarState
+import com.example.timekeeping.utils.convertToReference
 import com.example.timekeeping.view_models.AssignmentViewModel
 import com.example.timekeeping.view_models.ShiftViewModel
 import com.example.timekeeping.view_models.TeamViewModel
@@ -66,7 +67,7 @@ fun AssignmentScreen(
 
     var expanded by remember { mutableStateOf(true) }
 
-    var selectedShift by remember { mutableStateOf<String?>(null) }
+    var selectedShift by remember { mutableStateOf("") }
 
     val initialCalendarByEmployee = remember { mutableStateMapOf<String, List<CalendarDay>>() } // Dùng List để tránh bị mutate
 
@@ -94,6 +95,8 @@ fun AssignmentScreen(
                 initialCalendarByEmployee[it.id] = getDaysOfMonthExpanded(selectedDays, selectedWeekdays, assignmentStates[it.id]?.map { it.toInt() } ?: listOf())
 
                 employeeId_assignmentId[it.id] = assignments.firstOrNull()?.id ?: ""
+
+                Log.d("AssignmentScreen", "Assignment dates: $assignmentStates")
             }
         }
     }
@@ -122,16 +125,17 @@ fun AssignmentScreen(
                             if(isEmployeeCalendarModified(assignment.key, initialCalendarByEmployee, calendarByEmployee)) {
                                 viewModel.updateAssignment(
                                     employeeId_assignmentId[assignment.key]!!,
-                                    Assignment(
-                                    employeeId = assignment.key,
-                                    shiftId = selectedShift!!,
-                                    dates = assignment.value.filter { it.day.isNotBlank() && it.isSelected || it.isAssigned }.map { it.day.toInt() }.toList()
-                                ))
+                                        Assignment(
+                                        employeeId = assignment.key.convertToReference("employees"),
+                                        shiftId = selectedShift.convertToReference("shifts"),
+                                        dates = assignment.value.filter { it.day.isNotBlank() && it.isSelected || it.isAssigned }.map { it.day.toInt() }.toList()
+                                    )
+                                )
                             }else{
                                 viewModel.addAssignment(
                                     Assignment(
-                                        employeeId = assignment.key,
-                                        shiftId = selectedShift!!,
+                                        employeeId = assignment.key.convertToReference("employees"),
+                                        shiftId = selectedShift.convertToReference("shifts"),
                                         dates = assignment.value.filter { it.day.isNotBlank() && it.isSelected || it.isAssigned }.map { it.day.toInt() }.toList()
                                     )
                                 )

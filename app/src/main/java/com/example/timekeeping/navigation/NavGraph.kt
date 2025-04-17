@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.example.timekeeping.CheckInScreen
 import com.example.timekeeping.RequestJoinGroupScreen
 import com.example.timekeeping.navigation.auth.addAuthScreens
+import com.example.timekeeping.navigation.checkin.addCheckInNav
 import com.example.timekeeping.navigation.employee.addEmployeeFormScreen
 import com.example.timekeeping.navigation.employee.addEmployeeScreen
 import com.example.timekeeping.navigation.groups.addGroupFormScreen
@@ -38,6 +39,7 @@ fun AppNavigation(navController: NavHostController) {
         addScheduleScreen(navController)
         addTeamScreen(navController)
         addTeamFormScreen(navController)
+        addCheckInNav(navController)
 
         addCheckInScreen(navController)
         addProfileScreen()

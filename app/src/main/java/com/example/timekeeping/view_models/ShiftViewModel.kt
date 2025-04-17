@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Shift
 import com.example.timekeeping.repositories.ShiftRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,6 +21,9 @@ class ShiftViewModel @Inject constructor(
 
     private val _shifts = mutableStateOf<List<Shift>>(emptyList())
     val shifts = _shifts
+
+    private val _employees = mutableStateOf<List<Employee>>(emptyList())
+    val employees = _employees
 
     init {
         loadShifts()
@@ -55,5 +59,17 @@ class ShiftViewModel @Inject constructor(
         shiftRepository.getShiftById(shiftId) { shift ->
             shift?.let { callback(it) }
         }
+    }
+
+    fun loadEmployees(_shiftId: String = "") {
+//        if(_shiftId == ""){
+//            shiftRepository.loadEmployees(shifts.value.first().id) { employeesList ->
+//                _employees.value = employeesList
+//            }
+//        }else{
+            shiftRepository.loadEmployees(_shiftId) { employeesList ->
+                _employees.value = employeesList
+            }
+//        }
     }
 }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -34,7 +35,7 @@ fun GroupDetailButtonGrid(
         ) {
             IconButtonWithLabel(
                 onClick = onCheckInClick,
-                icon = Icons.Default.Warning,
+                icon = Icons.Default.CheckCircle,
                 label = "Chấm công"
             )
             IconButtonWithLabel(

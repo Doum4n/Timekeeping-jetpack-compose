@@ -3,6 +3,7 @@ package com.example.timekeeping.di
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
 import com.example.timekeeping.repositories.AssignmentRepo
+import com.example.timekeeping.repositories.AttendanceRepo
 import com.example.timekeeping.repositories.AuthRepository
 import com.example.timekeeping.repositories.EmployeeRepository
 import com.example.timekeeping.repositories.GroupRepository
@@ -68,6 +69,14 @@ object RepositoryModule {
     @Singleton
     fun provideAssignmentRepository(): AssignmentRepo {
         return AssignmentRepo(
+            FirebaseFirestore.getInstance(),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideAttendanceRepository(): AttendanceRepo {
+        return AttendanceRepo(
             FirebaseFirestore.getInstance(),
         )
     }
