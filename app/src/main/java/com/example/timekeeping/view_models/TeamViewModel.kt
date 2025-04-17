@@ -27,7 +27,6 @@ class TeamViewModel @Inject constructor(
 
     init {
         loadTeams()
-        getEmployees()
     }
 
     fun loadTeams() {
@@ -56,7 +55,7 @@ class TeamViewModel @Inject constructor(
     }
 
     // TODO: Lấy nhân viên theo team
-    fun getEmployees(teamId: String? = "DeatdekLGJyLxCbdHV6h") {
+    fun getEmployees(teamId: String? = "") {
         teamId?.let {
             teamRepository.getEmployees(it) { result ->
                 _employees.value = result

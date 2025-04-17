@@ -75,6 +75,15 @@ fun AssignmentScreen(
 
     val employeeId_assignmentId = remember { mutableStateMapOf<String, String>() }
 
+    val teams = teamViewModel.teams.value
+
+    LaunchedEffect(teams) {
+        if(teams.isNotEmpty())
+        {
+            teamViewModel.getEmployees(teams.first().id)
+        }
+    }
+
     // Load assignment dates
     LaunchedEffect(employees) {
         teamViewModel.employees.value.forEach {
