@@ -1,6 +1,7 @@
 package com.example.timekeeping.ui.check_in
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import com.example.timekeeping.ui.assignment.components.ShiftSection
 import com.example.timekeeping.ui.calender.CalendarState
 import com.example.timekeeping.view_models.ShiftViewModel
@@ -31,16 +33,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.timekeeping.models.Attendance
 import com.example.timekeeping.ui.components.TopBarWithDoneAction
 import com.example.timekeeping.utils.convertLocalDateToDate
+import com.example.timekeeping.utils.convertToReference
 import com.example.timekeeping.view_models.AttendanceViewModel
+import java.time.LocalDate
 
 enum class AttendanceType(val label: String) {
     FullDay("Đi làm"),
@@ -55,6 +61,26 @@ enum class AttendanceType(val label: String) {
     }
 }
 
+data class CheckInState(
+    val employeeId: String,
+    val employeeName: String,
+    val attendanceStates: SnapshotStateMap<AttendanceType, Boolean> = mutableStateMapOf(),
+    var reason: String = ""
+)
+
+data class CheckInUiState(
+    var selectedDate: LocalDate,
+    var selectedShiftId: String? = null,
+    val sharedAttendanceStates: SnapshotStateMap<AttendanceType, Boolean> = mutableStateMapOf(
+        AttendanceType.FullDay to false,
+        AttendanceType.HalfDay to false,
+        AttendanceType.PaidLeave to false,
+        AttendanceType.UnpaidLeave to false
+    ),
+    val attendances: List<Attendance> = emptyList(),
+    var checkInStates: SnapshotStateMap<String, CheckInState> = mutableStateMapOf()
+)
+
 @Composable
 fun CheckInManagementScreen(
     state: CalendarState,
@@ -63,79 +89,116 @@ fun CheckInManagementScreen(
     onBackClick: () -> Unit = {},
     groupId: String
 ){
-    val checkInStates = remember { mutableStateMapOf<String, SnapshotStateMap<AttendanceType, Boolean>>() }
-    val shifts = shiftViewModel.shifts.value
-    var selectedShift = remember { mutableStateOf<String?>("") }
 
-    val attendances = remember { mutableStateOf<List<Attendance>>(emptyList()) }
+    val context = LocalContext.current
 
-    var shareCheckInStates = remember { mutableStateMapOf<AttendanceType, Boolean>() }
-
-    val isShareCheckIn by remember {
-        derivedStateOf {
-            shareCheckInStates.values.any { it }
-        }
-    }
-
-    shareCheckInStates = remember {
-        mutableStateMapOf(
-            AttendanceType.FullDay to false,
-            AttendanceType.HalfDay to false,
-            AttendanceType.PaidLeave to false,
-            AttendanceType.UnpaidLeave to false
+    val uiState = remember {
+        mutableStateOf(
+            CheckInUiState(
+                selectedDate = state.visibleDate
+            )
         )
     }
 
-    LaunchedEffect(shifts) {
+    val isSharedCheckIn by remember {
+        derivedStateOf {
+            uiState.value.sharedAttendanceStates.any { it.value }
+        }
+    }
+
+    LaunchedEffect(uiState.value.sharedAttendanceStates.toMap()) {
+        if (isSharedCheckIn) {
+            uiState.value.checkInStates.forEach { (_, checkIn) ->
+                uiState.value.sharedAttendanceStates.forEach { (type, checked) ->
+                    checkIn.attendanceStates[type] = checked
+                }
+            }
+        }
+    }
+
+    val visibleDate = state.visibleDate
+
+    LaunchedEffect(shiftViewModel.shifts.value, visibleDate) {
+        val shifts = shiftViewModel.shifts.value
         if (shifts.isNotEmpty()) {
-            //shiftViewModel.loadEmployees(shifts.first().id)
 
-            attendanceViewModel.getAttendanceByShiftId(shifts.first().id) { attendancesList ->
-                attendances.value = attendancesList
+            // reset
+            uiState.value.checkInStates = mutableStateMapOf()
+
+            val shiftId = shifts.first().id
+            uiState.value.selectedShiftId = shiftId
+
+            attendanceViewModel.getAttendanceByShiftId(shiftId, state.visibleDate.convertLocalDateToDate()) { attendances ->
+                shiftViewModel.loadEmployees(shiftId)
+
+                attendances.forEach { attendance ->
+                    val empId = attendance.employeeId.id
+                    val employeeName = shiftViewModel.employees.value
+                        .find { it.id == empId }?.fullName ?: "Unknown"
+
+                    val state = uiState.value.checkInStates.getOrPut(empId) {
+                        CheckInState(
+                            employeeId = empId,
+                            employeeName = employeeName
+                        )
+                    }
+
+                    AttendanceType.fromLabel(attendance.attendanceType)?.let {
+                        state.attendanceStates[it] = true
+                    }
+                }
+
+                uiState.value = uiState.value.copy(attendances = attendances)
             }
         }
     }
 
-    LaunchedEffect(shareCheckInStates.toMap()) {
-        checkInStates.forEach { (employeeId, individualStates) ->
-            shareCheckInStates.forEach { (type, checked) ->
-                individualStates[type] = checked
-            }
-        }
-    }
 
     Scaffold(
         topBar = {
             TopBarWithDoneAction(
                 title = "Chấm công",
                 onDoneClick = {
-                    checkInStates.forEach { (employeeId, attendanceStates) ->
-                        attendanceStates.forEach { (type, checked) ->
+                    uiState.value.checkInStates.forEach { (employeeId, checkIn) ->
+                        checkIn.attendanceStates.forEach { (type, checked) ->
                             if (checked) {
-                                val alreadyCheckedIn = attendances.value.firstOrNull {
+
+                                if(uiState.value.selectedShiftId == null) {
+                                    Toast.makeText(
+                                        context,
+                                        "Vui lòng chọn ca làm việc",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+
+                                    return@forEach
+                                }
+                                val alreadyAttended = uiState.value.attendances.firstOrNull {
                                     it.employeeId.id == employeeId &&
-                                            //it.attendanceType == type.label &&
-                                            it.shiftId == selectedShift.value // Kiểm tra chấm công của ca hiện tại
-                                    //it.dayCheckIn == state.visibleDate.convertLocalDateToDate() // Kiểm tra ngày chấm công
+                                    it.shiftId == uiState.value.selectedShiftId &&
+                                    it.dayCheckIn == state.visibleDate.convertLocalDateToDate()
                                 }
 
-                                Log.d("CheckInManagementScreen", "Attendance ID: $alreadyCheckedIn.id")
+                                Log.d("CheckInManagementScreen", "alreadyAttended: $alreadyAttended")
 
-                                if (alreadyCheckedIn != null) {
-                                    val attendanceId = alreadyCheckedIn.id
-
-                                    val updatedAttendance = alreadyCheckedIn.copy(
-                                        attendanceType = type.label,
-                                        dayCheckIn = state.visibleDate.convertLocalDateToDate()
+                                if (alreadyAttended != null)
+                                    attendanceViewModel.updateAttendance(
+                                        alreadyAttended.id,
+                                        Attendance(
+                                            employeeId = alreadyAttended.employeeId,
+                                            shiftId = alreadyAttended.shiftId,
+                                            attendanceType = type.label,
+                                            dayCheckIn = state.visibleDate.convertLocalDateToDate(),
+                                        )
                                     )
-
-                                    Log.d("CheckInManagementScreen", "Attendance ID: $attendanceId")
-                                    // Gọi update nếu có logic cập nhật
-                                    attendanceViewModel.updateAttendance(attendanceId, updatedAttendance)
-                                } else {
-                                    // Gọi tạo mới
-                                    attendanceViewModel.CheckIn(employeeId, selectedShift.value!!, type.label)
-                                }
+                                else
+                                    attendanceViewModel.CheckIn(
+                                        Attendance(
+                                            employeeId = employeeId.convertToReference("employees"),
+                                            shiftId = uiState.value.selectedShiftId!!,
+                                            attendanceType = type.label,
+                                            dayCheckIn = state.visibleDate.convertLocalDateToDate()
+                                        )
+                                    )
                             }
                         }
                     }
@@ -143,11 +206,8 @@ fun CheckInManagementScreen(
                 onBackClick = onBackClick
             )
         }
-    ) {paddingValues ->
-
-        LazyColumn(
-            modifier = Modifier.padding(paddingValues)
-        ) {
+    ) { paddingValues ->
+        LazyColumn(modifier = Modifier.padding(paddingValues)) {
             item {
                 Text("Ngày chấm công")
                 Header(state)
@@ -157,50 +217,39 @@ fun CheckInManagementScreen(
                 ShiftSection(
                     shiftViewModel = shiftViewModel,
                     onShiftSelected = {
-                        selectedShift.value = it
+                        uiState.value.selectedShiftId = it
                         shiftViewModel.loadEmployees(it)
-                    }
+                    },
+                    selectedShiftId = uiState.value.selectedShiftId
                 )
             }
 
             item {
                 Text("Chấm cả nhóm")
-                Spacer(modifier = Modifier.height(8.dp))
-
                 AttendanceOptions(
-                    attendanceStates = shareCheckInStates,
+                    attendanceStates = uiState.value.sharedAttendanceStates,
                     onCheck = { type, checked ->
-                        // Cập nhật trạng thái chung cho tất cả nhân viên khi checkbox thay đổi
-                        shareCheckInStates[type] = checked
+                        uiState.value.sharedAttendanceStates[type] = checked
                     }
                 )
-
                 HorizontalDivider()
             }
 
             items(shiftViewModel.employees.value) { employee ->
-                // Tạo và lưu trạng thái chấm công riêng biệt cho từng nhân viên
-                val individualState = remember {
-                    mutableStateMapOf<AttendanceType, Boolean>().apply {
-                        attendances.value.forEach {
-                            if (it.employeeId.id == employee.id)
-                                this[AttendanceType.fromLabel(it.attendanceType)!!] = true
-                        }
-                    }
+                val checkIn = uiState.value.checkInStates.getOrPut(employee.id) {
+                    CheckInState(employeeId = employee.id, employeeName = employee.fullName)
                 }
-
-                // Lưu trạng thái của từng nhân viên vào checkInStates
-                checkInStates[employee.id] = individualState
 
                 EmployeeCheckInSection(
                     employeeName = employee.fullName,
-                    shareCheckInStates = if(isShareCheckIn) shareCheckInStates
-                    else individualState,
-                    checkInStates = checkInStates,
-                    employeeId = employee.id
+                    shareCheckInStates = if (isSharedCheckIn) uiState.value.sharedAttendanceStates else checkIn.attendanceStates,
+                    onReasonChange = { reason -> checkIn.reason = reason },
+                    isLeave = checkIn.attendanceStates[AttendanceType.PaidLeave] == true ||
+                            checkIn.attendanceStates[AttendanceType.UnpaidLeave] == true
                 )
             }
         }
+
     }
 }
 
@@ -208,21 +257,33 @@ fun CheckInManagementScreen(
 fun EmployeeCheckInSection(
     employeeName: String,
     shareCheckInStates: SnapshotStateMap<AttendanceType, Boolean>,
-    checkInStates: SnapshotStateMap<String, SnapshotStateMap<AttendanceType, Boolean>> = mutableStateMapOf(),
-    employeeId: String,
-){
+    onReasonChange: (String) -> Unit = {},
+    isLeave: Boolean
+) {
+    var reason by remember { mutableStateOf("") }
+
     Column {
         Text(employeeName)
-        Spacer(modifier = Modifier.height(8.dp))
         AttendanceOptions(
             attendanceStates = shareCheckInStates,
             onCheck = { type, checked ->
-                // Cập nhật trạng thái checkbox cho từng nhân viên khi checkbox thay đổi
                 shareCheckInStates[type] = checked
-                checkInStates[employeeId]?.put(type, checked)
-                Log.d("EmployeeCheckInSection", checkInStates[employeeId].toString())
+                if (type == AttendanceType.PaidLeave || type == AttendanceType.UnpaidLeave) {
+                    reason = ""
+                }
             }
         )
+        if (isLeave) {
+            TextField(
+                value = reason,
+                onValueChange = {
+                    reason = it
+                    onReasonChange(it)
+                },
+                label = { Text("Lý do nghỉ phép") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
 
@@ -256,7 +317,8 @@ fun Header(
 @Composable
 fun AttendanceOptions(
     attendanceStates: Map<AttendanceType, Boolean>,
-    onCheck: (AttendanceType, Boolean) -> Unit
+    onCheck: (AttendanceType, Boolean) -> Unit,
+    isLeave: Boolean = false
 ) {
     Column {
         Row(

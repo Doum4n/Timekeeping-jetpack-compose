@@ -105,4 +105,8 @@ class EmployeeViewModel @Inject constructor(
     fun updateEmployee(employee: Employee, salary: Salary) {
         employeeRepository.updateEmployee(employee, salary)
     }
+
+    fun getTotalOutstanding(employeeId: String, groupId: String, onSuccess: (Int) -> Unit, onFailure: (Exception) -> Unit){
+        employeeRepository.getTotalOutstanding(employeeId, groupId, onSuccess, onFailure)
+    }
 }

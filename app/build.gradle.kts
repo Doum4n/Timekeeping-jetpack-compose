@@ -4,12 +4,13 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.services)
     alias(libs.plugins.dagger.hilt)
+
     id("kotlin-kapt")
     kotlin("kapt")
 }
 
-hilt {
-    enableAggregatingTask = false
+kapt {
+    correctErrorTypes = true
 }
 
 android {
@@ -45,6 +46,10 @@ android {
     buildFeatures {
         compose = true
     }
+}
+
+hilt {
+    enableAggregatingTask = false
 }
 
 dependencies {

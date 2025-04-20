@@ -116,7 +116,10 @@ fun ScheduleCalenda(
 }
 
 @Composable
-fun CalendarHeader(state: CalendarState) {
+fun CalendarHeader(
+    state: CalendarState,
+    modifier: Modifier = Modifier
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {

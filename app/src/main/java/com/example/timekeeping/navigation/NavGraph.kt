@@ -26,7 +26,7 @@ import com.example.timekeeping.ui.home.HomeScreen
 fun AppNavigation(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route
+        startDestination = Screen.Login.route
     ) {
         addHomeScreen(navController)
         addAuthScreens(navController)

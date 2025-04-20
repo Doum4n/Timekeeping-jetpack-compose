@@ -6,6 +6,8 @@ import com.example.timekeeping.models.Employee_Group
 import com.example.timekeeping.models.Role
 import com.example.timekeeping.models.Salary
 import com.example.timekeeping.models.Status
+import com.example.timekeeping.ui.employees.form.TypeAllowance
+import com.example.timekeeping.ui.employees.form.TypeDeduct
 import com.example.timekeeping.utils.convertToReference
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -150,8 +152,8 @@ class EmployeeRepository @Inject constructor (
             val employeeRef = db.collection("employees").document(employeeId)
 
             val employeeData = Employee_Group(
-                employeeId = employeeRef,
-                groupId = groupId.convertToReference("groups"),
+//                employeeId = employeeRef,
+//                groupId = groupId.convertToReference("groups"),
                 status = Status.UNAUTHORIZED,
                 isCreator = false,
                 dayJoined = Timestamp.now().toDate(),
@@ -199,5 +201,35 @@ class EmployeeRepository @Inject constructor (
         db.collection("employees").document(employee.id).set(employee.toMap())
         db.collection("salaries").document(salary.id).set(salary)
 
+    }
+
+    fun getTotalOutstanding(employeeId: String, groupId: String, onSuccess: (Int) -> Unit, onFailure: (Exception) -> Unit){
+
+        var totalOutstanding = 0;
+
+        db.collection("salaries")
+            .whereEqualTo("employeeId", employeeId)
+            .whereEqualTo("groupId", groupId)
+            .get()
+            .addOnSuccessListener { document ->
+                document.toObjects(Salary::class.java).forEach({salary ->
+                    TypeDeduct.entries.forEach( { type ->
+                        if (salary.salaryType == type.label) {
+                            totalOutstanding += salary.salary
+                        }
+                    } )
+                    TypeAllowance.entries.forEach({type ->
+                        if (salary.salaryType == type.label) {
+                            totalOutstanding += salary.salary
+                        }
+                    })
+                })
+                Log.d("EmployeeRepository", "Total outstanding: $totalOutstanding")
+                onSuccess(totalOutstanding)
+            }.addOnFailureListener { exception ->
+                onFailure(exception)
+                Log.e("EmployeeRepository", "Error loading salary", exception)
+                exception.printStackTrace()
+            }
     }
 }

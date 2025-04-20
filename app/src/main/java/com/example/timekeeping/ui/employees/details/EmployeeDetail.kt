@@ -12,8 +12,13 @@ import com.example.timekeeping.ui.components.TopBarClassic
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmployeeDetail(
+    employeeId: String = "",
+    groupId: String = "",
     onBackClick: () -> Unit = {},
-    onEmployeeInfoClick: () -> Unit = {}
+    onEmployeeInfoClick: () -> Unit = {},
+    onBonusClick: () -> Unit = {},
+    onMinusMoneyClick: () -> Unit = {},
+    onAdvanceSalaryClick: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -25,7 +30,12 @@ fun EmployeeDetail(
     ){paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
             EmployeeDetailGrid(
-                onEmployeeInfoClick = onEmployeeInfoClick
+                employeeId = employeeId,
+                groupId = groupId,
+                onEmployeeInfoClick = onEmployeeInfoClick,
+                onBonusClick = onBonusClick,
+                onMinusMoneyClick = onMinusMoneyClick,
+                onAdvanceSalaryClick = onAdvanceSalaryClick
             )
         }
     }

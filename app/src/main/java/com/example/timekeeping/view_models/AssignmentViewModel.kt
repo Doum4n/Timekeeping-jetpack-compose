@@ -1,5 +1,6 @@
 package com.example.timekeeping.view_models
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.example.timekeeping.models.Assignment
@@ -13,8 +14,6 @@ class AssignmentViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val assignmentRepo: AssignmentRepo
 ): ViewModel() {
-
-//    private val employeeId: String = savedStateHandle["employeeId"] ?: ""
 
     fun getAssignments(employeeId: String, callback: (List<Assignment>) -> Unit) {
         assignmentRepo.getAssignments(

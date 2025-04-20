@@ -20,8 +20,8 @@ enum class Status {
 }
 
 class Employee_Group (
-    var employeeId: DocumentReference = FirebaseFirestore.getInstance().collection("employees").document(),
-    var groupId: DocumentReference = FirebaseFirestore.getInstance().collection("groups").document(),
+    var employeeId: String = "",
+    var groupId: String = "",
     val isCreator: Boolean = false,
     val dayJoined: Date = Date(),
     var role: Role = Role.MEMBER,

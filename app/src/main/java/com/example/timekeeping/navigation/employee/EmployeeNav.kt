@@ -64,8 +64,13 @@ fun NavGraphBuilder.addEmployeeScreen(navController: NavHostController) {
         val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
         val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
         EmployeeDetail(
+            employeeId,
+            groupId,
             onBackClick = { navController.popBackStack() },
-            onEmployeeInfoClick = { navController.navigate(Screen.EmployeeInfo.createRoute(groupId, employeeId)) }
+            onEmployeeInfoClick = { navController.navigate(Screen.EmployeeInfo.createRoute(groupId, employeeId)) },
+            onBonusClick = { navController.navigate(Screen.BonusForm.createRoute(groupId, employeeId)) },
+            onMinusMoneyClick = { navController.navigate(Screen.MinusMoneyForm.createRoute(groupId, employeeId)) },
+            onAdvanceSalaryClick = { navController.navigate(Screen.SalaryAdvanceForm.createRoute(groupId, employeeId)) }
         )
     }
 }

@@ -10,6 +10,30 @@ sealed class Screen(val route: String) {
         fun createRoute(groupId: String) = "teamManagement/$groupId"
     }
 
+    object BonusForm : Screen("bonusForm/{groupId}/{employeeId}") {
+        fun createRoute(groupId: String, employeeId: String) = "bonusForm/$groupId/$employeeId"
+    }
+
+    object BonusInputForm : Screen("bonusInputForm/{groupId}/{employeeId}") {
+        fun createRoute(groupId: String, employeeId: String) = "bonusInputForm/$groupId/$employeeId"
+    }
+
+    object MinusMoneyForm : Screen("minusMoneyForm/{groupId}/{employeeId}") {
+        fun createRoute(groupId: String, employeeId: String) = "minusMoneyForm/$groupId/$employeeId"
+    }
+
+    object MinusMoneyInputForm : Screen("minusMoneyInputForm/{groupId}/{employeeId}") {
+        fun createRoute(groupId: String, employeeId: String) = "minusMoneyInputForm/$groupId/$employeeId"
+    }
+
+    object SalaryAdvanceForm : Screen("salaryAdvanceForm/{groupId}/{employeeId}") {
+        fun createRoute(groupId: String, employeeId: String) = "salaryAdvanceForm/$groupId/$employeeId"
+    }
+
+    object SalaryAdvanceInputForm : Screen("salaryAdvanceInputForm/{groupId}/{employeeId}") {
+        fun createRoute(groupId: String, employeeId: String) = "salaryAdvanceInputForm/$groupId/$employeeId"
+    }
+
     object TeamForm : Screen("teamForm/{groupId}") {
         fun createRoute(groupId: String) = "teamForm/$groupId"
     }

@@ -13,18 +13,24 @@ import com.example.timekeeping.view_models.ShiftViewModel
 @Composable
 fun ShiftSection(
     shiftViewModel: ShiftViewModel,
-    onShiftSelected: (String) -> Unit
+    selectedShiftId: String?, // Thêm dòng này
+    onShiftSelected: (String) -> Unit,
 ) {
     Column {
         Text("Chọn ca", modifier = Modifier.padding(16.dp))
-        Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
             shiftViewModel.shifts.value.forEach { shift ->
+                val isSelected = shift.id == selectedShiftId
                 ShiftItem(
                     onShiftClick = { onShiftSelected(shift.id) },
                     id = shift.id,
                     shiftName = shift.shiftName,
                     startTime = shift.startTime,
-                    endTime = shift.endTime
+                    endTime = shift.endTime,
+                    isSelected = isSelected // Truyền vào đây
                 )
             }
         }

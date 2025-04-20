@@ -1,6 +1,7 @@
 package com.example.timekeeping.ui.assignment.utils
 
 import android.annotation.SuppressLint
+import android.util.Log
 import java.time.DayOfWeek
 import java.time.LocalDate
 
@@ -76,7 +77,10 @@ fun getDaysOfMonthShrunk(
 
 fun isEmployeeCalendarModified(employeeId: String, initialCalendarByEmployee: Map<String, List<CalendarDay>>, calendarByEmployee: Map<String, List<CalendarDay>>): Boolean {
     val original = initialCalendarByEmployee[employeeId]
-    val current = calendarByEmployee[employeeId]
+    val current = calendarByEmployee[employeeId]?.toList()
+
+    Log.d("AssignmentScreen", "Original: $original")
+    Log.d("AssignmentScreen", "Current: $current")
 
     // Nếu một trong hai không tồn tại thì coi như có thay đổi
     if (original == null || current == null || original.size != current.size) return true

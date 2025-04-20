@@ -13,6 +13,7 @@ data class Salary(
     val salaryType: String = "", // Phương thức tính lương
     val salary: Int = 0,
     //val adjustmentAmount: Int = 0, // Số tiền điều chỉnh
+    val note: String = "", // Ghi chú
     val createdAt: Date = Date(), // Ngày tạo
     val dateApplied: Date = Date(), // Ngày áp dụng
 ) {

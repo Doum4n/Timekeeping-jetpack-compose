@@ -89,15 +89,14 @@ fun AssignmentScreen(
         teamViewModel.employees.value.forEach {
             viewModel.getAssignments(it.id) { assignments ->
                 val currentMonth = YearMonth.now()
-                assignmentStates.getOrPut(
+                assignmentStates.put(
                     it.id,
-                    {
-                        assignments
-                        .flatMap {  it.dates }
-                        .map { date -> currentMonth.atDay(date).dayOfMonth.toString()
-                    }
+                    assignments
+                        .flatMap { it.dates }
+                        .map { date ->
+                            currentMonth.atDay(date).dayOfMonth.toString()
+                        }
                         .toMutableStateList()
-                    }
                 )
                 assignmentDates = assignmentStates[it.id]?.map { it.toInt() } ?: listOf()
 
@@ -105,7 +104,7 @@ fun AssignmentScreen(
 
                 employeeId_assignmentId[it.id] = assignments.firstOrNull()?.id ?: ""
 
-                Log.d("AssignmentScreen", "Assignment dates: $assignmentStates")
+                Log.d("AssignmentScreen", "Assignment dates: $employeeId_assignmentId")
             }
         }
     }
@@ -131,24 +130,33 @@ fun AssignmentScreen(
                 actions = {
                     IconButton(onClick = {
                         calendarByEmployee.forEach({ assignment ->
-                            if(isEmployeeCalendarModified(assignment.key, initialCalendarByEmployee, calendarByEmployee)) {
+                            val employeeAssignmentId = employeeId_assignmentId[assignment.key]
+
+                            if (employeeAssignmentId != null && isEmployeeCalendarModified(assignment.key, initialCalendarByEmployee, calendarByEmployee)) {
+                                // Nếu bản ghi tồn tại và đã được sửa đổi, thực hiện cập nhật
                                 viewModel.updateAssignment(
-                                    employeeId_assignmentId[assignment.key]!!,
-                                        Assignment(
+                                    employeeAssignmentId,
+                                    Assignment(
                                         employeeId = assignment.key.convertToReference("employees"),
                                         shiftId = selectedShift.convertToReference("shifts"),
-                                        dates = assignment.value.filter { it.day.isNotBlank() && it.isSelected || it.isAssigned }.map { it.day.toInt() }.toList()
+                                        dates = assignment.value.filter { it.day.isNotBlank() && (it.isSelected || it.isAssigned) }
+                                            .map { it.day.toInt() }
+                                            .toList()
                                     )
                                 )
-                            }else{
+                            } else {
+                                // Nếu không có bản ghi hoặc không sửa đổi, thực hiện thêm mới
                                 viewModel.addAssignment(
                                     Assignment(
                                         employeeId = assignment.key.convertToReference("employees"),
                                         shiftId = selectedShift.convertToReference("shifts"),
-                                        dates = assignment.value.filter { it.day.isNotBlank() && it.isSelected || it.isAssigned }.map { it.day.toInt() }.toList()
+                                        dates = assignment.value.filter { it.day.isNotBlank() && (it.isSelected || it.isAssigned) }
+                                            .map { it.day.toInt() }
+                                            .toList()
                                     )
                                 )
                             }
+
                         })
                     }) {
                         Icon(Icons.Default.Done, contentDescription = "Done")
@@ -164,7 +172,7 @@ fun AssignmentScreen(
             item {
                 ShiftSection(shiftViewModel, onShiftSelected = {
                     selectedShift = it
-                })
+                }, selectedShiftId = selectedShift)
             }
 
             val shareCalendar = Calendar.Shared(
@@ -198,10 +206,13 @@ fun AssignmentScreen(
 
             items(teamViewModel.employees.value) { employee ->
 
-                if(isSharedCalendar)
-                    calendarByEmployee[employee.id] = sharedCalendarDays.map { it.copy() }.toMutableStateList()
-                else
-                    calendarByEmployee[employee.id] = getDaysOfMonthExpanded(selectedDays, selectedWeekdays, assignmentStates[employee.id]!!.map { it.toInt() }).map { it.copy() }.toMutableStateList()
+                calendarByEmployee[employee.id] = if (isSharedCalendar) {
+                    sharedCalendarDays.map { it.copy() }.toMutableStateList()
+                } else {
+                    val assignedDates = assignmentStates[employee.id]?.map { it.toInt() } ?: listOf()
+                    getDaysOfMonthExpanded(selectedDays, selectedWeekdays, assignedDates)
+                        .map { it.copy() }.toMutableStateList()
+                }
 
                 weekdayByEmployee[employee.id] = selectedWeekdays.toList().toMutableStateList()
 

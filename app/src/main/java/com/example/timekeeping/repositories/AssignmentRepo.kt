@@ -13,7 +13,7 @@ class AssignmentRepo @Inject constructor(
 ) {
     fun getAssignments(employeeId: String, callback: (List<Assignment>) -> Unit) {
         db.collection("assignments")
-            .whereEqualTo("employeeId", employeeId)
+            .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
             .get()
             .addOnSuccessListener { documents ->
                 val assignments = documents.map { doc ->
