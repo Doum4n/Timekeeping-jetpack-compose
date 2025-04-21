@@ -1,6 +1,7 @@
 package com.example.timekeeping.view_models
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.example.timekeeping.models.Group
 import com.example.timekeeping.repositories.GroupRepository
@@ -9,8 +10,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class GroupViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val groupRepository: GroupRepository
 ) : ViewModel() {
+
+    val groupId: String = savedStateHandle["groupId"] ?: ""
 
     val joinedGroups = mutableStateOf<List<Group>>(emptyList())
     val createdGroups = mutableStateOf<List<Group>>(emptyList())
@@ -54,6 +58,16 @@ class GroupViewModel @Inject constructor(
         val currentUserId = groupRepository.auth.currentUser?.uid ?: return
         groupRepository.leaveGroup(groupId, currentUserId) {
             loadGroups()  // Reload groups after leaving
+        }
+    }
+
+    fun getGroupById(groupId: String, onResult: (Group?) -> Unit) {
+        groupRepository.getGroupById(groupId, onResult)
+    }
+
+    fun updateGroup(group: Group) {
+        groupRepository.updateGroup(group) {
+            loadGroups()  // Reload groups after updating
         }
     }
 }

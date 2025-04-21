@@ -56,7 +56,7 @@ fun GroupDetailTopBar(
                     modifier = Modifier.widthIn(min = 180.dp)
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Cài đặt") },
+                        text = { Text("Chỉnh sửa công việc") },
                         onClick = {
                             expanded = false
                             onSettingsClick()
@@ -65,7 +65,7 @@ fun GroupDetailTopBar(
                     )
                     HorizontalDivider()
                     DropdownMenuItem(
-                        text = { Text("Đăng xuất") },
+                        text = { Text("Xóa nhóm") },
                         onClick = {
                             expanded = false
                             // TODO: Handle logout

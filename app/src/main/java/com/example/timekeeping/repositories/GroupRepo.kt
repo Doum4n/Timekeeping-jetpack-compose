@@ -111,8 +111,27 @@ class GroupRepository @Inject constructor (
             }
     }
 
+    fun getGroupById(groupId: String, onResult: (Group?) -> Unit) {
+        db.collection("groups").document(groupId).get()
+            .addOnSuccessListener { document ->
+                val group = document.toObject(Group::class.java)?.apply { id = document.id }
+                onResult(group)
+            }.addOnFailureListener {
+                Log.e("GroupRepository", "Failed to get group", it)
+                onResult(null)
+            }
+    }
+
     // Leave group
     fun leaveGroup(groupId: String, userId: String, onSuccess: () -> Unit) {
 
+    }
+
+    fun updateGroup(group: Group, function: () -> Unit) {
+        db.collection("groups").document(group.id).set(group)
+            .addOnSuccessListener { function() }
+            .addOnFailureListener {
+                Log.e("GroupRepository", "Failed to update group", it)
+            }
     }
 }

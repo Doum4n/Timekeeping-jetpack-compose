@@ -3,6 +3,7 @@ package com.example.timekeeping.repositories
 import android.util.Log
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Employee_Group
+import com.example.timekeeping.models.Group
 import com.example.timekeeping.models.Role
 import com.example.timekeeping.models.Salary
 import com.example.timekeeping.models.Status
@@ -19,6 +20,8 @@ import javax.inject.Inject
 class EmployeeRepository @Inject constructor (
     private val db: FirebaseFirestore
 ) {
+
+    val salaryTypes = listOf("Giờ", "Ca", "Tháng")
 
     fun loadEmployees(groupId: String, onResult: (List<Employee>) -> Unit) {
         load(groupId, Status.ACCEPTED, onResult)
@@ -122,14 +125,10 @@ class EmployeeRepository @Inject constructor (
         db.collection("salaries").whereEqualTo("employeeId", employeeId)
             .whereEqualTo("groupId", groupId).get()
             .addOnSuccessListener { document ->
-                val salary = document.toObjects(Salary::class.java).firstOrNull().apply {
-                    this?.id = document.documents.first().id
-                }
-                if (salary != null) {
-                    onSuccess(salary)
-                } else {
-                    onFailure(Exception("Salary not found"))
-                    Log.e("EmployeeRepository", "Salary not found for employeeId: $employeeId and groupId: $groupId")
+                document.toObjects(Salary::class.java).forEach {
+                    if(it.salaryType in salaryTypes) {
+                        onSuccess(it)
+                    }
                 }
             }.addOnFailureListener { exception ->
                 onFailure(exception)

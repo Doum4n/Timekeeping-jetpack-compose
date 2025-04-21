@@ -28,7 +28,7 @@ fun NavGraphBuilder.addGroupScreen(navController: NavHostController) {
                 navController.navigate(Screen.CheckInManagement.createRoute(groupId))
             },
             onSettingsClick = {
-                navController.navigate(Screen.GroupSettings.createRoute(groupId))
+                navController.navigate(Screen.EditGroup.createRoute(groupId))
             },
             onScheduleClick = {
                 navController.navigate(Screen.Schedule.createRoute(groupId, FirebaseAuth.getInstance().currentUser?.uid ?: ""))
