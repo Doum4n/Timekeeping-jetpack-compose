@@ -24,7 +24,7 @@ fun EmployeeInputForm(
     onSave: (List<Employee>) -> Unit,
 ) {
     val employees = remember { mutableStateListOf(Employee(
-        status = Status.PENDING,
+        status = Status.UNAUTHORIZED,
         isCreator = false
     )) }
 
@@ -72,7 +72,7 @@ fun EmployeeInputForm(
                 item {
                     Button(
                         onClick = { employees.add(Employee(
-                            status = Status.PENDING,
+                            status = Status.UNAUTHORIZED,
                             isCreator = false
                         )) },
                         modifier = Modifier.fillMaxWidth()

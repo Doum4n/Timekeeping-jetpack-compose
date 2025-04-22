@@ -121,16 +121,20 @@ fun CalendarHeader(
     modifier: Modifier = Modifier
 ) {
     Row(
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = { state.prevMonth() }) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous")
         }
 
-        Text(
-            text = state.visibleMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
-            style = MaterialTheme.typography.titleMedium
-        )
+        Box(
+            modifier = modifier
+        ){
+            Text(
+                text = state.visibleMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
 
         IconButton(onClick = { state.nextMonth() }) {
             Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next")

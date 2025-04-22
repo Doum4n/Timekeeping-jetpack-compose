@@ -32,6 +32,9 @@ fun NavGraphBuilder.addEmployeeScreen(navController: NavHostController) {
             },
             onEmployeeIdClick = { employeeId ->
                 navController.navigate(Screen.EmployeeDetail.createRoute(groupId, employeeId))
+            },
+            onLinkClick = { employeeId ->
+                navController.navigate(Screen.GrantPermission.createRoute(groupId, employeeId))
             }
         )
     }
@@ -70,7 +73,9 @@ fun NavGraphBuilder.addEmployeeScreen(navController: NavHostController) {
             onEmployeeInfoClick = { navController.navigate(Screen.EmployeeInfo.createRoute(groupId, employeeId)) },
             onBonusClick = { navController.navigate(Screen.BonusForm.createRoute(groupId, employeeId)) },
             onMinusMoneyClick = { navController.navigate(Screen.MinusMoneyForm.createRoute(groupId, employeeId)) },
-            onAdvanceSalaryClick = { navController.navigate(Screen.SalaryAdvanceForm.createRoute(groupId, employeeId)) }
+            onAdvanceSalaryClick = { navController.navigate(Screen.SalaryAdvanceForm.createRoute(groupId, employeeId)) },
+            onPaymentClick = { navController.navigate(Screen.PaymentForm.createRoute(groupId, employeeId)) },
+            onBackToEmployeeList = { navController.navigate(Screen.EmployeeManagement.createRoute(groupId)) }
         )
     }
 }

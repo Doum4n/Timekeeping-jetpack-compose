@@ -19,6 +19,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -29,11 +30,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.timekeeping.models.Adjustment
 import com.example.timekeeping.models.Salary
 import com.example.timekeeping.ui.assignment.components.CalendarHeader
 import com.example.timekeeping.ui.calender.CalendarState
 import com.example.timekeeping.ui.components.TopBarWithDoneAction
 import com.example.timekeeping.utils.convertLocalDateToDate
+import com.example.timekeeping.view_models.SalaryViewModel
 
 enum class TypeDeduct(val label: String) {
     NotCome("Không đi làm"),
@@ -51,9 +55,12 @@ fun DeductMoneyInputScreen(
     groupId: String = "",
     employeeId: String = "",
     onBackClick: () -> Unit = {},
-    onSave: (Salary) -> Unit = {},
+    onSave: (Adjustment) -> Unit = {},
+    salaryViewModel: SalaryViewModel = hiltViewModel(),
     state: CalendarState
 ) {
+
+
     var amount by remember { mutableStateOf(TextFieldValue()) }
     var note by remember { mutableStateOf(TextFieldValue()) }
     var selectedType by remember { mutableStateOf(TypeDeduct.NotCome) }
@@ -63,17 +70,7 @@ fun DeductMoneyInputScreen(
             TopBarWithDoneAction(
                 title = "Trừ tiền",
                 onBackClick = onBackClick,
-                onDoneClick = {onSave(
-                    Salary(
-                        groupId = groupId,
-                        employeeId = employeeId,
-                        salaryType = selectedType.label,
-                        salary = -amount.text.toInt(),
-                        note = note.text,
-                        createdAt = state.selectedDate.convertLocalDateToDate(),
-                        dateApplied = state.selectedDate.convertLocalDateToDate(),
-                    )
-                )}
+                onDoneClick = {}
             )
         }
     ) { paddingValues ->
@@ -136,16 +133,13 @@ fun DeductMoneyInputScreen(
 
             Button(
                 onClick = {onSave(
-                    Salary(
-                        groupId = groupId,
-                        employeeId = employeeId,
-                        salaryType = selectedType.label,
-                        salary = -amount.text.toInt(),
+                    Adjustment(
+                        adjustmentType = selectedType.label,
+                        adjustmentAmount = - amount.text.toInt(),
                         note = note.text,
-                        createdAt = state.selectedDate.convertLocalDateToDate(),
-                        dateApplied = state.selectedDate.convertLocalDateToDate(),
+                        createdAt = state.selectedDate.convertLocalDateToDate()
                     )
-                ) },
+                )},
                 modifier = Modifier
                     .align(Alignment.End)
                     .padding(top = 8.dp)

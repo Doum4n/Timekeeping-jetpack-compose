@@ -1,5 +1,6 @@
 package com.example.timekeeping.ui.employees.employee_info
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -33,7 +34,9 @@ fun EmployeeInfoScreen(
     LaunchedEffect(employeeId) {
         employeeViewModel.getEmployeeById(
             employeeId,
-            onSuccess = { _employee -> employee = _employee },
+            onSuccess = {
+                _employee -> employee = _employee
+              },
             onFailure = { exception -> /* handle lỗi nếu cần */ }
         )
 

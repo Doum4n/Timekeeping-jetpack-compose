@@ -1,6 +1,7 @@
 package com.example.timekeeping.repositories
 
 import android.util.Log
+import com.example.timekeeping.models.Adjustment
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Employee_Group
 import com.example.timekeeping.models.Group
@@ -15,6 +16,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.type.DateTime
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 class EmployeeRepository @Inject constructor (
@@ -62,7 +65,7 @@ class EmployeeRepository @Inject constructor (
                     com.google.android.gms.tasks.Tasks.whenAllSuccess<com.google.firebase.firestore.DocumentSnapshot>(tasks)
                         .addOnSuccessListener { documents ->
                             val employees = documents.mapNotNull { doc ->
-                                Log.d("EmployeeRepository", "Loaded employee: ${doc.id}")
+                                Log.d("EmployeeRepository", "Loaded employee: $doc")
                                 doc.toObject(Employee::class.java)?.apply {
                                     id = doc.id
                                 }
@@ -109,7 +112,19 @@ class EmployeeRepository @Inject constructor (
     }
 
     fun requestJoinGroup(groupId: String, employeeId: String) {
-
+        db.collection("employee_group").document(employeeGroupDocId(groupId, employeeId))
+            .set(
+                mapOf(
+                    "employeeId" to employeeId.convertToReference("employees"),
+                    "groupId" to groupId.convertToReference("groups"),
+                    "status" to Status.PENDING.toString(),
+                    "isCreator" to false,
+                )
+            ).addOnSuccessListener {
+                Log.d("EmployeeRepository_requestJoinGroup", "Request join group success")
+            }.addOnFailureListener { e ->
+                Log.e("EmployeeRepository_requestJoinGroup", "Request join group failed", e)
+            }
     }
 
     fun acceptJoinGroup(groupId: String, employeeId: String) {
@@ -122,11 +137,12 @@ class EmployeeRepository @Inject constructor (
         onSuccess: (Salary) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        db.collection("salaries").whereEqualTo("employeeId", employeeId)
-            .whereEqualTo("groupId", groupId).get()
+        db.collection("salaries").document(salaryDocId(groupId, employeeId))
+            .get()
             .addOnSuccessListener { document ->
-                document.toObjects(Salary::class.java).forEach {
-                    if(it.salaryType in salaryTypes) {
+                document.toObject(Salary::class.java)?.let {
+                    if (it.salaryType in salaryTypes) {
+                        it.id = document.id
                         onSuccess(it)
                     }
                 }
@@ -146,13 +162,13 @@ class EmployeeRepository @Inject constructor (
         val batch = db.batch()
 
         employees.forEach { employee ->
-            val employeeGroupRef = db.collection("employee_group").document()
-            val employeeId = employee.id.ifEmpty { db.collection("employees").document().id }
+            val employeeId = db.collection("employees").document().id
+            val employeeGroupRef = db.collection("employee_group").document(employeeGroupDocId(groupId, employeeId))
             val employeeRef = db.collection("employees").document(employeeId)
 
             val employeeData = Employee_Group(
-//                employeeId = employeeRef,
-//                groupId = groupId.convertToReference("groups"),
+                employeeId = employeeRef,
+                groupId = groupId.convertToReference("groups"),
                 status = Status.UNAUTHORIZED,
                 isCreator = false,
                 dayJoined = Timestamp.now().toDate(),
@@ -160,10 +176,8 @@ class EmployeeRepository @Inject constructor (
             )
             batch.set(employeeGroupRef, employeeData)
 
-            val salaryRef = db.collection("salaries").document()
+            val salaryRef = db.collection("salaries").document(salaryDocId(groupId, employeeId))
             val salaryData = hashMapOf(
-                "employeeId" to employeeId,
-                "groupId" to groupId,
                 "salaryType" to employee.salaryType,
                 "salary" to employee.salary,
                 "createdAt" to Timestamp.now(),
@@ -189,7 +203,7 @@ class EmployeeRepository @Inject constructor (
                 if (employee != null) {
                     employee.id = document.id
                     onSuccess(employee)
-                    Log.d("EmployeeRepository", "Loaded employee: $employee")
+                    Log.d("EmployeeRepository_getEmployeeById", "Loaded employee: $employee")
                 } else {
                     onFailure(Exception("Employee not found"))
                 }
@@ -197,38 +211,67 @@ class EmployeeRepository @Inject constructor (
     }
 
     fun updateEmployee(employee: Employee, salary: Salary) {
+        Log.d("EmployeeRepository_updateEmployee", "Updating employee: $employee, salary: $salary")
         db.collection("employees").document(employee.id).set(employee.toMap())
         db.collection("salaries").document(salary.id).set(salary)
-
     }
 
-    fun getTotalOutstanding(employeeId: String, groupId: String, onSuccess: (Int) -> Unit, onFailure: (Exception) -> Unit){
+    fun getTotalOutstanding(groupId: String, employeeId: String, onSuccess: (Int) -> Unit, onFailure: (Exception) -> Unit){
 
         var totalOutstanding = 0;
 
-        db.collection("salaries")
-            .whereEqualTo("employeeId", employeeId)
-            .whereEqualTo("groupId", groupId)
+        val salaryRef = db.collection("salaries")
+
+        salaryRef.document(salaryDocId(groupId, employeeId))
+            .collection("adjustments-${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-M"))}")
             .get()
-            .addOnSuccessListener { document ->
-                document.toObjects(Salary::class.java).forEach({salary ->
-                    TypeDeduct.entries.forEach( { type ->
-                        if (salary.salaryType == type.label) {
-                            totalOutstanding += salary.salary
+            .addOnSuccessListener({ document ->
+                document.toObjects(Adjustment::class.java).forEach({ salary ->
+                    TypeDeduct.entries.forEach({ type ->
+                        if (salary.adjustmentType == type.label) {
+                            totalOutstanding += salary.adjustmentAmount
                         }
-                    } )
-                    TypeAllowance.entries.forEach({type ->
-                        if (salary.salaryType == type.label) {
-                            totalOutstanding += salary.salary
+                    })
+                    TypeAllowance.entries.forEach({ type ->
+                        if (salary.adjustmentType == type.label) {
+                            totalOutstanding += salary.adjustmentAmount
                         }
                     })
                 })
-                Log.d("EmployeeRepository", "Total outstanding: $totalOutstanding")
                 onSuccess(totalOutstanding)
-            }.addOnFailureListener { exception ->
+            }).addOnFailureListener { exception ->
                 onFailure(exception)
                 Log.e("EmployeeRepository", "Error loading salary", exception)
                 exception.printStackTrace()
             }
+    }
+
+    fun deleteEmloyeeGroup(groupId: String, employeeId: String) {
+        db.collection("employee_group").document(employeeGroupDocId(groupId, employeeId)).delete()
+    }
+
+    private fun employeeGroupDocId(groupId: String, employeeId: String): String {
+        return "$groupId-$employeeId"
+    }
+
+    fun grantPermission(groupId: String, employeeId: String, scannedResult: String?) {
+
+        val batch = db.batch()
+
+        val employeeGroupRef = db.collection("employee_group").document(employeeGroupDocId(groupId, employeeId))
+        val employeeRef = db.collection("employees").document(employeeId)
+
+        batch.update(employeeGroupRef, "status", Status.ACCEPTED.toString())
+        batch.update(employeeRef, "userId", scannedResult)
+        batch.commit()
+            .addOnSuccessListener {
+                Log.d("EmployeeRepository_grantPermission", "Batch update success")
+            }
+            .addOnFailureListener { e ->
+                Log.e("EmployeeRepository_grantPermission", "Batch update failed", e)
+            }
+
+
+        Log.d("EmployeeRepository_grantPermission", "Granted permission for employee: $employeeId")
     }
 }

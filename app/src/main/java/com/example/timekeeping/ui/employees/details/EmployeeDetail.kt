@@ -19,6 +19,8 @@ fun EmployeeDetail(
     onBonusClick: () -> Unit = {},
     onMinusMoneyClick: () -> Unit = {},
     onAdvanceSalaryClick: () -> Unit = {},
+    onPaymentClick: () -> Unit = {},
+    onBackToEmployeeList: () -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -35,7 +37,9 @@ fun EmployeeDetail(
                 onEmployeeInfoClick = onEmployeeInfoClick,
                 onBonusClick = onBonusClick,
                 onMinusMoneyClick = onMinusMoneyClick,
-                onAdvanceSalaryClick = onAdvanceSalaryClick
+                onAdvanceSalaryClick = onAdvanceSalaryClick,
+                onPaymentClick = onPaymentClick,
+                onBackToEmployeeList = onBackToEmployeeList
             )
         }
     }

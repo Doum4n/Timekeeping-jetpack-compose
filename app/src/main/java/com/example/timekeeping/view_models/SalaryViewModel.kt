@@ -1,6 +1,7 @@
 package com.example.timekeeping.view_models
 
 import androidx.lifecycle.ViewModel
+import com.example.timekeeping.models.Adjustment
 import com.example.timekeeping.models.Salary
 import com.example.timekeeping.repositories.SalaryRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,18 +14,35 @@ class SalaryViewModel @Inject constructor (
     private val salaryRepo: SalaryRepo
 ) : ViewModel() {
 
-    private val _advanceMoney = MutableStateFlow<List<Salary>>(emptyList())
-    val advanceMoney: StateFlow<List<Salary>> = _advanceMoney
+    private val _advanceMoney = MutableStateFlow<List<Adjustment>>(emptyList())
+    val advanceMoney: StateFlow<List<Adjustment>> = _advanceMoney
+
+    private val _salaryInfo = MutableStateFlow<List<Adjustment>>(emptyList())
+    val salaryInfo: StateFlow<List<Adjustment>> = _salaryInfo
 
     fun createSalary(salary: Salary, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         salaryRepo.createSalary(salary, onSuccess, onFailure)
     }
 
-    fun getAdvanceMoney(employeeId: String, onFailure: (Exception) -> Unit = {}) {
-        salaryRepo.getAdvanceMoney(employeeId,
+    fun createAdjustSalary(groupId: String, employeeId: String, adjustment: Adjustment, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+        salaryRepo.createAdjustSalary(groupId, employeeId, adjustment, onSuccess, onFailure)
+    }
+
+    fun getAdvanceMoney(groupId: String, employeeId: String, month: Int, year: Int, onFailure: (Exception) -> Unit = {}) {
+        salaryRepo.getAdvanceMoney(groupId, employeeId, month, year,
             onSuccess = {
                 _advanceMoney.value = it
             }, onFailure)
     }
 
+    fun getSalaryInfoByMonth(groupId: String, employeeId: String, month: Int, year: Int, onFailure: (Exception) -> Unit = {}) {
+        salaryRepo.getSalaryInfoByMonth(groupId, employeeId, month, year,
+            onSuccess = {
+                _salaryInfo.value = it
+            }, onFailure)
+    }
+
+    fun calculateTotalWage(groupId: String, employeeId: String, month: Int, year: Int, onResult: (Int) -> Unit) {
+        salaryRepo.calculateTotalWage(groupId, employeeId, month, year, onResult)
+    }
 }

@@ -106,7 +106,15 @@ class EmployeeViewModel @Inject constructor(
         employeeRepository.updateEmployee(employee, salary)
     }
 
-    fun getTotalOutstanding(employeeId: String, groupId: String, onSuccess: (Int) -> Unit, onFailure: (Exception) -> Unit){
-        employeeRepository.getTotalOutstanding(employeeId, groupId, onSuccess, onFailure)
+    fun getTotalOutstanding(groupId: String, employeeId: String, onSuccess: (Int) -> Unit, onFailure: (Exception) -> Unit){
+        employeeRepository.getTotalOutstanding(groupId, employeeId, onSuccess, onFailure)
+    }
+
+    fun deleteEmloyeeGroup(groupId: String, employeeId: String) {
+        employeeRepository.deleteEmloyeeGroup(groupId, employeeId)
+    }
+
+    fun grantPermission(groupId: String, employeeId: String, scannedResult: String?) {
+        employeeRepository.grantPermission(groupId, employeeId, scannedResult)
     }
 }

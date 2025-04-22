@@ -34,7 +34,8 @@ fun EmployeeManagementScreen(
     viewModel: EmployeeViewModel,
     onBackClick: () -> Unit,
     onMenuItemClick: (MenuItem) -> Unit,
-    onEmployeeIdClick: (String) -> Unit
+    onEmployeeIdClick: (String) -> Unit,
+    onLinkClick: (String) -> Unit
 ) {
     EmployeeManagementContentScreen(
         groupId = viewModel.groupId,
@@ -44,7 +45,8 @@ fun EmployeeManagementScreen(
         onSearch = { searchText -> viewModel.searchEmployeesByName(searchText) },
         onBackClick = onBackClick,
         onMenuItemClick = onMenuItemClick,
-        onEmployeeIdClick = { onEmployeeIdClick(it) }
+        onEmployeeIdClick = { onEmployeeIdClick(it) },
+        onLinkClick = { employeeId -> onLinkClick(employeeId) }
     )
 }
 
@@ -61,7 +63,9 @@ fun EmployeeManagementContentScreen(
     onBackClick: () -> Unit,
     onMenuItemClick: (MenuItem) -> Unit,
 
-    onEmployeeIdClick: (String) -> Unit
+    onEmployeeIdClick: (String) -> Unit,
+
+    onLinkClick: (String) -> Unit
 ) {
     val searchText = remember { mutableStateOf("") }
 
@@ -97,7 +101,10 @@ fun EmployeeManagementContentScreen(
             )
 
             val pages = listOf(
-                EmployeePage.Unlinked(unlinkedEmployees),
+                EmployeePage.Unlinked(
+                    unlinkedEmployees,
+                    onLinkClick = { employeeId -> onLinkClick(employeeId) }
+                ),
                 EmployeePage.Members(employees),
                 EmployeePage.Approval(
                     pendingEmployees,
@@ -118,7 +125,7 @@ fun EmployeeManagementContentScreen(
 }
 
 @Composable
-fun UnlinkedEmployeesScreen(unlinkedEmployees: List<Employee>, groupId: String) {
+fun UnlinkedEmployeesScreen(unlinkedEmployees: List<Employee>, groupId: String, onClick: (String) -> Unit = {}, onLinkClick: (String) -> Unit = {}) {
     EntityList(
         unlinkedEmployees,
         modifier = Modifier
@@ -127,7 +134,8 @@ fun UnlinkedEmployeesScreen(unlinkedEmployees: List<Employee>, groupId: String) 
     ){
         EmployeeCard(
             employee = it,
-            onLinkClick = {}
+            onClick = {employeeId -> onClick(employeeId)},
+            onLinkClick = onLinkClick
         )
     }
 }
@@ -187,6 +195,7 @@ fun EmployeeManagementScreenPreview() {
         onSearch = {},
         onBackClick = {},
         onMenuItemClick = {},
-        onEmployeeIdClick = {}
+        onEmployeeIdClick = {},
+        onLinkClick = {}
     )
 }

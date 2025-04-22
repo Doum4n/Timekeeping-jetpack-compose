@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.example.timekeeping.models.Adjustment
 import com.example.timekeeping.models.Salary
 import com.example.timekeeping.ui.assignment.components.CalendarHeader
 import com.example.timekeeping.ui.calender.CalendarState
@@ -32,7 +33,7 @@ fun SalaryAdvanceInputForm(
     groupId: String,
     employeeId: String,
     onBackClick: () -> Unit,
-    onSave: (Salary) -> Unit,
+    onSave: (Adjustment) -> Unit,
     state: CalendarState
 ) {
     var amount by remember { mutableStateOf(TextFieldValue()) }
@@ -88,14 +89,10 @@ fun SalaryAdvanceInputForm(
             Button(
                 onClick = {
                     onSave(
-                        Salary(
-                            groupId = groupId,
-                            employeeId = employeeId,
-                            salaryType = "Tiền ứng",
-                            salary = -amount.text.toIntOrNull().orZero(),
-                            note = note.text,
+                        Adjustment(
+                            adjustmentAmount = - amount.text.toInt(),
                             createdAt = state.selectedDate.convertLocalDateToDate(),
-                            dateApplied = state.selectedDate.convertLocalDateToDate(),
+                            adjustmentType = "Ứng lương",
                         )
                     )
                 },

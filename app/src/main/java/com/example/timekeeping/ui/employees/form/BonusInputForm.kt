@@ -10,11 +10,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.timekeeping.models.Adjustment
 import com.example.timekeeping.models.Salary
 import com.example.timekeeping.ui.assignment.components.CalendarHeader
 import com.example.timekeeping.ui.calender.CalendarState
 import com.example.timekeeping.ui.components.TopBarWithDoneAction
 import com.example.timekeeping.utils.convertLocalDateToDate
+import com.example.timekeeping.view_models.SalaryViewModel
 
 enum class TypeAllowance(val label: String) {
     ReachTarget("Đạt chỉ tiêu"),
@@ -30,9 +33,11 @@ fun BonusInputForm(
     groupId: String = "",
     employeeId: String = "",
     onBackClick: () -> Unit = {},
-    onSave: (Salary) -> Unit = {},
+    onSave: (Adjustment) -> Unit = {},
+    salaryViewModel: SalaryViewModel = hiltViewModel(),
     state: CalendarState
 ) {
+
     var amount by remember { mutableStateOf(0) }
     var note by remember { mutableStateOf(TextFieldValue()) }
     var selectedType by remember { mutableStateOf(TypeAllowance.ReachTarget) }
@@ -42,17 +47,7 @@ fun BonusInputForm(
             TopBarWithDoneAction(
                 title = "Thêm phụ cấp",
                 onBackClick = onBackClick,
-                onDoneClick = {onSave(
-                    Salary(
-                        groupId = groupId,
-                        employeeId = employeeId,
-                        salaryType = selectedType.label,
-                        salary = amount,
-                        note = note.text,
-                        createdAt = state.selectedDate.convertLocalDateToDate(),
-                        dateApplied = state.selectedDate.convertLocalDateToDate(),
-                    )
-                )}
+                onDoneClick = {}
             )
         }
     ) { paddingValues ->
@@ -76,7 +71,7 @@ fun BonusInputForm(
                     TypeAllowanceItem(
                         onTypeClick = { },
                         modifier = Modifier,
-                        type = type.toString()
+                        type = type.label
                     )
                 }
             }
@@ -115,16 +110,13 @@ fun BonusInputForm(
 
             Button(
                 onClick = {onSave(
-                    Salary(
-                        groupId = groupId,
-                        employeeId = employeeId,
-                        salaryType = selectedType.name,
-                        salary = amount,
+                    Adjustment(
+                        adjustmentType = selectedType.label,
+                        adjustmentAmount = amount,
                         note = note.text,
-                        createdAt = state.selectedDate.convertLocalDateToDate(),
-                        dateApplied = state.selectedDate.convertLocalDateToDate(),
+                        createdAt = state.selectedDate.convertLocalDateToDate()
                     )
-                ) },
+                )},
                 modifier = Modifier
                     .align(Alignment.End)
                     .padding(top = 8.dp)
@@ -145,7 +137,7 @@ fun TypeAllowanceItem(
 ) {
     Card(
         modifier = modifier
-            .clickable { onTypeClick(TypeAllowance.valueOf(type)) },
+            .clickable { onTypeClick(type.convertToAllowanceType() ?: TypeAllowance.ReachTarget) },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -160,4 +152,8 @@ fun TypeAllowanceItem(
             )
         }
     }
+}
+
+fun String.convertToAllowanceType() : TypeAllowance?{
+    return TypeAllowance.entries.find { it.label == this }
 }

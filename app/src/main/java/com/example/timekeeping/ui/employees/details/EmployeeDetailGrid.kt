@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.timekeeping.ui.employees.components.SimpleDialogS
 import com.example.timekeeping.ui.groups.components.IconButtonWithLabel
 import com.example.timekeeping.view_models.EmployeeViewModel
 
@@ -32,12 +33,17 @@ fun EmployeeDetailGrid(
     onBonusClick: () -> Unit = {},
     onMinusMoneyClick: () -> Unit = {},
     onAdvanceSalaryClick: () -> Unit = {},
+    onPaymentClick: () -> Unit = {},
+
+    onBackToEmployeeList: () -> Unit = {}
 ) {
 
     var totalOutStanding by remember { mutableStateOf(0) }
 
+    var showDialog = remember { mutableStateOf(false) }
+
     LaunchedEffect(employeeId) {
-        employeeViewModel.getTotalOutstanding(employeeId, groupId, {
+        employeeViewModel.getTotalOutstanding(groupId, employeeId,{
             totalOutStanding = it
         }, {})
     }
@@ -76,7 +82,7 @@ fun EmployeeDetailGrid(
                     label = "Trừ tiền"
                 )
                 IconButtonWithLabel(
-                    onClick = {},
+                    onClick = {onPaymentClick()},
                     icon = Icons.Default.Warning,
                     label = "Thanh toán"
                 )
@@ -96,6 +102,27 @@ fun EmployeeDetailGrid(
                     icon = Icons.Default.Info,
                     label = "Thông tin nhân viên"
                 )
+                IconButtonWithLabel(
+                    onClick = {
+                        showDialog.value = true},
+                    icon = Icons.Default.Warning,
+                    label = "Ngừng chấm"
+                )
+
+                if (showDialog.value){
+                    SimpleDialogS(
+                        title = "Thông báo",
+                        question = "Bạn có chắc chắn muốn dừng chấm công cho nhân viên này không?",
+                        onConfirm = {
+                            employeeViewModel.deleteEmloyeeGroup(groupId, employeeId)
+                            showDialog.value = false
+                            onBackToEmployeeList()
+                        },
+                        onDismiss = {
+                            showDialog.value = false
+                        }
+                    )
+                }
             }
         }
     }

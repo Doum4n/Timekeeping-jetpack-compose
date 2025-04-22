@@ -40,7 +40,7 @@ fun EmployeeCard(
     employee: Employee,
     isPending: Boolean = false,
     onClick: (String) -> Unit = {},
-    onLinkClick: () -> Unit = {},
+    onLinkClick: (String) -> Unit = {},
     onAcceptClick: () -> Unit = {},
     onRejectClick: () -> Unit = {}
 ) {
@@ -136,7 +136,7 @@ fun EmployeeCard(
                 }
             }else if (employee.userId.isEmpty()) {
                 Button(
-                    onClick =  onLinkClick,
+                    onClick =  {onLinkClick(employee.id)},
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Liên kết")

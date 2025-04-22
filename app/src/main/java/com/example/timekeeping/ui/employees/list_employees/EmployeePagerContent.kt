@@ -33,7 +33,10 @@ fun EmployeePagerContent(
         employeesByPage = pages.map { page ->
             {
                 when (page) {
-                    is EmployeePage.Unlinked -> UnlinkedEmployeesScreen(page.employees, groupId)
+                    is EmployeePage.Unlinked -> UnlinkedEmployeesScreen(page.employees, groupId){
+                        onEmployeeClick(it)
+                        page.onLinkClick(it)
+                    }
                     is EmployeePage.Members -> MembersScreen(page.employees, groupId){
                         onEmployeeClick(it)
                     }

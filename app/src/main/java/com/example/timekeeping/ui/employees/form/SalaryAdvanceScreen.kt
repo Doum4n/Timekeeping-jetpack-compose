@@ -32,6 +32,10 @@ import com.example.timekeeping.ui.calender.CalendarHeader
 import com.example.timekeeping.ui.calender.CalendarState
 import com.example.timekeeping.ui.components.TopBarClassic
 import com.example.timekeeping.view_models.SalaryViewModel
+import java.text.SimpleDateFormat
+import java.time.format.DateTimeFormatter
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun SalaryAdvanceScreen(
@@ -39,13 +43,14 @@ fun SalaryAdvanceScreen(
     employeeId: String,
     onBackClick: () -> Unit,
     onAddSalaryAdvance: () -> Unit,
-    salaryViewModel: SalaryViewModel = hiltViewModel()
+    salaryViewModel: SalaryViewModel = hiltViewModel(),
+    state: CalendarState = CalendarState()
 ) {
 
     val advanceMoney = salaryViewModel.advanceMoney.collectAsState()
 
     LaunchedEffect(advanceMoney){
-        salaryViewModel.getAdvanceMoney(employeeId)
+        salaryViewModel.getAdvanceMoney(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year)
     }
 
     Scaffold(
@@ -65,7 +70,7 @@ fun SalaryAdvanceScreen(
         ){
             item {
                 CalendarHeader(
-                    state = CalendarState(),
+                    state = state,
                     modifier = Modifier
                 )
             }
@@ -80,8 +85,8 @@ fun SalaryAdvanceScreen(
 
             items(salaryViewModel.advanceMoney.value){
                 SalaryAdvanceHistoryItem(
-                    total = it.salary,
-                    date = it.createdAt.toString(),
+                    total = -it.adjustmentAmount,
+                    date =  SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it.createdAt) ,
                     modifier = Modifier
                 )
             }

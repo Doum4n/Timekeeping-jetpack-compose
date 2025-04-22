@@ -14,6 +14,7 @@ import com.example.timekeeping.ui.employees.form.BonusInputForm
 import com.example.timekeeping.ui.employees.form.BonusScreen
 import com.example.timekeeping.ui.employees.form.DeductMoneyInputScreen
 import com.example.timekeeping.ui.employees.form.DeductMoneyScreen
+import com.example.timekeeping.ui.employees.form.PaymentScreen
 import com.example.timekeeping.ui.employees.form.SalaryAdvanceInputForm
 import com.example.timekeeping.ui.employees.form.SalaryAdvanceScreen
 import com.example.timekeeping.view_models.EmployeeViewModel
@@ -79,8 +80,11 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
             groupId = groupId,
             employeeId = employeeId,
             onBackClick = { navController.popBackStack() },
-            onSave = {
-                salary -> salaryViewModel.createSalary(salary,
+            onSave = { adjustments ->
+                salaryViewModel.createAdjustSalary(
+                    groupId,
+                    employeeId,
+                    adjustments,
                     onSuccess = {
                         Toast.makeText(navController.context, "Salary saved successfully", Toast.LENGTH_SHORT).show()
                         navController.popBackStack()
@@ -88,7 +92,7 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
                     onFailure = { exception ->
                         Toast.makeText(navController.context, "Failed to save salary: ${exception.message}", Toast.LENGTH_SHORT).show()
                     }
-                            )
+                )
             },
             state = CalendarState()
         )
@@ -130,16 +134,19 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
             groupId = groupId,
             employeeId = employeeId,
             onBackClick = { navController.popBackStack() },
-            onSave = {
-                    salary -> salaryViewModel.createSalary(salary,
-                onSuccess = {
-                    Toast.makeText(navController.context, "Salary saved successfully", Toast.LENGTH_SHORT).show()
-                    navController.popBackStack()
-                },
-                onFailure = { exception ->
-                    Toast.makeText(navController.context, "Failed to save salary: ${exception.message}", Toast.LENGTH_SHORT).show()
-                }
-            )
+            onSave = { adjustments ->
+                salaryViewModel.createAdjustSalary(
+                    groupId,
+                    employeeId,
+                    adjustments,
+                    onSuccess = {
+                        Toast.makeText(navController.context, "Salary saved successfully", Toast.LENGTH_SHORT).show()
+                        navController.popBackStack()
+                    },
+                    onFailure = { exception ->
+                        Toast.makeText(navController.context, "Failed to save salary: ${exception.message}", Toast.LENGTH_SHORT).show()
+                    }
+                )
             },
             state = CalendarState()
         )
@@ -180,7 +187,11 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
             groupId = groupId,
             employeeId = employeeId,
             onBackClick = { navController.popBackStack() },
-            onSave = { salary -> salaryViewModel.createSalary(salary,
+            onSave = { adjustments ->
+                salaryViewModel.createAdjustSalary(
+                    groupId,
+                    employeeId,
+                    adjustments,
                     onSuccess = {
                         Toast.makeText(navController.context, "Salary saved successfully", Toast.LENGTH_SHORT).show()
                         navController.popBackStack()
@@ -194,4 +205,20 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
         )
     }
 
+    composable(
+        route = Screen.PaymentForm.route,
+        arguments = listOf(
+            navArgument("groupId") { type = NavType.StringType },
+            navArgument("employeeId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+        val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
+        val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
+        PaymentScreen(
+            groupId = groupId,
+            employeeId = employeeId,
+            onBack = { navController.popBackStack() },
+            state = CalendarState()
+        )
+    }
 }
