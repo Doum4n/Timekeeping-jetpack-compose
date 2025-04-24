@@ -16,8 +16,10 @@ import com.example.timekeeping.models.Salary
 import com.example.timekeeping.ui.assignment.components.CalendarHeader
 import com.example.timekeeping.ui.calender.CalendarState
 import com.example.timekeeping.ui.components.TopBarWithDoneAction
+import com.example.timekeeping.utils.DateTimeMap
 import com.example.timekeeping.utils.convertLocalDateToDate
 import com.example.timekeeping.view_models.SalaryViewModel
+import java.time.LocalDateTime
 
 enum class TypeAllowance(val label: String) {
     ReachTarget("Đạt chỉ tiêu"),
@@ -114,7 +116,7 @@ fun BonusInputForm(
                         adjustmentType = selectedType.label,
                         adjustmentAmount = amount,
                         note = note.text,
-                        createdAt = state.selectedDate.convertLocalDateToDate()
+                        createdAt = DateTimeMap.from(LocalDateTime.now())
                     )
                 )},
                 modifier = Modifier

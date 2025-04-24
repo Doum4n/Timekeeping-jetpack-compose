@@ -4,6 +4,7 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Date
 import java.util.Locale
@@ -32,4 +33,8 @@ fun String.convertToReference(collectionName: String): DocumentReference {
 
 fun LocalDate.convertLocalDateToDate(): Date {
     return Date.from(this.atStartOfDay(ZoneId.systemDefault()).toInstant())
+}
+
+fun LocalDate.convertToLocalDateTime(): LocalDateTime {
+    return this.atStartOfDay()
 }

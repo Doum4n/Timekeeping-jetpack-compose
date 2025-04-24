@@ -36,8 +36,10 @@ import com.example.timekeeping.models.Salary
 import com.example.timekeeping.ui.assignment.components.CalendarHeader
 import com.example.timekeeping.ui.calender.CalendarState
 import com.example.timekeeping.ui.components.TopBarWithDoneAction
+import com.example.timekeeping.utils.DateTimeMap
 import com.example.timekeeping.utils.convertLocalDateToDate
 import com.example.timekeeping.view_models.SalaryViewModel
+import java.time.LocalDateTime
 
 enum class TypeDeduct(val label: String) {
     NotCome("Không đi làm"),
@@ -137,7 +139,7 @@ fun DeductMoneyInputScreen(
                         adjustmentType = selectedType.label,
                         adjustmentAmount = - amount.text.toInt(),
                         note = note.text,
-                        createdAt = state.selectedDate.convertLocalDateToDate()
+                        createdAt = DateTimeMap.from(LocalDateTime.now())
                     )
                 )},
                 modifier = Modifier

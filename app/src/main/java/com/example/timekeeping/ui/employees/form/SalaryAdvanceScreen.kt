@@ -86,7 +86,7 @@ fun SalaryAdvanceScreen(
             items(salaryViewModel.advanceMoney.value){
                 SalaryAdvanceHistoryItem(
                     total = -it.adjustmentAmount,
-                    date =  SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it.createdAt) ,
+                    date =  it.createdAt.format("dd-MM-yyyy"),
                     modifier = Modifier
                 )
             }

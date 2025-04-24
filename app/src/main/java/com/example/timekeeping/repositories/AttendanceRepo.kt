@@ -7,6 +7,7 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import java.time.LocalDate
 import java.util.Calendar
 import java.util.Date
 import javax.inject.Inject
@@ -33,26 +34,14 @@ class AttendanceRepo @Inject constructor(
         val calendar = Calendar.getInstance()
         calendar.time = dayCheckIn
 
-        // Set về đầu ngày (00:00:00.000)
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        val startOfDay = calendar.time
-
-        // Tăng ngày lên 1 để lấy endOfDay (00:00:00 của ngày hôm sau)
-        calendar.add(Calendar.DATE, 1)
-        val endOfDay = calendar.time
-
-        println("🔍 shiftId: $shiftId")
-        println("🔍 dayCheckIn: $dayCheckIn")
-        println("🔍 startOfDay: $startOfDay")
-        println("🔍 endOfDay: $endOfDay")
-
+        val day = calendar.get(Calendar.DAY_OF_MONTH)
+        val month = calendar.get(Calendar.MONTH) + 1 // Tháng tính từ 0
+        val year = calendar.get(Calendar.YEAR)
         db.collection("attendances")
             .whereEqualTo("shiftId", shiftId)
-            .whereGreaterThanOrEqualTo("dayCheckIn", startOfDay)
-            .whereLessThan("dayCheckIn", endOfDay) // dùng lessThan thay vì lessThanOrEqualTo
+            .whereEqualTo("startTime.month", month)
+            .whereEqualTo("startTime.year", year)
+            .whereEqualTo("startTime.day", day)
             .get()
             .addOnSuccessListener { result ->
                 val attendances = result.documents.mapNotNull { doc ->

@@ -10,7 +10,9 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import org.checkerframework.checker.units.qual.A
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import javax.inject.Inject
@@ -59,8 +61,6 @@ class SalaryRepo @Inject constructor(
             .get()
             .addOnSuccessListener { documents ->
                 val salaries = documents.toObjects(Adjustment::class.java)
-                Log.d("SalaryRepo_getSalaryInfoByMonth", "salaries: $salaries")
-                Log.d("SalaryRepo_getSalaryInfoByMonth", "groupId: $groupId, employeeId: $employeeId, month: $month, year: $year")
                 onSuccess(salaries)
             }
             .addOnFailureListener { onFailure(it) }
@@ -104,13 +104,26 @@ class SalaryRepo @Inject constructor(
                 salaryType = salary?.salaryType ?: ""
                 salaryAmount = salary?.salary ?: 0
 
+            val startDate = Timestamp(Date.from(
+                LocalDate.of(year, month, 1)
+                    .atStartOfDay(ZoneId.systemDefault())
+                    .toInstant()
+            ))
+
+            val endDate = Timestamp(Date.from(
+                LocalDate.of(year, month, 1)
+                    .withDayOfMonth(LocalDate.of(year, month, 1).lengthOfMonth())
+                    .atTime(23, 59, 59)
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+            ))
 
             when(salaryType) {
                 "Ca" -> {
                     firestore.collection("attendances")
                         .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
-//                    .whereGreaterThanOrEqualTo("startTime", Timestamp(Date(year, month, 1)))
-//                    .whereLessThanOrEqualTo("endTime", Timestamp(Date(year, month + 1, 0)))
+                        .whereEqualTo("startTime.month", month)
+                        //.whereLessThanOrEqualTo("endTime", endDate)
                         .get()
                         .addOnSuccessListener({
                             val assignments = it.toObjects(Attendance::class.java)
@@ -124,11 +137,11 @@ class SalaryRepo @Inject constructor(
                 "Tháng" -> {
                     firestore.collection("attendances")
                         .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
-//                    .whereGreaterThanOrEqualTo("startTime", Timestamp(Date(year, month, 1)))
-//                    .whereLessThanOrEqualTo("endTime", Timestamp(Date(year, month + 1, 0)))
+                        .whereGreaterThanOrEqualTo("startTime", startDate)
+                        .whereLessThanOrEqualTo("endTime", endDate)
                         .get()
-                        .addOnSuccessListener({ documents ->
-                            val assignments = documents.toObjects(Assignment::class.java)
+                        .addOnSuccessListener({
+                            val assignments = it.toObjects(Assignment::class.java)
                             totalWage = (assignments.size * salaryAmount / 30)
                             onResult(totalWage)
                         })

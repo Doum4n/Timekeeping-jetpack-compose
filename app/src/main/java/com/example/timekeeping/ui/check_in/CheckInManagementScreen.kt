@@ -43,10 +43,12 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.timekeeping.models.Attendance
 import com.example.timekeeping.ui.components.TopBarWithDoneAction
+import com.example.timekeeping.utils.DateTimeMap
 import com.example.timekeeping.utils.convertLocalDateToDate
 import com.example.timekeeping.utils.convertToReference
 import com.example.timekeeping.view_models.AttendanceViewModel
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 enum class AttendanceType(val label: String) {
     FullDay("Đi làm"),
@@ -64,6 +66,7 @@ enum class AttendanceType(val label: String) {
 data class CheckInState(
     val employeeId: String,
     val employeeName: String,
+    // Lưu trạng thái của các loại chấm công
     val attendanceStates: SnapshotStateMap<AttendanceType, Boolean> = mutableStateMapOf(),
     var reason: String = ""
 )
@@ -175,7 +178,7 @@ fun CheckInManagementScreen(
                                 val alreadyAttended = uiState.value.attendances.firstOrNull {
                                     it.employeeId.id == employeeId &&
                                     it.shiftId == uiState.value.selectedShiftId &&
-                                    it.dayCheckIn == state.visibleDate.convertLocalDateToDate()
+                                    it.startTime.equals(DateTimeMap.from(state.visibleDate))
                                 }
 
                                 Log.d("CheckInManagementScreen", "alreadyAttended: $alreadyAttended")
@@ -187,7 +190,7 @@ fun CheckInManagementScreen(
                                             employeeId = alreadyAttended.employeeId,
                                             shiftId = alreadyAttended.shiftId,
                                             attendanceType = type.label,
-                                            dayCheckIn = state.visibleDate.convertLocalDateToDate(),
+                                            startTime = DateTimeMap.from(LocalDateTime.now()),
                                         )
                                     )
                                 else
@@ -196,7 +199,7 @@ fun CheckInManagementScreen(
                                             employeeId = employeeId.convertToReference("employees"),
                                             shiftId = uiState.value.selectedShiftId!!,
                                             attendanceType = type.label,
-                                            dayCheckIn = state.visibleDate.convertLocalDateToDate()
+                                            startTime = DateTimeMap.from(LocalDateTime.now()),
                                         )
                                     )
                             }

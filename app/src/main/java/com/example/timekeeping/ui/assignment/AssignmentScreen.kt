@@ -54,28 +54,32 @@ fun AssignmentScreen(
     viewModel: AssignmentViewModel = hiltViewModel()
 ) {
     // State chính
-    var isSharedCalendar by remember { mutableStateOf(true) }
-    val selectedDays = remember { mutableStateListOf<String>() }
-    var sharedCalendarDays by remember { mutableStateOf(listOf<CalendarDay>()) }
-    val assignmentStates = remember {  mutableStateMapOf<String, SnapshotStateList<String>>() }
+    var isSharedCalendar by remember { mutableStateOf(true) } // Cờ xác định lịch dùng chung hay cá nhân
+    val selectedDays = remember { mutableStateListOf<String>() } // Lưu các ngày đã chọn
+    var sharedCalendarDays by remember { mutableStateOf(listOf<CalendarDay>()) } // Lịch dùng chung cho các nhân viên
 
-    var calendarByEmployee = remember { mutableStateMapOf<String, SnapshotStateList<CalendarDay>>() }
-    val weekdayByEmployee = remember { mutableStateMapOf<String, SnapshotStateList<DayOfWeek>>() }
+    var calendarByEmployee = remember { mutableStateMapOf<String, SnapshotStateList<CalendarDay>>() } // Lịch của từng nhân viên
+    val weekdayByEmployee = remember { mutableStateMapOf<String, SnapshotStateList<DayOfWeek>>() } // Các ngày trong tuần của từng nhân viên
+    val assignmentStates = remember { mutableStateMapOf<String, SnapshotStateList<String>>() } // Trạng thái phân công công việc của từng nhân viên
 
-    val selectedWeekdays = remember { mutableStateListOf<DayOfWeek>() }
-    var assignmentDates by remember { mutableStateOf(listOf<Int>()) }
+    val selectedWeekdays = remember { mutableStateListOf<DayOfWeek>() } // Các ngày trong tuần được chọn
+    var assignmentDates by remember { mutableStateOf(listOf<Int>()) } // Ngày phân công công việc
 
-    var expanded by remember { mutableStateOf(true) }
+    var expanded by remember { mutableStateOf(true) } // Cờ xác định trạng thái mở rộng của lịch
 
-    var selectedShift by remember { mutableStateOf("") }
+    var selectedShift by remember { mutableStateOf("") } // Shift đã chọn
 
-    val initialCalendarByEmployee = remember { mutableStateMapOf<String, List<CalendarDay>>() } // Dùng List để tránh bị mutate
+    // Lịch khởi tạo của nhân viên, sử dụng List để tránh việc mutate
+    // Danh sách này dùng để kiểm tra xem lịch của nhân viên đã được sửa đổi hay chưa
+    val initialCalendarByEmployee = remember { mutableStateMapOf<String, List<CalendarDay>>() }
 
-    val employees = teamViewModel.employees.collectAsState().value
+    val employees = teamViewModel.employees.collectAsState().value // Danh sách nhân viên của nhóm
 
+    // Map giữa employeeId và assignmentId
+    // Dùng để kiểm tra xem nhân viên đã có phân công công việc chưa
     val employeeId_assignmentId = remember { mutableStateMapOf<String, String>() }
 
-    val teams = teamViewModel.teams.value
+    val teams = teamViewModel.teams.value // Danh sách các nhóm
 
     LaunchedEffect(teams) {
         if(teams.isNotEmpty())
@@ -132,31 +136,34 @@ fun AssignmentScreen(
                         calendarByEmployee.forEach({ assignment ->
                             val employeeAssignmentId = employeeId_assignmentId[assignment.key]
 
-                            if (employeeAssignmentId != null && isEmployeeCalendarModified(assignment.key, initialCalendarByEmployee, calendarByEmployee)) {
-                                // Nếu bản ghi tồn tại và đã được sửa đổi, thực hiện cập nhật
-                                viewModel.updateAssignment(
-                                    employeeAssignmentId,
-                                    Assignment(
-                                        employeeId = assignment.key.convertToReference("employees"),
-                                        shiftId = selectedShift.convertToReference("shifts"),
-                                        dates = assignment.value.filter { it.day.isNotBlank() && (it.isSelected || it.isAssigned) }
-                                            .map { it.day.toInt() }
-                                            .toList()
-                                    )
-                                )
-                            } else {
-                                // Nếu không có bản ghi hoặc không sửa đổi, thực hiện thêm mới
-                                viewModel.addAssignment(
-                                    Assignment(
-                                        employeeId = assignment.key.convertToReference("employees"),
-                                        shiftId = selectedShift.convertToReference("shifts"),
-                                        dates = assignment.value.filter { it.day.isNotBlank() && (it.isSelected || it.isAssigned) }
-                                            .map { it.day.toInt() }
-                                            .toList()
-                                    )
-                                )
-                            }
+                            Log.d("AssignmentScreen", "Employee assignment id: $employeeAssignmentId")
 
+                            if (employeeAssignmentId != null) {
+                                if (employeeAssignmentId.isNotBlank() && isEmployeeCalendarModified(assignment.key, initialCalendarByEmployee, calendarByEmployee)) {
+                                    // Nếu bản ghi tồn tại và đã được sửa đổi, thực hiện cập nhật
+                                    viewModel.updateAssignment(
+                                        employeeAssignmentId,
+                                        Assignment(
+                                            employeeId = assignment.key.convertToReference("employees"),
+                                            shiftId = selectedShift.convertToReference("shifts"),
+                                            dates = assignment.value.filter { it.day.isNotBlank() && (it.isSelected || it.isAssigned) }
+                                                .map { it.day.toInt() }
+                                                .toList()
+                                        )
+                                    )
+                                } else if(employeeAssignmentId.isBlank()) {
+                                    // Nếu không có bản ghi hoặc không sửa đổi, thực hiện thêm mới
+                                    viewModel.addAssignment(
+                                        Assignment(
+                                            employeeId = assignment.key.convertToReference("employees"),
+                                            shiftId = selectedShift.convertToReference("shifts"),
+                                            dates = assignment.value.filter { it.day.isNotBlank() && (it.isSelected || it.isAssigned) }
+                                                .map { it.day.toInt() }
+                                                .toList()
+                                        )
+                                    )
+                                }
+                            }
                         })
                     }) {
                         Icon(Icons.Default.Done, contentDescription = "Done")
@@ -170,9 +177,14 @@ fun AssignmentScreen(
 
         LazyColumn(modifier = Modifier.padding(padding)) {
             item {
-                ShiftSection(shiftViewModel, onShiftSelected = {
-                    selectedShift = it
-                }, selectedShiftId = selectedShift)
+                ShiftSection(
+                    shiftViewModel,
+                    onShiftSelected = {
+                        selectedShift = it
+
+                    },
+                    selectedShiftId = selectedShift
+                )
             }
 
             val shareCalendar = Calendar.Shared(

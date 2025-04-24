@@ -1,5 +1,6 @@
 package com.example.timekeeping.models
 
+import com.example.timekeeping.utils.DateTimeMap
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.Exclude
@@ -12,9 +13,9 @@ data class Attendance(
     val employeeId: DocumentReference = FirebaseFirestore.getInstance().document(""),
     val shiftId: String = "",
     val attendanceType: String = "",
-    val dayCheckIn: Date = Date(),
-    val startTime: Timestamp = Timestamp.now(),
-    val endTime: Date = Date(),
+    val dayCheckIn: DateTimeMap = DateTimeMap(),
+    val startTime: DateTimeMap = DateTimeMap(),
+    val endTime: DateTimeMap = DateTimeMap(),
 ) {
     fun toMap(): Map<String, Any?> {
         return mapOf(

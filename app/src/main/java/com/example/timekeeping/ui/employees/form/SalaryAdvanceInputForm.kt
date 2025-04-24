@@ -26,6 +26,7 @@ import com.example.timekeeping.models.Salary
 import com.example.timekeeping.ui.assignment.components.CalendarHeader
 import com.example.timekeeping.ui.calender.CalendarState
 import com.example.timekeeping.ui.components.TopBarClassic
+import com.example.timekeeping.utils.DateTimeMap
 import com.example.timekeeping.utils.convertLocalDateToDate
 
 @Composable
@@ -91,7 +92,7 @@ fun SalaryAdvanceInputForm(
                     onSave(
                         Adjustment(
                             adjustmentAmount = - amount.text.toInt(),
-                            createdAt = state.selectedDate.convertLocalDateToDate(),
+                            createdAt = DateTimeMap.from(state.selectedDate),
                             adjustmentType = "Ứng lương",
                         )
                     )
