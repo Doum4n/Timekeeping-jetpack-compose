@@ -137,7 +137,7 @@ fun CheckInManagementScreen(
                 attendances.forEach { attendance ->
                     val empId = attendance.employeeId.id
                     val employeeName = shiftViewModel.employees.value
-                        .find { it.id == empId }?.fullName ?: "Unknown"
+                        .find { it.id == empId }?.name?.fullName ?: "Unknown"
 
                     val state = uiState.value.checkInStates.getOrPut(empId) {
                         CheckInState(
@@ -240,11 +240,11 @@ fun CheckInManagementScreen(
 
             items(shiftViewModel.employees.value) { employee ->
                 val checkIn = uiState.value.checkInStates.getOrPut(employee.id) {
-                    CheckInState(employeeId = employee.id, employeeName = employee.fullName)
+                    CheckInState(employeeId = employee.id, employeeName = employee.name.fullName)
                 }
 
                 EmployeeCheckInSection(
-                    employeeName = employee.fullName,
+                    employeeName = employee.name.fullName,
                     shareCheckInStates = if (isSharedCheckIn) uiState.value.sharedAttendanceStates else checkIn.attendanceStates,
                     onReasonChange = { reason -> checkIn.reason = reason },
                     isLeave = checkIn.attendanceStates[AttendanceType.PaidLeave] == true ||

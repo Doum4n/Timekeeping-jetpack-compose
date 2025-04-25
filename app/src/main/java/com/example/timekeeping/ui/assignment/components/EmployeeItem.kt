@@ -38,7 +38,7 @@ fun EmployeeItem(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                Text(text = employee.fullName)
+                Text(text = employee.name.fullName)
                 Button(
                     modifier = Modifier.wrapContentSize(),
                     onClick = onSharedCalendarClick

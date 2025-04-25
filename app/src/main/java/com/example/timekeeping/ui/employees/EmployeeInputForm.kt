@@ -15,6 +15,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.example.timekeeping.models.Employee
+import com.example.timekeeping.models.Name
 import com.example.timekeeping.models.Status
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -118,9 +119,11 @@ fun InputFormCard(
                     value = fullName,
                     onValueChange = {
                         fullName = it
-                        onEmployeeChange(employee.copy(fullName = it))
+                        with(employee) {
+                            onEmployeeChange(copy(name = name.form(fullName)))
+                        }
                     },
-                    label = { Text("Tên") },
+                    label = { Text("Họ và tên") },
                     modifier = Modifier.weight(1f)
                 )
 
@@ -220,7 +223,7 @@ fun InputFormCard(
 fun InputFormCardPreview() {
     InputFormCard(
         employee = Employee(
-            fullName = "Nguyen Van A",
+            Name(firstName = "John", lastName = "Doe").fullName,
             role = "Quản lý",
             salaryType = "Giờ",
             salary = 100

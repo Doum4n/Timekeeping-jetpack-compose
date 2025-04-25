@@ -35,7 +35,7 @@ fun RegisterScreen(
                 onRegisterSuccess(
                     Employee(
                         userId = state.userId,
-                        fullName = uiState.fullName,
+                        name = uiState.name,
                         email = uiState.email,
                     )
                 )
@@ -53,7 +53,16 @@ fun RegisterScreen(
 
     RegisterScreenContent(
         state = uiState,
-        onFullNameChange = { uiState = uiState.copy(fullName = it) },
+        onLastNameChange = {
+            with(uiState) {
+                uiState = copy(name = name.copy(lastName = it))
+            }
+        },
+        onFirstNameChange = {
+            with(uiState) {
+                uiState = copy(name = name.copy(firstName = it))
+            }
+        },
         onEmailChange = { uiState = uiState.copy(email = it) },
         onPasswordChange = {
             uiState = uiState.copy(
@@ -69,11 +78,11 @@ fun RegisterScreen(
         },
         onRegisterClick = {
             if (!uiState.passwordError &&
-                uiState.fullName.isNotEmpty() &&
+                uiState.name.fullName.isNotEmpty() &&
                 uiState.email.isNotEmpty() &&
                 uiState.password.isNotEmpty()
             ) {
-                viewModel.registerUser(uiState.fullName, uiState.email, uiState.password)
+                viewModel.registerUser(uiState.name.fullName, uiState.email, uiState.password)
             }
         },
         onNavigateToLogin = onNavigateToLogin

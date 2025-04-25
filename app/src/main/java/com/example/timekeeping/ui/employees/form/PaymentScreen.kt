@@ -1,6 +1,7 @@
 package com.example.timekeeping.ui.employees.form
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,8 +10,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,6 +27,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -27,7 +37,11 @@ import com.example.timekeeping.models.Adjustment
 import com.example.timekeeping.ui.assignment.components.CalendarHeader
 import com.example.timekeeping.ui.calender.CalendarState
 import com.example.timekeeping.ui.components.TopBarClassic
+import com.example.timekeeping.view_models.EmployeeViewModel
+import com.example.timekeeping.view_models.PaymentViewModel
 import com.example.timekeeping.view_models.SalaryViewModel
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 data class SalaryInfo(
     val employeeName: String = "",
@@ -51,18 +65,28 @@ fun PaymentScreen(
     employeeId: String,
     groupId: String,
     onBack: () -> Unit,
-    salaryViewModel: SalaryViewModel = hiltViewModel()
+    onPaymentClick: () -> Unit,
+    salaryViewModel: SalaryViewModel = hiltViewModel(),
+    employeeViewModel: EmployeeViewModel = hiltViewModel(),
+    paymentViewModel: PaymentViewModel = hiltViewModel()
 ) {
 
+    var name by remember { mutableStateOf("") }
+
     val adjustmentsInfo = salaryViewModel.salaryInfo.collectAsState()
+    val totalPayment = paymentViewModel.getTotalPayment()
 
     val totalWage = remember { mutableStateOf(0) }
 
-    LaunchedEffect(adjustmentsInfo, totalWage) {
+    LaunchedEffect(state.visibleMonth) {
         salaryViewModel.getSalaryInfoByMonth(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year)
         salaryViewModel.calculateTotalWage(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year) {
             totalWage.value = it
         }
+        paymentViewModel.getPayments(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year)
+        employeeViewModel.getName(employeeId, {
+            name = it
+        })
     }
 
     Scaffold(
@@ -75,29 +99,43 @@ fun PaymentScreen(
     ) {
         paddingValues ->
         Column(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
+            modifier = Modifier.run {
+                padding(paddingValues)
+                        .padding(16.dp)
+                        .fillMaxSize()
+            }
         ) {
-            PaymentContent(state, adjustmentsInfo.value, totalWage.value)
+            PaymentContent(name, state, adjustmentsInfo.value, totalWage.value, totalPayment)
+
+            Button(
+                onClick = onPaymentClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Thanh toán")
+            }
         }
     }
 }
 
 @Composable
-fun PaymentContent(state: CalendarState, salaryInfo: List<Adjustment>, totalWage: Int) {
+fun PaymentContent(name: String, state: CalendarState, salaryInfo: List<Adjustment>, totalWage: Int, totalPayment: Int) {
+
+    val allowanceLabels = TypeAllowance.entries.map { it.label }
+    val deductLabels = TypeDeduct.entries.map { it.label }.filter { it != "Ứng lương" }
+    val totalBonus = salaryInfo.filter { it.adjustmentType in allowanceLabels }.sumOf { it.adjustmentAmount }
+    val totalAdvance = salaryInfo.filter { it.adjustmentType == "Ứng lương" }.sumOf { it.adjustmentAmount }
+    val totalDeduct = salaryInfo.filter { it.adjustmentType in deductLabels }.sumOf { it.adjustmentAmount }
+    val totalUnpaid = totalWage + totalBonus + totalAdvance + totalDeduct - totalPayment
 
     val salary = SalaryInfo(
-        employeeName = "Nguyễn Văn A",
-        totalWorkingSalary = totalWage ,
-        totalBonus = salaryInfo.filter { it.adjustmentType in TypeAllowance.entries.map { it.label } }.sumOf { it.adjustmentAmount },
-        totalSalary = salaryInfo.filter { it.adjustmentType in TypeAllowance.entries.map { it.label } }.sumOf { it.adjustmentAmount } + totalWage,
-        totalAdvance = salaryInfo.filter { it.adjustmentType == "Ứng lương" }.sumOf { it.adjustmentAmount },
-        totalDeduct = salaryInfo.filter {
-            it.adjustmentType in TypeDeduct.entries.filter { it.label != "Ứng lương" }.map { it.label }
-        }.sumOf { it.adjustmentAmount },
-        totalPaid = salaryInfo.filter { it.adjustmentType == "Đã thanh toán" }.sumOf { it.adjustmentAmount },
-        totalUnpaid = salaryInfo.filter { it.adjustmentType == "Chưa thanh toán" }.sumOf { it.adjustmentAmount }
+        employeeName = name,
+        totalWorkingSalary = totalWage,
+        totalBonus = totalBonus,
+        totalSalary = totalWage + totalBonus,
+        totalAdvance = totalAdvance,
+        totalDeduct = totalDeduct,
+        totalPaid = totalPayment,
+        totalUnpaid = totalUnpaid
     )
 
     val paymentInfo = listOf(
@@ -112,8 +150,8 @@ fun PaymentContent(state: CalendarState, salaryInfo: List<Adjustment>, totalWage
         PaymentItem("Tổng chưa thanh toán", formatCurrency(salary.totalUnpaid)),
     )
 
-    CalendarHeader(
-        state = state,
+    CalendarHeaderWithMonthYear(
+        state = state
     )
     Card (
         modifier = Modifier
@@ -126,6 +164,33 @@ fun PaymentContent(state: CalendarState, salaryInfo: List<Adjustment>, totalWage
                     value = item.value
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun CalendarHeaderWithMonthYear(
+    state: CalendarState,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(onClick = { state.prevMonth() }) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous")
+        }
+
+        Text(
+            text = state.visibleDate.format(DateTimeFormatter.ofPattern("MMMM 'năm' yyyy", Locale("vi", "VN"))),
+            style = MaterialTheme.typography.titleMedium
+        )
+
+        IconButton(onClick = { state.nextMonth() }) {
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next")
         }
     }
 }

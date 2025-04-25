@@ -142,7 +142,7 @@ fun EmployeeItem(employee: Employee, onCheckedChange: (DocumentReference) -> Uni
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = employee.fullName, style = MaterialTheme.typography.titleMedium)
+            Text(text = employee.name.fullName, style = MaterialTheme.typography.titleMedium)
             Checkbox(
                 checked = isChecked,
                 onCheckedChange = {

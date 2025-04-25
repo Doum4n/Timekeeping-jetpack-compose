@@ -1,7 +1,9 @@
 package com.example.timekeeping.ui.auth.state
 
+import com.example.timekeeping.models.Name
+
 data class RegisterUiState(
-    val fullName: String = "",
+    val name: Name = Name(),
     val email: String = "",
     val password: String = "",
     val confirmPassword: String = "",

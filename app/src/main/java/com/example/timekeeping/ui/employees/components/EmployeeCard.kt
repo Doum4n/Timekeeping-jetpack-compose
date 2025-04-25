@@ -34,6 +34,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.example.timekeeping.R
 import com.example.timekeeping.models.Employee
+import com.example.timekeeping.models.Name
 
 @Composable
 fun EmployeeCard(
@@ -84,7 +85,7 @@ fun EmployeeCard(
                             .clip(CircleShape)
                     )
                     Text(
-                        text = employee.fullName,
+                        text = employee.name.fullName,
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
@@ -158,12 +159,12 @@ class EmployeePreviewParameterProvider : androidx.compose.ui.tooling.preview.Pre
     override val values: Sequence<Employee> = sequenceOf(
         Employee(
             id = "1",
-            fullName = "Nguyễn Văn A",
+            name = Name(firstName = "Nguyễn Văn", lastName = "A"),
             userId = "123"
         ),
         Employee(
             id = "2",
-            fullName = "Trần Thị B",
+            name = Name(firstName = "Nguyễn Văn", lastName = "B"),
             userId = ""
         ),
 

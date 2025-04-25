@@ -27,7 +27,8 @@ import com.example.timekeeping.ui.auth.state.RegisterUiState
 @Composable
 fun RegisterScreenContent(
     state: RegisterUiState,
-    onFullNameChange: (String) -> Unit,
+    onLastNameChange: (String) -> Unit,
+    onFirstNameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onConfirmPasswordChange: (String) -> Unit,
@@ -48,9 +49,19 @@ fun RegisterScreenContent(
         )
 
         OutlinedTextField(
-            value = state.fullName,
-            onValueChange = onFullNameChange,
-            label = { Text("Họ và tên") },
+            value = state.name.fullName,
+            onValueChange = onFirstNameChange,
+            label = { Text("Tên") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = state.name.lastName,
+            onValueChange = onLastNameChange,
+            label = { Text("Họ") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true
         )
@@ -119,7 +130,7 @@ fun RegisterScreenContent(
         Button(
             onClick = onRegisterClick,
             modifier = Modifier.fillMaxWidth(),
-            enabled = state.fullName.isNotEmpty() &&
+            enabled = state.name.fullName.isNotEmpty() &&
                     state.email.isNotEmpty() &&
                     state.password.isNotEmpty() &&
                     state.confirmPassword.isNotEmpty() &&
@@ -152,18 +163,19 @@ fun RegisterScreenContent(
 fun RegisterScreenContentPreview() {
     RegisterScreenContent(
         state = RegisterUiState(
-            fullName = "Nguyễn Văn A",
+//            name = "Nguyễn Văn A",
             email = "example@gmail.com",
             password = "password123",
             confirmPassword = "password123",
             isLoading = false,
             passwordError = false
         ),
-        onFullNameChange = {},
         onEmailChange = {},
         onPasswordChange = {},
         onConfirmPasswordChange = {},
         onRegisterClick = {},
-        onNavigateToLogin = {}
+        onLastNameChange = TODO(),
+        onFirstNameChange = TODO(),
+        onNavigateToLogin = TODO(),
     )
 }
