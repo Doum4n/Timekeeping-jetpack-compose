@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.timekeeping.models.Employee
+import com.example.timekeeping.models.Name
 import com.example.timekeeping.ui.components.EntityList
 import com.example.timekeeping.ui.employees.components.EmployeeCard
 import com.example.timekeeping.ui.employees.components.SearchBar
@@ -175,17 +176,19 @@ fun ApprovalScreen(pendingEmployees: List<Employee>, groupId: String, onAcceptCl
 @Composable
 fun EmployeeManagementScreenPreview() {
     val sampleEmployees = listOf(
-        Employee("1", "John Doe", "john.doe@example.com", "", "1"),
-        Employee("2", "Jane Smith", "jane.smith@example.com", "", "1"),
-        Employee("3", "Peter Jones", "peter.jones@example.com", "", "1")
+        Employee("1", "John Doe",  Name(firstName = "John", lastName = "Doe"), "", ""),
+        Employee("2", "Jane Smith", Name(firstName = "Jane", lastName = "Smith"), "", ""),
+        Employee("3", "Jim Brown", Name(firstName = "Jim", lastName = "Brown"), "", ""),
     )
     val sampleUnlinkedEmployees = listOf(
-        Employee("4", "Alice Brown", "alice.brown@example.com", "", ""),
-        Employee("5", "Bob White", "bob.white@example.com", "", "")
+        Employee("1", "John Doe",  Name(firstName = "John", lastName = "Doe"), "", ""),
+        Employee("2", "Jane Smith", Name(firstName = "Jane", lastName = "Smith"), "", ""),
+        Employee("3", "Jim Brown", Name(firstName = "Jim", lastName = "Brown"), "", ""),
     )
     val samplePendingEmployees = listOf(
-        Employee("6", "Charlie Green", "charlie.green@example.com", "", ""),
-        Employee("7", "David Black", "david.black@example.com", "", "")
+        Employee("1", "John Doe",  Name(firstName = "John", lastName = "Doe"), "", ""),
+        Employee("2", "Jane Smith", Name(firstName = "Jane", lastName = "Smith"), "", ""),
+        Employee("3", "Jim Brown", Name(firstName = "Jim", lastName = "Brown"), "", ""),
     )
     EmployeeManagementContentScreen(
         groupId = "1",

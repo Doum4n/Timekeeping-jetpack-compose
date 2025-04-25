@@ -7,6 +7,7 @@ import com.example.timekeeping.repositories.AttendanceRepo
 import com.example.timekeeping.repositories.AuthRepository
 import com.example.timekeeping.repositories.EmployeeRepository
 import com.example.timekeeping.repositories.GroupRepository
+import com.example.timekeeping.repositories.PaymentRepo
 import com.example.timekeeping.repositories.SalaryRepo
 import com.example.timekeeping.repositories.ShiftRepository
 import com.example.timekeeping.repositories.TeamRepository
@@ -86,6 +87,14 @@ object RepositoryModule {
     @Singleton
     fun provideSalaryRepository() : SalaryRepo {
         return SalaryRepo(
+            FirebaseFirestore.getInstance(),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providePaymentRepository() : PaymentRepo {
+        return PaymentRepo(
             FirebaseFirestore.getInstance(),
         )
     }

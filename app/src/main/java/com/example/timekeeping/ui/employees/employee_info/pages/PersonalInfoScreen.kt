@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.timekeeping.models.Employee
+import com.example.timekeeping.models.Name
 
 @Composable
 fun PersonalInfoScreen(
@@ -22,7 +23,7 @@ fun PersonalInfoScreen(
 
     // Khi employee thay đổi (do load từ viewmodel), cập nhật các state tương ứng
     LaunchedEffect(employee) {
-        fullName = employee.fullName
+        fullName = employee.name.fullName
         email = employee.email
         phone = employee.phone
         address = employee.address
@@ -32,7 +33,7 @@ fun PersonalInfoScreen(
     LaunchedEffect(fullName, email, phone, address) {
         onEmployeeChange(
             employee.copy(
-                fullName = fullName,
+                name = Name().form(fullName),
                 email = email,
                 phone = phone,
                 address = address

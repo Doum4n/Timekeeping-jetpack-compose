@@ -37,7 +37,7 @@ fun GrantPermissionScreen(
         employeeViewModel.getEmployeeById(
             employeeId,
             onSuccess = { employee ->
-                name = employee.fullName
+                name = employee.name.fullName
                 email = employee.email
             },
             onFailure = { exception ->

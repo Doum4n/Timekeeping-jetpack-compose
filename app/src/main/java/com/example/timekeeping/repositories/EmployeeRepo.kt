@@ -5,6 +5,7 @@ import com.example.timekeeping.models.Adjustment
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Employee_Group
 import com.example.timekeeping.models.Group
+import com.example.timekeeping.models.Name
 import com.example.timekeeping.models.Role
 import com.example.timekeeping.models.Salary
 import com.example.timekeeping.models.Status
@@ -15,6 +16,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.getField
 import com.google.type.DateTime
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -273,5 +275,16 @@ class EmployeeRepository @Inject constructor (
 
 
         Log.d("EmployeeRepository_grantPermission", "Granted permission for employee: $employeeId")
+    }
+
+    fun getName(employeeId: String, onSuccess: (String) -> Unit = {}, onFailure: (Exception) -> Unit = {}) {
+        db.collection("employees")
+            .document(employeeId)
+            .get()
+            .addOnSuccessListener({
+                it.getField<Name>("name")?.let { it1 -> onSuccess(it1.fullName) }
+            }).addOnFailureListener({
+                onFailure(it)
+            })
     }
 }

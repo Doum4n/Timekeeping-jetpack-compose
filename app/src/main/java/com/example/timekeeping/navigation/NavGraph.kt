@@ -16,6 +16,8 @@ import com.example.timekeeping.navigation.employee.addEmployeeScreen
 import com.example.timekeeping.navigation.grant_permission.addGrantPermissionNav
 import com.example.timekeeping.navigation.groups.addGroupFormScreen
 import com.example.timekeeping.navigation.groups.addGroupScreen
+import com.example.timekeeping.navigation.payment.addPaymentFormNav
+import com.example.timekeeping.navigation.payment.addPaymentNav
 import com.example.timekeeping.navigation.schedule.addScheduleScreen
 import com.example.timekeeping.navigation.shifts.addShiftFormScreen
 import com.example.timekeeping.navigation.shifts.addShiftScreen
@@ -27,7 +29,7 @@ import com.example.timekeeping.ui.home.HomeScreen
 fun AppNavigation(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Login.route
+        startDestination = Screen.Home.route
     ) {
         addHomeScreen(navController)
         addAuthScreens(navController)
@@ -41,6 +43,9 @@ fun AppNavigation(navController: NavHostController) {
         addTeamScreen(navController)
         addTeamFormScreen(navController)
         addCheckInNav(navController)
+
+        addPaymentNav(navController)
+        addPaymentFormNav(navController)
 
         addGrantPermissionNav(navController)
 

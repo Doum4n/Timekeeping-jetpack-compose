@@ -89,6 +89,10 @@ sealed class Screen(val route: String) {
         fun createRoute(groupId: String, employeeId: String) =
             "payment/$groupId/$employeeId"
     }
+    object PaymentInputForm : Screen("paymentInputForm/{groupId}/{employeeId}") {
+        fun createRoute(groupId: String, employeeId: String) =
+            "paymentInputForm/$groupId/$employeeId"
+    }
     // endregion
 
     // region Shift

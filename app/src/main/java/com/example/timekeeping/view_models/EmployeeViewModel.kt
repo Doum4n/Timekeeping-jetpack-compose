@@ -93,9 +93,9 @@ class EmployeeViewModel @Inject constructor(
             return
         }
 
-        employees.value = employees.value.filter{ it.fullName.contains(searchText, ignoreCase = true) }
-        pendingEmployees.value = pendingEmployees.value.filter { it.fullName.contains(searchText, ignoreCase = true) }
-        unlinkedEmployees.value = unlinkedEmployees.value.filter { it.fullName.contains(searchText, ignoreCase = true) }
+        employees.value = employees.value.filter{ it.name.fullName.contains(searchText, ignoreCase = true) }
+        pendingEmployees.value = pendingEmployees.value.filter { it.name.fullName.contains(searchText, ignoreCase = true) }
+        unlinkedEmployees.value = unlinkedEmployees.value.filter { it.name.fullName.contains(searchText, ignoreCase = true) }
     }
 
     fun loadEmployeeByShiftId(shiftId: String, onSuccess: (List<Employee>) -> Unit){
@@ -116,5 +116,9 @@ class EmployeeViewModel @Inject constructor(
 
     fun grantPermission(groupId: String, employeeId: String, scannedResult: String?) {
         employeeRepository.grantPermission(groupId, employeeId, scannedResult)
+    }
+
+    fun getName(employeeId: String, onSuccess: (String) -> Unit = {}, onFailure: (Exception) -> Unit = {}) {
+        employeeRepository.getName(employeeId, onSuccess, onFailure)
     }
 }
