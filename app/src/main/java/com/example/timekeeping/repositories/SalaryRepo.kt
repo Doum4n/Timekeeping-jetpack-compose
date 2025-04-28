@@ -5,6 +5,9 @@ import com.example.timekeeping.models.Adjustment
 import com.example.timekeeping.models.Assignment
 import com.example.timekeeping.models.Attendance
 import com.example.timekeeping.models.Salary
+import com.example.timekeeping.ui.employees.form.TypeAllowance
+import com.example.timekeeping.ui.employees.form.TypeDeduct
+import com.example.timekeeping.ui.employees.form.TypeDeductItem
 import com.example.timekeeping.utils.convertToReference
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
@@ -136,6 +139,94 @@ class SalaryRepo @Inject constructor(
             }
         })
         }
+
+    fun getTotalUnpaidSalary(groupId: String, onResult: (Int) -> Unit) {
+        firestore.collection("salaries")
+            .whereEqualTo("groupId", groupId)
+            .get()
+            .addOnSuccessListener { documents ->
+                val totalResults = documents.size()
+                if (totalResults == 0) {
+                    onResult(0)
+                    return@addOnSuccessListener
+                }
+
+                var completedCount = 0
+                var totalUnpaidSalary = 0
+
+                // Tạo một object để lưu trữ các giá trị tạm thời
+                val results = mutableMapOf<String, IntArray>() // employeeId to [wage, bonus, deduction, advance]
+
+                for (document in documents) {
+                    val salary = document.toObject(Salary::class.java)
+                    val employeeId = salary.employeeId
+                    val month = LocalDateTime.now().monthValue
+                    val year = LocalDateTime.now().year
+
+                    // Khởi tạo entry cho employee
+                    results[employeeId] = IntArray(4) // [wage, bonus, deduction, advance]
+
+                    // Đếm số lượng callback đã hoàn thành
+                    var callbacksCompleted = 0
+                    val totalCallbacks = 3 // calculateTotalWage, getSalaryInfoByMonth, getAdvanceMoney
+
+                    fun checkAllCallbacksDone() {
+                        callbacksCompleted++
+                        if (callbacksCompleted == totalCallbacks) {
+                            completedCount++
+                            // Khi tất cả callback cho employee này hoàn thành, cộng vào tổng
+                            results[employeeId]?.let {
+                                totalUnpaidSalary += it[0] + it[1] + it[2] + it[3]
+
+                                Log.d("SalaryRepo_getTotalUnpaidSalary", "wage: ${it[0]}, bonus: ${it[1]}, deduction: ${it[2]}, advance: ${it[3]}, totalUnpaidSalary: $totalUnpaidSalary")
+                            }
+
+                            // Khi tất cả employee đã xử lý xong
+                            if (completedCount == totalResults) {
+                                onResult(totalUnpaidSalary)
+                            }
+                        }
+                    }
+
+                    calculateTotalWage(groupId, employeeId, month, year) { wage ->
+                        results[employeeId]?.set(0, wage)
+                        checkAllCallbacksDone()
+                    }
+
+                    getSalaryInfoByMonth(
+                        groupId, employeeId, month, year,
+                        onSuccess = { adjustments ->
+                            val bonus = adjustments.filter { it.adjustmentType in TypeAllowance.entries.map { it.label } }
+                                .sumOf { it.adjustmentAmount }
+                            val deduction = adjustments.filter { it.adjustmentType in TypeDeduct.entries.map { it.label } && it.adjustmentType != "Ứng lương" }
+                                .sumOf { it.adjustmentAmount }
+
+                            results[employeeId]?.let {
+                                it[1] = bonus
+                                it[2] = deduction
+                            }
+                            checkAllCallbacksDone()
+                        }
+                    )
+
+                    getAdvanceMoney(
+                        groupId, employeeId, month, year,
+                        onSuccess = { advances ->
+                            val advanceTotal = advances.sumOf { it.adjustmentAmount }
+                            results[employeeId]?.set(3, advanceTotal)
+                            checkAllCallbacksDone()
+                        }
+                    ) {
+                        // Xử lý lỗi nếu cần
+                        checkAllCallbacksDone()
+                    }
+                }
+            }
+            .addOnFailureListener {
+                // Xử lý lỗi nếu cần
+                onResult(0)
+            }
+    }
 }
 
 fun salaryDocId(groupId: String, employeeId: String): String {

@@ -1,5 +1,6 @@
 package com.example.timekeeping.ui.groups.components
 
+import android.app.AlertDialog
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
@@ -26,13 +27,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import com.example.timekeeping.ui.employees.components.SimpleDialogS
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupDetailTopBar(
     onBackClick: () -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    onDelete: () -> Unit
 ) {
+
+    var showDialog = remember { mutableStateOf(false) }
+
     TopAppBar(
         title = { Text("Group Management") },
         navigationIcon = {
@@ -67,11 +73,24 @@ fun GroupDetailTopBar(
                     DropdownMenuItem(
                         text = { Text("Xóa nhóm") },
                         onClick = {
-                            expanded = false
-                            // TODO: Handle logout
+                            showDialog.value = showDialog.value.not()
                         },
                         leadingIcon = { Icon(Icons.Default.ExitToApp, null) }
                     )
+
+                    if (showDialog.value){
+                        SimpleDialogS(
+                            title = "Thông báo",
+                            question = "Bạn có chắc chắn muốn xóa nhóm này không này không?",
+                            onConfirm = {
+                                onDelete()
+                                onBackClick()
+                            },
+                            onDismiss = {
+                                showDialog.value = false
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -83,6 +102,8 @@ fun GroupDetailTopBar(
 fun PreviewGroupDetailTopBar() {
     GroupDetailTopBar(
         onBackClick = { /*TODO*/ },
-        onSettingsClick = { /*TODO*/ })
+        onSettingsClick = { /*TODO*/ },
+        onDelete = { /*TODO*/ }
+    )
 }
 

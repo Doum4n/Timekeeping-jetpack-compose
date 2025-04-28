@@ -132,7 +132,7 @@ fun CheckInManagementScreen(
             uiState.value.selectedShiftId = shiftId
 
             attendanceViewModel.getAttendanceByShiftId(shiftId, state.visibleDate.convertLocalDateToDate()) { attendances ->
-                shiftViewModel.loadEmployees(shiftId)
+                shiftViewModel.loadEmployees(shiftId, state.visibleDate.dayOfMonth)
 
                 attendances.forEach { attendance ->
                     val empId = attendance.employeeId.id
@@ -142,7 +142,8 @@ fun CheckInManagementScreen(
                     val state = uiState.value.checkInStates.getOrPut(empId) {
                         CheckInState(
                             employeeId = empId,
-                            employeeName = employeeName
+                            employeeName = employeeName,
+                            reason = attendance.note
                         )
                     }
 
@@ -191,6 +192,7 @@ fun CheckInManagementScreen(
                                             shiftId = alreadyAttended.shiftId,
                                             attendanceType = type.label,
                                             startTime = DateTimeMap.from(LocalDateTime.now()),
+                                            note = checkIn.reason
                                         )
                                     )
                                 else
@@ -200,6 +202,7 @@ fun CheckInManagementScreen(
                                             shiftId = uiState.value.selectedShiftId!!,
                                             attendanceType = type.label,
                                             startTime = DateTimeMap.from(LocalDateTime.now()),
+                                            note = checkIn.reason
                                         )
                                     )
                             }
@@ -221,7 +224,7 @@ fun CheckInManagementScreen(
                     shiftViewModel = shiftViewModel,
                     onShiftSelected = {
                         uiState.value.selectedShiftId = it
-                        shiftViewModel.loadEmployees(it)
+                        shiftViewModel.loadEmployees(it, state.visibleDate.dayOfMonth)
                     },
                     selectedShiftId = uiState.value.selectedShiftId
                 )
@@ -246,13 +249,13 @@ fun CheckInManagementScreen(
                 EmployeeCheckInSection(
                     employeeName = employee.name.fullName,
                     shareCheckInStates = if (isSharedCheckIn) uiState.value.sharedAttendanceStates else checkIn.attendanceStates,
+                    reason = checkIn.reason,
                     onReasonChange = { reason -> checkIn.reason = reason },
                     isLeave = checkIn.attendanceStates[AttendanceType.PaidLeave] == true ||
                             checkIn.attendanceStates[AttendanceType.UnpaidLeave] == true
                 )
             }
         }
-
     }
 }
 
@@ -260,10 +263,10 @@ fun CheckInManagementScreen(
 fun EmployeeCheckInSection(
     employeeName: String,
     shareCheckInStates: SnapshotStateMap<AttendanceType, Boolean>,
+    reason: String,
     onReasonChange: (String) -> Unit = {},
     isLeave: Boolean
 ) {
-    var reason by remember { mutableStateOf("") }
 
     Column {
         Text(employeeName)
@@ -271,16 +274,12 @@ fun EmployeeCheckInSection(
             attendanceStates = shareCheckInStates,
             onCheck = { type, checked ->
                 shareCheckInStates[type] = checked
-                if (type == AttendanceType.PaidLeave || type == AttendanceType.UnpaidLeave) {
-                    reason = ""
-                }
             }
         )
         if (isLeave) {
             TextField(
                 value = reason,
                 onValueChange = {
-                    reason = it
                     onReasonChange(it)
                 },
                 label = { Text("Lý do nghỉ phép") },

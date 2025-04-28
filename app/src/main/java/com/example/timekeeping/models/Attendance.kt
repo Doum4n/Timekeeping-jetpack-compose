@@ -13,7 +13,7 @@ data class Attendance(
     val employeeId: DocumentReference = FirebaseFirestore.getInstance().document(""),
     val shiftId: String = "",
     val attendanceType: String = "",
-    val dayCheckIn: DateTimeMap = DateTimeMap(),
+    val note: String = "",
     val startTime: DateTimeMap = DateTimeMap(),
     val endTime: DateTimeMap = DateTimeMap(),
 ) {
@@ -22,7 +22,7 @@ data class Attendance(
             "employeeId" to employeeId,
             "shiftId" to shiftId,
             "attendanceType" to attendanceType,
-            "dayCheckIn" to dayCheckIn,
+            "note" to note,
             "startTime" to startTime,
             "endTime" to endTime
         )

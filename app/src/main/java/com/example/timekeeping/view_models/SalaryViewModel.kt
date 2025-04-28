@@ -7,6 +7,7 @@ import com.example.timekeeping.repositories.SalaryRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -20,9 +21,9 @@ class SalaryViewModel @Inject constructor (
     private val _salaryInfo = MutableStateFlow<List<Adjustment>>(emptyList())
     val salaryInfo: StateFlow<List<Adjustment>> = _salaryInfo
 
-    fun createSalary(salary: Salary, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
-        salaryRepo.createSalary(salary, onSuccess, onFailure)
-    }
+    private val _totalUnpaidSalary = MutableStateFlow(0)
+    val totalUnpaidSalary: StateFlow<Int> = _totalUnpaidSalary
+
 
     fun createAdjustSalary(groupId: String, employeeId: String, adjustment: Adjustment, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         salaryRepo.createAdjustSalary(groupId, employeeId, adjustment, onSuccess, onFailure)
@@ -44,5 +45,11 @@ class SalaryViewModel @Inject constructor (
 
     fun calculateTotalWage(groupId: String, employeeId: String, month: Int, year: Int, onResult: (Int) -> Unit) {
         salaryRepo.calculateTotalWage(groupId, employeeId, month, year, onResult)
+    }
+
+    fun getTotalUnpaidSalary(groupId: String) {
+        salaryRepo.getTotalUnpaidSalary(groupId) {
+            _totalUnpaidSalary.value = it
+        }
     }
 }

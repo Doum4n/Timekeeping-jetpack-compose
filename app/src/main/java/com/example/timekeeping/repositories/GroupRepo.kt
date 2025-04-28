@@ -134,4 +134,12 @@ class GroupRepository @Inject constructor (
                 Log.e("GroupRepository", "Failed to update group", it)
             }
     }
+
+    fun deleteGroup(groupId: String, function: () -> Unit) {
+        db.collection("groups").document(groupId).delete()
+            .addOnSuccessListener { function() }
+            .addOnFailureListener {
+                Log.e("GroupRepository", "Failed to delete group", it)
+            }
+    }
 }

@@ -2,6 +2,7 @@ package com.example.timekeeping.view_models
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +50,10 @@ class EmployeeViewModel @Inject constructor(
         employeeRepository.saveEmployees(employees, groupId, onSuccess, onFailure)
     }
 
+    fun deleteEmployee(employeeId: String) {
+        employeeRepository.deleteEmployee(employeeId)
+    }
+
     // Load accepted employees for the given groupId
     private fun loadEmployees() {
         employeeRepository.loadEmployees(groupId) { employeesList ->
@@ -56,7 +61,7 @@ class EmployeeViewModel @Inject constructor(
         }
     }
 
-    fun requestJoinGroup(employeeId: String) {
+    fun requestJoinGroup(employeeId: String, groupId: String) {
         employeeRepository.requestJoinGroup(groupId, employeeId)
 
         //sendNotification(context)
@@ -104,6 +109,10 @@ class EmployeeViewModel @Inject constructor(
 
     fun updateEmployee(employee: Employee, salary: Salary) {
         employeeRepository.updateEmployee(employee, salary)
+    }
+
+    fun updateEmployee(employee: Employee) {
+        employeeRepository.updateEmployee(employee)
     }
 
     fun getTotalOutstanding(groupId: String, employeeId: String, onSuccess: (Int) -> Unit, onFailure: (Exception) -> Unit){

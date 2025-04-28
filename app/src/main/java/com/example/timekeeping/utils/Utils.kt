@@ -35,6 +35,6 @@ fun LocalDate.convertLocalDateToDate(): Date {
     return Date.from(this.atStartOfDay(ZoneId.systemDefault()).toInstant())
 }
 
-fun LocalDate.convertToLocalDateTime(): LocalDateTime {
-    return this.atStartOfDay()
+fun formatCurrency(value: Int): String {
+    return "%,dđ".format(value).replace(',', '.')
 }

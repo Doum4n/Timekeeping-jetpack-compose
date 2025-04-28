@@ -63,13 +63,13 @@ class ShiftViewModel @Inject constructor(
         }
     }
 
-    fun loadEmployees(_shiftId: String = "") {
+    fun loadEmployees(_shiftId: String = "", day: Int) {
 //        if(_shiftId == ""){
 //            shiftRepository.loadEmployees(shifts.value.first().id) { employeesList ->
 //                _employees.value = employeesList
 //            }
 //        }else{
-            shiftRepository.loadEmployees(_shiftId) { employeesList ->
+            shiftRepository.loadEmployees(_shiftId, day) { employeesList ->
                 _employees.value = employeesList
             }
 //        }

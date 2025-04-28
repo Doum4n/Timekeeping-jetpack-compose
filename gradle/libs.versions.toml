@@ -4,6 +4,7 @@ bom = "3.1.4"
 cameraCamera2 = "1.4.2"
 cameraLifecycleVersion = "1.1.0"
 cameraViewVersion = "1.1.0"
+core = "3.5.2"
 credentials = "1.5.0"
 firebaseAuthKtxVersion = "22.3.1"
 firebaseBom = "33.12.0"
@@ -35,6 +36,7 @@ playServicesMlkitBarcodeScanning = "18.3.1"
 firebaseCrashlyticsBuildtools = "3.0.3"
 firebaseDatabaseKtx = "21.0.0"
 firebaseMessagingKtx = "24.1.1"
+zxingAndroidEmbedded = "4.3.0"
 
 [libraries]
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCamera2" }
@@ -45,6 +47,7 @@ androidx-credentials = { module = "androidx.credentials:credentials", version.re
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "bom" }
+core = { module = "com.google.zxing:core", version.ref = "core" }
 firebase-auth-ktx-v2231 = { module = "com.google.firebase:firebase-auth-ktx", version.ref = "firebaseAuthKtxVersion" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
@@ -78,6 +81,7 @@ firebase-database-ktx = { group = "com.google.firebase", name = "firebase-databa
 firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
 squareup-javapoet = { module = "com.squareup:javapoet", version.ref = "javapoetVersion" }
 supabase-postgrest-kt = { module = "io.github.jan-tennert.supabase:postgrest-kt" }
+zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", version.ref = "zxingAndroidEmbedded" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

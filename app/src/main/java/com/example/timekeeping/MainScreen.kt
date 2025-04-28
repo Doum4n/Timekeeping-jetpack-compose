@@ -51,7 +51,7 @@ fun MainScreen() {
         },
         bottomBar = {
             // Hiển thị BottomNavigationBar chỉ khi ở route "Home"
-            if (currentRoute == Screen.Home.route) {
+            if (currentRoute == Screen.Home.route || currentRoute == Screen.Profile.route) {
                 BottomNavigationBar(navController)
             }
         },
@@ -65,6 +65,7 @@ fun MainScreen() {
 
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
+
     val items = listOf(
         Screen.Home,
         Screen.Profile

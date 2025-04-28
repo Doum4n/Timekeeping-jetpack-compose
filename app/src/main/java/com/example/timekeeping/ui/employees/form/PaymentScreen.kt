@@ -37,6 +37,7 @@ import com.example.timekeeping.models.Adjustment
 import com.example.timekeeping.ui.assignment.components.CalendarHeader
 import com.example.timekeeping.ui.calender.CalendarState
 import com.example.timekeeping.ui.components.TopBarClassic
+import com.example.timekeeping.utils.formatCurrency
 import com.example.timekeeping.view_models.EmployeeViewModel
 import com.example.timekeeping.view_models.PaymentViewModel
 import com.example.timekeeping.view_models.SalaryViewModel
@@ -185,7 +186,7 @@ fun CalendarHeaderWithMonthYear(
         }
 
         Text(
-            text = state.visibleDate.format(DateTimeFormatter.ofPattern("MMMM 'năm' yyyy", Locale("vi", "VN"))),
+            text = state.visibleMonth.format(DateTimeFormatter.ofPattern("MMMM 'năm' yyyy", Locale("vi", "VN"))),
             style = MaterialTheme.typography.titleMedium
         )
 
@@ -218,8 +219,4 @@ fun Item(
         }
         HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f))
     }
-}
-
-fun formatCurrency(value: Int): String {
-    return "%,dđ".format(value).replace(',', '.')
 }

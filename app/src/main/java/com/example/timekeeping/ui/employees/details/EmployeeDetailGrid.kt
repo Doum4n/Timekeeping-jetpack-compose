@@ -93,11 +93,6 @@ fun EmployeeDetailGrid(
                 horizontalArrangement = Arrangement.Start
             ) {
                 IconButtonWithLabel(
-                    onClick = {},
-                    icon = Icons.Default.Warning,
-                    label = "Thanh toán"
-                )
-                IconButtonWithLabel(
                     onClick = {onEmployeeInfoClick()},
                     icon = Icons.Default.Info,
                     label = "Thông tin nhân viên"

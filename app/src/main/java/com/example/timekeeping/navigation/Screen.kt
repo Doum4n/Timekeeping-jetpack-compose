@@ -133,4 +133,17 @@ sealed class Screen(val route: String) {
         fun createRoute(groupId: String, employeeId: String) = "grantPermission/$groupId/$employeeId"
     }
     // endregion
+
+    // region MyAccount
+    object MyAccount : Screen("myAccount/{employeeId}") {
+        fun createRoute(employeeId: String) = "myAccount/$employeeId"
+    }
+    object MyQRCode : Screen("myQRCode/{employeeId}") {
+        fun createRoute(employeeId: String) = "myQRCode/$employeeId"
+    }
+    object EditAccountInfo : Screen("editAccountInfo/{employeeId}") {
+        fun createRoute(employeeId: String) = "editAccountInfo/$employeeId"
+    }
+    // endregion
+
 }

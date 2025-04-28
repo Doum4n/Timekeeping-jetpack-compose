@@ -70,4 +70,10 @@ class GroupViewModel @Inject constructor(
             loadGroups()  // Reload groups after updating
         }
     }
+
+    fun deleteGroup(groupId: String) {
+        groupRepository.deleteGroup(groupId) {
+            loadGroups()  // Reload groups after deleting
+        }
+    }
 }

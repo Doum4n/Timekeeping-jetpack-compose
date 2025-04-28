@@ -3,11 +3,13 @@ package com.example.timekeeping.repositories
 import android.util.Log
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Shift
+import com.example.timekeeping.utils.DateTimeMap
 import com.example.timekeeping.utils.convertToReference
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
+import java.time.LocalDate
 import javax.inject.Inject
 
 class ShiftRepository @Inject constructor(
@@ -65,9 +67,10 @@ class ShiftRepository @Inject constructor(
         }
     }
 
-    fun loadEmployees(shiftId: String, onResult: (List<Employee>) -> Unit) {
+    fun loadEmployees(shiftId: String, day: Int, onResult: (List<Employee>) -> Unit) {
         db.collection("assignments")
             .whereEqualTo("shiftId", shiftId.convertToReference("shifts"))
+            .whereArrayContains("dates", day)
             .get()
             .addOnSuccessListener { assignments ->
                 val tasks = assignments?.documents?.mapNotNull {
@@ -79,6 +82,7 @@ class ShiftRepository @Inject constructor(
                             id = doc.id
                         }
                     }
+                    Log.d("ShiftRepository", "Employees: $employees")
                     onResult(employees)
                 }
             }.addOnFailureListener { e ->

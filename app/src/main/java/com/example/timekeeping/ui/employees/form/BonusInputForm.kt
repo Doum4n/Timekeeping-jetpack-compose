@@ -1,5 +1,7 @@
 package com.example.timekeeping.ui.employees.form
 
+import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -71,9 +73,10 @@ fun BonusInputForm(
             ) {
                 TypeAllowance.entries.forEach { type ->
                     TypeAllowanceItem(
-                        onTypeClick = { },
-                        modifier = Modifier,
-                        type = type.label
+                        type = type.label,
+                        isSelected = type == selectedType,
+                        onClick = { selectedType = type },
+                        modifier = Modifier.padding(8.dp)
                     )
                 }
             }
@@ -133,15 +136,21 @@ fun BonusInputForm(
 
 @Composable
 fun TypeAllowanceItem(
-    onTypeClick: (TypeAllowance) -> Unit,
-    modifier: Modifier = Modifier,
-    type: String = ""
+    type: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier
-            .clickable { onTypeClick(type.convertToAllowanceType() ?: TypeAllowance.ReachTarget) },
+            .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = if (isSelected) {
+            BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+        } else {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        }
     ) {
         Box(
             modifier = Modifier

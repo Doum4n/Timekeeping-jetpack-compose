@@ -40,6 +40,10 @@ class EmployeeRepository @Inject constructor (
         load(groupId, Status.UNAUTHORIZED, onResult)
     }
 
+    fun deleteEmployee(employeeId: String) {
+        db.collection("employees").document(employeeId).delete()
+    }
+
     private fun load(
         groupId: String,
         status: Status,
@@ -130,7 +134,13 @@ class EmployeeRepository @Inject constructor (
     }
 
     fun acceptJoinGroup(groupId: String, employeeId: String) {
-
+        db.collection("employee_group").document(employeeGroupDocId(groupId, employeeId))
+            .update("status", Status.ACCEPTED.toString())
+            .addOnSuccessListener {
+                Log.d("EmployeeRepository_acceptJoinGroup", "Accept join group success")
+            }.addOnFailureListener {
+                Log.e("EmployeeRepository_acceptJoinGroup", "Accept join group failed", it)
+            }
     }
 
     fun getSalaryById(
@@ -181,6 +191,8 @@ class EmployeeRepository @Inject constructor (
             val salaryRef = db.collection("salaries").document(salaryDocId(groupId, employeeId))
             val salaryData = hashMapOf(
                 "salaryType" to employee.salaryType,
+                "employeeId" to employeeId,
+                "groupId" to groupId,
                 "salary" to employee.salary,
                 "createdAt" to Timestamp.now(),
                 "approveAt" to Timestamp.now()
@@ -216,6 +228,11 @@ class EmployeeRepository @Inject constructor (
         Log.d("EmployeeRepository_updateEmployee", "Updating employee: $employee, salary: $salary")
         db.collection("employees").document(employee.id).set(employee.toMap())
         db.collection("salaries").document(salary.id).set(salary)
+    }
+
+    fun updateEmployee(employee: Employee) {
+        Log.d("EmployeeRepository_updateEmployee", "Updating employee: $employee")
+        db.collection("employees").document(employee.id).set(employee.toMap())
     }
 
     fun getTotalOutstanding(groupId: String, employeeId: String, onSuccess: (Int) -> Unit, onFailure: (Exception) -> Unit){

@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.timekeeping.CheckInScreen
 import com.example.timekeeping.RequestJoinGroupScreen
+import com.example.timekeeping.navigation.account.addMyAccountNav
 import com.example.timekeeping.navigation.auth.addAuthScreens
 import com.example.timekeeping.navigation.checkin.addCheckInNav
 import com.example.timekeeping.navigation.employee.addEmployeeFormScreen
@@ -23,7 +24,9 @@ import com.example.timekeeping.navigation.shifts.addShiftFormScreen
 import com.example.timekeeping.navigation.shifts.addShiftScreen
 import com.example.timekeeping.navigation.team.addTeamFormScreen
 import com.example.timekeeping.navigation.team.addTeamScreen
+import com.example.timekeeping.ui.account.MyAccountScreen
 import com.example.timekeeping.ui.home.HomeScreen
+import com.example.timekeeping.utils.SessionManager
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
@@ -50,7 +53,8 @@ fun AppNavigation(navController: NavHostController) {
         addGrantPermissionNav(navController)
 
         addCheckInScreen(navController)
-        addProfileScreen()
+        addProfileScreen(navController)
+        addMyAccountNav(navController)
 
         addRequestJoinGroup(navController)
     }
@@ -65,9 +69,15 @@ private fun NavGraphBuilder.addHomeScreen(navController: NavHostController) {
     }
 }
 
-private fun NavGraphBuilder.addProfileScreen() {
+private fun NavGraphBuilder.addProfileScreen(navController: NavHostController) {
     composable(Screen.Profile.route) {
-        // ProfileScreen()
+        MyAccountScreen(
+            onLogout = { navController.navigate(Screen.Login.route) },
+            onShowCode = { employeeId ->
+                navController.navigate(Screen.MyQRCode.createRoute(employeeId))
+            },
+            onEdit = { navController.navigate(Screen.EditAccountInfo.createRoute(SessionManager.getEmployeeId() ?: "")) }
+        )
     }
 }
 

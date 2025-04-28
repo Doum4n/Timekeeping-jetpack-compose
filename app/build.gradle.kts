@@ -71,6 +71,8 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.barcode.scanning.common)
     implementation(libs.play.services.mlkit.barcode.scanning)
+    implementation(libs.core)
+    implementation(libs.zxing.android.embedded)
     implementation(libs.firebase.crashlytics.buildtools)
     implementation(libs.guava)
     implementation(libs.androidx.camera.camera2)

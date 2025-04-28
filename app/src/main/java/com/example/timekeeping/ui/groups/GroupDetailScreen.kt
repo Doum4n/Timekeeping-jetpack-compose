@@ -16,26 +16,39 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.timekeeping.ui.calender.CalendarScreen
 import com.example.timekeeping.ui.groups.components.GroupDetailButtonGrid
 import com.example.timekeeping.ui.groups.components.GroupDetailTopBar
 import com.example.timekeeping.ui.groups.components.IconButtonWithLabel
+import com.example.timekeeping.utils.formatCurrency
+import com.example.timekeeping.view_models.SalaryViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupDetailScreen(
+    groupId: String,
     onBackClick: () -> Unit,
     onEmployeeManagementClick: () -> Unit,
     onShiftManagementClick: () -> Unit,
     onScheduleClick: () -> Unit,
     onCheckInClick: () -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    onDelete: () -> Unit,
+
+    salaryViewModel: SalaryViewModel = hiltViewModel()
 ) {
+
+    LaunchedEffect(Unit) {
+        salaryViewModel.getTotalUnpaidSalary(groupId)
+    }
+
     Scaffold(
         topBar = {
             GroupDetailTopBar(
                 onBackClick = onBackClick,
-                onSettingsClick = onSettingsClick
+                onSettingsClick = onSettingsClick,
+                onDelete = onDelete
             )
         }
     ) { paddingValues ->
@@ -45,6 +58,8 @@ fun GroupDetailScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
+            Text("Tổng chưa thanh toán", style = MaterialTheme.typography.titleLarge)
+            Text(formatCurrency(salaryViewModel.totalUnpaidSalary.collectAsState().value))
             GroupDetailButtonGrid(
                 onCheckInClick = onCheckInClick,
                 onScheduleClick = onScheduleClick,
@@ -74,7 +89,9 @@ fun GroupDetailScreenPreview() {
         onShiftManagementClick = { /*TODO*/ },
         onScheduleClick = { /*TODO*/ },
         onCheckInClick = { /*TODO*/ },
-        onSettingsClick = { /*TODO*/ }
+        onSettingsClick = { /*TODO*/ },
+        onDelete = { /*TODO*/ },
+        groupId = ""
     )
 
 }

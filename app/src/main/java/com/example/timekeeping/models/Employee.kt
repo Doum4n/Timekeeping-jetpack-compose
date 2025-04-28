@@ -24,7 +24,7 @@ data class Employee(
     @Exclude
     var id: String = "",
     val userId: String = "",
-    val name: Name = Name(),
+    var name: Name = Name(),
     val avatarUrl: String = "",
     val email: String = "",
     val phone: String = "",
@@ -41,10 +41,20 @@ data class Employee(
     @Exclude
     val isCreator: Boolean = false,
 
-) {
+    ) {
     fun toMap(): Map<String, Any?> {
         return mapOf(
             "userId" to userId,
+            "name" to name,
+            "avatarUrl" to avatarUrl,
+            "email" to email,
+            "phone" to phone,
+            "address" to address
+        )
+    }
+
+    fun toMapWithoutUserId(): Map<String, Any?> {
+        return mapOf(
             "name" to name,
             "avatarUrl" to avatarUrl,
             "email" to email,

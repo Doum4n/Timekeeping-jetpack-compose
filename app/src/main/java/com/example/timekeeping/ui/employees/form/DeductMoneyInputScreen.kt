@@ -1,5 +1,6 @@
 package com.example.timekeeping.ui.employees.form
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -94,6 +95,7 @@ fun DeductMoneyInputScreen(
             ) {
                 TypeDeduct.entries.forEach { type ->
                     TypeDeductItem(
+                        isSelected = type == selectedType,
                         onTypeClick = {
                             selectedType = it
                         },
@@ -157,6 +159,7 @@ fun DeductMoneyInputScreen(
 @Composable
 fun TypeDeductItem(
     onTypeClick: (TypeDeduct) -> Unit,
+    isSelected: Boolean,
     modifier: Modifier = Modifier,
     type: String = ""
 ) {
@@ -164,7 +167,11 @@ fun TypeDeductItem(
         modifier = modifier
             .clickable { onTypeClick(type.convertToTypeDeduct() ?: TypeDeduct.Other) },
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = if (isSelected) {
+            BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+        } else
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Box(
             modifier = Modifier

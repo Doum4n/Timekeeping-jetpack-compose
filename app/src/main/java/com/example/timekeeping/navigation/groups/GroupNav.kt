@@ -1,5 +1,6 @@
 package com.example.timekeeping.navigation.groups
 
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -8,6 +9,7 @@ import androidx.navigation.navArgument
 import com.example.timekeeping.ui.groups.GroupDetailScreen
 import com.example.timekeeping.ui.groups.GroupSettingsScreen
 import com.example.timekeeping.navigation.Screen
+import com.example.timekeeping.view_models.GroupViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 fun NavGraphBuilder.addGroupScreen(navController: NavHostController) {
@@ -16,7 +18,11 @@ fun NavGraphBuilder.addGroupScreen(navController: NavHostController) {
         arguments = listOf(navArgument("groupId") { type = NavType.StringType })
     ) { backStackEntry ->
         val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
+
+        val groupViewModel: GroupViewModel = hiltViewModel()
+
         GroupDetailScreen(
+            groupId = groupId,
             onEmployeeManagementClick = {
                 navController.navigate(Screen.EmployeeManagement.createRoute(groupId))
             },
@@ -32,6 +38,9 @@ fun NavGraphBuilder.addGroupScreen(navController: NavHostController) {
             },
             onScheduleClick = {
                 navController.navigate(Screen.Schedule.createRoute(groupId, FirebaseAuth.getInstance().currentUser?.uid ?: ""))
+            },
+            onDelete = {
+                groupViewModel.deleteGroup(groupId)
             }
         )
     }
