@@ -39,8 +39,8 @@ class TeamRepository @Inject constructor(
         }
     }
 
-    fun updateTeam(teamId: String, team: Team, onSuccess: () -> Unit) {
-        firestore.collection("teams").document(teamId).set(team).addOnSuccessListener {
+    fun updateTeam(team: Team, onSuccess: () -> Unit) {
+        firestore.collection("teams").document(team.id).set(team).addOnSuccessListener {
             onSuccess()
         }.addOnFailureListener { exception ->
             Log.e("TeamRepo", " Error updating team", exception)

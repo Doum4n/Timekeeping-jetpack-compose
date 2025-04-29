@@ -8,6 +8,7 @@ import java.util.Date
 import java.util.Locale
 
 data class Adjustment(
+    var id : String = "",
     val adjustmentType: String = "", // Loại điều chỉnh (tăng hoặc giảm)
     val adjustmentAmount: Int = 0, // Số tiền điều chỉnh
     val note: String = "", // Ghi chú

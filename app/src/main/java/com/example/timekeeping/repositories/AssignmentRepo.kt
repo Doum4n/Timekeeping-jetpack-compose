@@ -29,13 +29,10 @@ class AssignmentRepo @Inject constructor(
 
     fun addAssignment(assignment: Assignment) {
         db.collection("assignments")
-            .add(assignment)
+            .document(assignment.employeeId.id)
+            .set(assignment)
             .addOnSuccessListener { documentReference ->
-                // Handle the success
-                Log.d("AssignmentRepo", "Assignment added with ID: ${documentReference.id}")
             }.addOnFailureListener { exception ->
-                // Handle the exception
-                Log.e("AssignmentRepo", "Error adding assignment", exception)
             }
     }
 

@@ -1,5 +1,7 @@
 package com.example.timekeeping.navigation.team
 
+import android.widget.Toast
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -15,10 +17,21 @@ fun NavGraphBuilder.addTeamScreen(navController: NavController) {
         arguments = listOf(navArgument("groupId") { type = NavType.StringType })
     ) {
         val groupId = it.arguments?.getString("groupId") ?: ""
+
+        val teamViewModel: TeamViewModel = hiltViewModel()
+
         TeamManagementScreen(
             groupId = groupId,
             onBackClick = { navController.popBackStack() },
-            onAddTeamClick = { navController.navigate(Screen.TeamForm.createRoute(groupId)) }
+            onAddTeamClick = { navController.navigate(Screen.TeamForm.createRoute(groupId)) },
+            onEditTeamClick = { teamId ->
+                navController.navigate(Screen.TeamEditForm.createRoute(groupId, teamId))
+            },
+            onDeleteTeamClick = { teamId ->
+                teamViewModel.deleteTeam(teamId){
+                    Toast.makeText(navController.context, "Xóa tổ thành công", Toast.LENGTH_SHORT).show()
+                }
+            }
         )
     }
 }

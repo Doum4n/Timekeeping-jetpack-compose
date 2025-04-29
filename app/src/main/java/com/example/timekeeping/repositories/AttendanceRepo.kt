@@ -16,7 +16,7 @@ class AttendanceRepo @Inject constructor(
     val db: FirebaseFirestore
 ) {
     fun CheckIn(attendance: Attendance){
-        db.collection("attendances").add(attendance)
+        db.collection("attendances").document(attendance.employeeId.id).set(attendance)
     }
 
     fun CheckOut(){

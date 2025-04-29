@@ -56,11 +56,31 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
             backStackEntry ->
             val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
             val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
+
+            val salaryViewModel : SalaryViewModel = hiltViewModel()
+
             BonusScreen(
                 groupId = groupId,
                 employeeId = employeeId,
                 onBackClick = { navController.popBackStack() },
-                onAddBonus = { navController.navigate(Screen.BonusInputForm.createRoute(groupId, employeeId)) }
+                state = CalendarState(),
+                onAddBonus = { navController.navigate(Screen.BonusInputForm.createRoute(groupId, employeeId)) },
+                onEditClick = { _employeeId, adjustmentId ->
+                    navController.navigate(Screen.BonusEditForm.createRoute(groupId, _employeeId, adjustmentId))
+                },
+                onDeleteClick = { _employeeId, adjustment ->
+                    salaryViewModel.deleteAdjustSalary(
+                        groupId,
+                        _employeeId,
+                        adjustment,
+                        onSuccess = {
+                            Toast.makeText(navController.context, "Xóa thành công!", Toast.LENGTH_SHORT).show()
+                        },
+                        onFailure = { exception ->
+                            Toast.makeText(navController.context, "Xóa thất bại: ${exception.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
             )
         }
 
@@ -77,8 +97,6 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
         val salaryViewModel : SalaryViewModel = hiltViewModel()
 
         BonusInputForm(
-            groupId = groupId,
-            employeeId = employeeId,
             onBackClick = { navController.popBackStack() },
             onSave = { adjustments ->
                 salaryViewModel.createAdjustSalary(
@@ -99,6 +117,48 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
     }
 
     composable(
+        route = Screen.BonusEditForm.route,
+        arguments = listOf(
+            navArgument("groupId") { type = NavType.StringType },
+            navArgument("employeeId") { type = NavType.StringType },
+            navArgument("adjustmentId") { type = NavType.StringType }
+        )
+    ) { backStackEntry ->
+        val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
+        val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
+        val adjustmentId = backStackEntry.arguments?.getString("adjustmentId") ?: ""
+        val salaryViewModel: SalaryViewModel = hiltViewModel()
+        BonusInputForm(
+            onBackClick = { navController.popBackStack() },
+            onSave = { adjustments ->
+                salaryViewModel.updateAdjustSalary(
+//                    groupId,
+//                    employeeId,
+//                    adjustmentId,
+                    adjustments,
+                    onSuccess = {
+                        Toast.makeText(
+                            navController.context,
+                            "Cập nhật thành công!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        navController.popBackStack()
+                    },
+                    onFailure = { exception ->
+                        Toast.makeText(
+                            navController.context,
+                            "Cập nhật thất bại: ${exception.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                )
+            },
+            state = CalendarState(),
+        )
+    }
+
+
+    composable(
         route = Screen.MinusMoneyForm.route,
         arguments = listOf(
             navArgument("groupId") { type = NavType.StringType },
@@ -109,12 +169,30 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
             val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
             val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
 
+        val salaryViewModel : SalaryViewModel = hiltViewModel()
+
         DeductMoneyScreen(
                 groupId = groupId,
                 employeeId = employeeId,
                 onBackClick = { navController.popBackStack() },
                 state = CalendarState(),
-                onMinusMoney = { navController.navigate(Screen.MinusMoneyInputForm.createRoute(groupId, employeeId)) }
+                onMinusMoney = { navController.navigate(Screen.MinusMoneyInputForm.createRoute(groupId, employeeId)) },
+                onEditClick = { _employeeId, adjustmentId ->
+                    navController.navigate(Screen.MinusMoneyEditForm.createRoute(groupId, _employeeId, adjustmentId))
+                },
+                onDeleteClick = { _employeeId, adjustment ->
+                    salaryViewModel.deleteAdjustSalary(
+                        groupId,
+                        _employeeId,
+                        adjustment,
+                        onSuccess = {
+                            Toast.makeText(navController.context, "Xóa thành công!", Toast.LENGTH_SHORT).show()
+                        },
+                        onFailure = { exception ->
+                            Toast.makeText(navController.context, "Xóa thất bại: ${exception.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                }
             )
         }
 
@@ -153,6 +231,42 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
     }
 
     composable(
+        route = Screen.MinusMoneyEditForm.route,
+        arguments = listOf(
+            navArgument("groupId") { type = NavType.StringType },
+            navArgument("employeeId") { type = NavType.StringType },
+            navArgument("adjustmentId") { type = NavType.StringType }
+        )
+    ){
+        backStackEntry ->
+        val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
+        val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
+        val adjustmentId = backStackEntry.arguments?.getString("adjustmentId") ?: ""
+        val salaryViewModel : SalaryViewModel = hiltViewModel()
+
+        DeductMoneyInputScreen(
+            groupId = groupId,
+            employeeId = employeeId,
+            adjustmentId = adjustmentId,
+            onBackClick = { navController.popBackStack() },
+            onSave = { adjustments ->
+                salaryViewModel.updateAdjustSalary(
+                    adjustments,
+                    onSuccess = {
+                        Toast.makeText(navController.context, "Cập nhật thành công!", Toast.LENGTH_SHORT).show()
+                        navController.popBackStack()
+                    },
+                    onFailure = { exception ->
+                        Toast.makeText(navController.context, "Cập nhâtj thất bại: ${exception.message}", Toast.LENGTH_SHORT).show()
+                    }
+                )
+            },
+            state = CalendarState()
+        )
+    }
+
+
+    composable(
         route = Screen.SalaryAdvanceForm.route,
         arguments = listOf(
             navArgument("groupId") { type = NavType.StringType },
@@ -162,11 +276,31 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
         val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
         val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
 
+        val salaryViewModel : SalaryViewModel = hiltViewModel()
+
         SalaryAdvanceScreen(
             groupId = groupId,
             employeeId = employeeId,
             onBackClick = { navController.popBackStack() },
-            onAddSalaryAdvance = { navController.navigate(Screen.SalaryAdvanceInputForm.createRoute(groupId, employeeId)) }
+            state = CalendarState(),
+            onAddSalaryAdvance = { navController.navigate(Screen.SalaryAdvanceInputForm.createRoute(groupId, employeeId)) },
+            onEditClick = { _employeeId, adjustmentId ->
+                navController.navigate(Screen.SalaryAdvanceEditForm.createRoute(groupId, _employeeId, adjustmentId))
+             },
+            onDeleteClick = {
+                _employeeId, adjustmentId ->
+                salaryViewModel.deleteAdjustSalary(
+                    groupId,
+                    _employeeId,
+                    adjustmentId,
+                    onSuccess = {
+                        Toast.makeText(navController.context, "Xóa thành công!", Toast.LENGTH_SHORT).show()
+                    },
+                    onFailure = { exception ->
+                        Toast.makeText(navController.context, "Xóa thất bại: ${exception.message}", Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
         )
     }
 
@@ -205,5 +339,49 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
         )
     }
 
+    composable(
+        route = Screen.SalaryAdvanceEditForm.route,
+        arguments = listOf(
+            navArgument("groupId") { type = NavType.StringType },
+            navArgument("employeeId") { type = NavType.StringType },
+            navArgument("adjustmentId") { type = NavType.StringType }
+        )
+    ){
+        backStackEntry ->
+        val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
+        val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
+        val adjustmentId = backStackEntry.arguments?.getString("adjustmentId") ?: ""
+        val salaryViewModel : SalaryViewModel = hiltViewModel()
+        SalaryAdvanceInputForm(
+            groupId = groupId,
+            employeeId = employeeId,
+            adjustmentId = adjustmentId,
+            onBackClick = { navController.popBackStack() },
+            onSave = { adjustments ->
+                salaryViewModel.updateAdjustSalary(
+//                    groupId,
+//                    employeeId,
+//                    adjustmentId,
+                    adjustments,
+                    onSuccess = {
+                        Toast.makeText(
+                            navController.context,
+                            "Cập nhật thành công!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        navController.popBackStack()
+                    },
+                    onFailure = { exception ->
+                        Toast.makeText(
+                            navController.context,
+                            "Cập nhật thất bại: ${exception.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                )
+            },
+            state = CalendarState()
+        )
+    }
 
 }

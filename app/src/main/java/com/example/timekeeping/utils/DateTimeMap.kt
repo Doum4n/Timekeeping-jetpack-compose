@@ -11,6 +11,12 @@ data class DateTimeMap(
     val hour: Int = 0,
     val minute: Int = 0
 ) {
+    constructor(_day: Int, _month: Int, _year: Int) : this(
+        year = _year,
+        month = _month,
+        day = _day
+    )
+
     fun toLocalDateTime(): LocalDateTime {
         return LocalDateTime.of(year, month, day, hour, minute)
     }

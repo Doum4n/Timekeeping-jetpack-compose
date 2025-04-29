@@ -5,7 +5,7 @@ import com.google.firebase.firestore.Exclude
 
 data class Team(
     @Exclude
-    val id: String = "",
+    var id: String = "",
     val name: String = "",
     val groupId: String = "",
     val description: String = "",

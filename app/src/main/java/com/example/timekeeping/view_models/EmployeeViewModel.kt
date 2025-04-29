@@ -11,6 +11,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Salary
+import com.example.timekeeping.models.Team
 import com.example.timekeeping.repositories.EmployeeRepository
 import com.example.timekeeping.utils.sendNotification
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -129,5 +130,13 @@ class EmployeeViewModel @Inject constructor(
 
     fun getName(employeeId: String, onSuccess: (String) -> Unit = {}, onFailure: (Exception) -> Unit = {}) {
         employeeRepository.getName(employeeId, onSuccess, onFailure)
+    }
+
+    fun loadTeamById(teamId: String, result: (Team) -> Unit ) {
+        employeeRepository.loadTeamById(teamId, result)
+    }
+
+    fun deleteTeam(teamId: String) {
+        employeeRepository.deleteTeam(teamId)
     }
 }

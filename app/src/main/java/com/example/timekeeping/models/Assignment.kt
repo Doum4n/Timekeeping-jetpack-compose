@@ -13,7 +13,7 @@ data class Assignment(
     val shiftId: DocumentReference = FirebaseFirestore.getInstance().collection("shifts").document(),
     val employeeId: DocumentReference = FirebaseFirestore.getInstance().collection("employees").document(),
     val teamId: String = "",
-    val month: Month = Month.JANUARY,
+    val month: Int = 1,
     val year: Int = Year.now().value,
     val dates: List<Int> = listOf() // Danh sách các ngày trong tháng được phân công
 

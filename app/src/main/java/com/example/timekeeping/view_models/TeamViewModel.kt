@@ -42,14 +42,15 @@ class TeamViewModel @Inject constructor(
         }
     }
 
-    fun updateTeam(teamId: String, team: Team) {
-        teamRepository.updateTeam(teamId, team) {
+    fun updateTeam(team: Team) {
+        teamRepository.updateTeam(team) {
             loadTeams()
         }
     }
 
-    fun deleteTeam(teamId: String) {
+    fun deleteTeam(teamId: String, onSuccess: () -> Unit) {
         teamRepository.deleteTeam(teamId) {
+            onSuccess()
             _teams.value = _teams.value.filter { it.id != teamId }
         }
     }

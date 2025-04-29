@@ -9,6 +9,7 @@ import com.example.timekeeping.models.Name
 import com.example.timekeeping.models.Role
 import com.example.timekeeping.models.Salary
 import com.example.timekeeping.models.Status
+import com.example.timekeeping.models.Team
 import com.example.timekeeping.ui.employees.form.TypeAllowance
 import com.example.timekeeping.ui.employees.form.TypeDeduct
 import com.example.timekeeping.utils.convertToReference
@@ -41,7 +42,15 @@ class EmployeeRepository @Inject constructor (
     }
 
     fun deleteEmployee(employeeId: String) {
-        db.collection("employees").document(employeeId).delete()
+        val batch = db.batch()
+        batch.delete(db.collection("employees").document(employeeId))
+        //TODO Thêm groupId
+//        batch.delete(db.collection("employee_group").document("$groupId-$employeeId"))
+//        batch.delete(db.collection("salaries").document(salaryDocId(groupId, employeeId)))
+        batch.delete(db.collection("attendances").document(employeeId))
+        batch.delete(db.collection("attendances").document(employeeId))
+        batch.delete(db.collection("assignments").document(employeeId))
+        batch.commit()
     }
 
     private fun load(
@@ -303,5 +312,23 @@ class EmployeeRepository @Inject constructor (
             }).addOnFailureListener({
                 onFailure(it)
             })
+    }
+
+    fun loadTeamById(teamId: String, result: (Team) -> Unit) {
+        db.collection("teams").document(teamId).get()
+            .addOnSuccessListener { document ->
+                val team = document.toObject(Team::class.java)
+                if (team != null) {
+                    team.id = document.id
+                    result(team)
+                    Log.d("EmployeeRepository_loadTeamById", "Loaded team: $team")
+                } else {
+                    Log.e("EmployeeRepository_loadTeamById", "Team not found")
+                }
+            }
+    }
+
+    fun deleteTeam(teamId: String) {
+        db.collection("teams").document(teamId).delete()
     }
 }

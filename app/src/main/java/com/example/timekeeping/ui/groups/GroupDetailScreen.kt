@@ -39,7 +39,7 @@ fun GroupDetailScreen(
     salaryViewModel: SalaryViewModel = hiltViewModel()
 ) {
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(groupId) {
         salaryViewModel.getTotalUnpaidSalary(groupId)
     }
 
@@ -59,7 +59,7 @@ fun GroupDetailScreen(
                 .padding(16.dp)
         ) {
             Text("Tổng chưa thanh toán", style = MaterialTheme.typography.titleLarge)
-            Text(formatCurrency(salaryViewModel.totalUnpaidSalary.collectAsState().value))
+            Text(salaryViewModel.totalUnpaidSalary.collectAsState().value.formatCurrency())
             GroupDetailButtonGrid(
                 onCheckInClick = onCheckInClick,
                 onScheduleClick = onScheduleClick,

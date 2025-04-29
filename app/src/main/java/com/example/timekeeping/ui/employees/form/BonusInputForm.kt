@@ -13,6 +13,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.SavedStateHandle
 import com.example.timekeeping.models.Adjustment
 import com.example.timekeeping.models.Salary
 import com.example.timekeeping.ui.assignment.components.CalendarHeader
@@ -34,8 +35,6 @@ enum class TypeAllowance(val label: String) {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BonusInputForm(
-    groupId: String = "",
-    employeeId: String = "",
     onBackClick: () -> Unit = {},
     onSave: (Adjustment) -> Unit = {},
     salaryViewModel: SalaryViewModel = hiltViewModel(),
@@ -45,6 +44,19 @@ fun BonusInputForm(
     var amount by remember { mutableStateOf(0) }
     var note by remember { mutableStateOf(TextFieldValue()) }
     var selectedType by remember { mutableStateOf(TypeAllowance.ReachTarget) }
+
+    LaunchedEffect(salaryViewModel.adjustmentId) {
+        Log.d("BonusInputForm_adjustmentId", salaryViewModel.adjustmentId)
+        if(salaryViewModel.adjustmentId != ""){
+            salaryViewModel.getAdjustSalary(salaryViewModel.groupId, salaryViewModel.employeeId, salaryViewModel.adjustmentId, state.visibleMonth.monthValue, state.visibleMonth.year, {
+                if (it != null) {
+                    note = TextFieldValue(it.note)
+                    amount = it.adjustmentAmount
+                    selectedType = it.adjustmentType.convertToAllowanceType() ?: TypeAllowance.ReachTarget
+                }
+            })
+        }
+    }
 
     Scaffold(
         topBar = {

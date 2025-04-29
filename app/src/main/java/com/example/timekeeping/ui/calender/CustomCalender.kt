@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun CustomCalendar(
@@ -73,7 +74,7 @@ fun CalendarHeader(
         }
 
         Text(
-            text = state.visibleMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
+            text = state.visibleMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale("vi", "VN"))),
             style = MaterialTheme.typography.titleMedium
         )
 

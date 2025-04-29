@@ -21,13 +21,30 @@ fun NavGraphBuilder.addTeamFormScreen(navController: NavController) {
         val teamViewModel: TeamViewModel = hiltViewModel()
 
         TeamInputFormScreen(
-            onSubmit = { name, description, employees ->
-                teamViewModel.createTeam(Team(
-                    name = name,
-                    description = description,
-                    groupId = groupId,
-                    members = employees
-                ))
+            onSubmit = { team ->
+                teamViewModel.createTeam(team)
+                navController.popBackStack()
+            },
+            onCancel = { navController.popBackStack() }
+        )
+    }
+
+    composable(
+        route = Screen.TeamEditForm.route,
+        arguments = listOf(
+            navArgument("groupId") { type = NavType.StringType },
+            navArgument("teamId") { type = NavType.StringType }
+        )
+    ){
+        val groupId = it.arguments?.getString("groupId") ?: ""
+        val teamId = it.arguments?.getString("teamId") ?: ""
+
+        val teamViewModel: TeamViewModel = hiltViewModel()
+
+        TeamInputFormScreen(
+            teamId = teamId,
+            onSubmit = { team ->
+                teamViewModel.updateTeam(team)
                 navController.popBackStack()
             },
             onCancel = { navController.popBackStack() }

@@ -32,6 +32,10 @@ sealed class Screen(val route: String) {
     object TeamForm : Screen("teamForm/{groupId}") {
         fun createRoute(groupId: String) = "teamForm/$groupId"
     }
+    object TeamEditForm : Screen("teamEditForm/{groupId}/{teamId}") {
+        fun createRoute(groupId: String, teamId: String) =
+            "teamEditForm/$groupId/$teamId"
+    }
     // endregion
 
     // region Employee
@@ -60,6 +64,10 @@ sealed class Screen(val route: String) {
         fun createRoute(groupId: String, employeeId: String) =
             "bonusInputForm/$groupId/$employeeId"
     }
+    object BonusEditForm : Screen("bonusEditForm/{groupId}/{employeeId}/{adjustmentId}") {
+        fun createRoute(groupId: String, employeeId: String, adjustmentId: String) =
+            "bonusEditForm/$groupId/$employeeId/$adjustmentId"
+    }
     // endregion
 
     // region Minus Money
@@ -70,6 +78,10 @@ sealed class Screen(val route: String) {
     object MinusMoneyInputForm : Screen("minusMoneyInputForm/{groupId}/{employeeId}") {
         fun createRoute(groupId: String, employeeId: String) =
             "minusMoneyInputForm/$groupId/$employeeId"
+    }
+    object MinusMoneyEditForm : Screen("minusMoneyEditForm/{groupId}/{employeeId}/{adjustmentId}") {
+        fun createRoute(groupId: String, employeeId: String, adjustmentId: String) =
+            "minusMoneyEditForm/$groupId/$employeeId/$adjustmentId"
     }
     // endregion
 
@@ -82,6 +94,10 @@ sealed class Screen(val route: String) {
         fun createRoute(groupId: String, employeeId: String) =
             "salaryAdvanceInputForm/$groupId/$employeeId"
     }
+    object SalaryAdvanceEditForm : Screen("salaryAdvanceEditForm/{groupId}/{employeeId}/{adjustmentId}") {
+        fun createRoute(groupId: String, employeeId: String, adjustmentId: String) =
+            "salaryAdvanceEditForm/$groupId/$employeeId/$adjustmentId"
+    }
     // endregion
 
     // region Payment
@@ -92,6 +108,10 @@ sealed class Screen(val route: String) {
     object PaymentInputForm : Screen("paymentInputForm/{groupId}/{employeeId}") {
         fun createRoute(groupId: String, employeeId: String) =
             "paymentInputForm/$groupId/$employeeId"
+    }
+    object PaymentEditForm : Screen("paymentEditForm/{groupId}/{employeeId}/{paymentId}") {
+        fun createRoute(groupId: String, employeeId: String, paymentId: String) =
+            "paymentEditForm/$groupId/$employeeId/$paymentId"
     }
     // endregion
 

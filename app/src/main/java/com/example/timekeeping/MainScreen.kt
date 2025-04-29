@@ -95,7 +95,6 @@ fun BottomNavigationBar(navController: NavHostController) {
                 selected = currentRoute == screen.route,
                 onClick = {
                     navController.navigate(screen.route) {
-                        // Cấu hình navigation hợp lý
                         popUpTo(navController.graph.findStartDestination().id) {
                             saveState = true
                         }

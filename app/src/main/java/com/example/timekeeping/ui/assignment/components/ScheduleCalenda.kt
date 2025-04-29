@@ -44,6 +44,7 @@ import com.example.timekeeping.ui.assignment.utils.getWeekdays
 import com.example.timekeeping.ui.calender.CalendarState
 import java.time.DayOfWeek
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun ScheduleCalenda(
@@ -53,7 +54,9 @@ fun ScheduleCalenda(
     calendar: Calendar,
     onClick: (CalendarDay) -> Unit,
     onWeekdayToggle: (DayOfWeek) -> Unit,
-    enableToggleWeekday: Boolean = true
+    enableToggleWeekday: Boolean = true,
+
+    isHideExpandButton: Boolean = false
 ){
     val calendarDays = when (calendar) {
         is Calendar.Shared -> calendar.calendarDay
@@ -72,8 +75,12 @@ fun ScheduleCalenda(
         Box(modifier = Modifier.weight(1f)) {
             CalendarHeader(state)
         }
-        Button(onClick = { onExpandedChange() }) {
-            Text(text = if (expanded) "Thu gọn" else "Mở rộng")
+        if(!isHideExpandButton) {
+            Button(
+                onClick = { onExpandedChange() },
+            ) {
+                Text(text = if (expanded) "Thu gọn" else "Mở rộng")
+            }
         }
     }
 
@@ -131,7 +138,7 @@ fun CalendarHeader(
             modifier = modifier
         ){
             Text(
-                text = state.visibleMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
+                text = state.visibleMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale("vi", "VN"))),
                 style = MaterialTheme.typography.titleMedium
             )
         }

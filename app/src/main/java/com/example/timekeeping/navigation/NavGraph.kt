@@ -32,7 +32,7 @@ import com.example.timekeeping.utils.SessionManager
 fun AppNavigation(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route
+        startDestination = Screen.Login.route
     ) {
         addHomeScreen(navController)
         addAuthScreens(navController)
@@ -59,9 +59,6 @@ fun AppNavigation(navController: NavHostController) {
         addRequestJoinGroup(navController)
     }
 }
-
-/* ------------------- Các hàm mở rộng cho từng màn hình ------------------- */
-
 
 private fun NavGraphBuilder.addHomeScreen(navController: NavHostController) {
     composable(Screen.Home.route) {

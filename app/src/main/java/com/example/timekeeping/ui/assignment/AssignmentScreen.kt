@@ -34,14 +34,6 @@ import com.example.timekeeping.view_models.TeamViewModel
 import java.time.DayOfWeek
 import java.time.YearMonth
 
-
-data class AssignmentState(
-    val teamId: String,
-    val assignment: Assignment,
-    var isModified: Boolean = false,
-    var isNew: Boolean = true
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AssignmentScreen(
@@ -89,7 +81,7 @@ fun AssignmentScreen(
     }
 
     // Load assignment dates
-    LaunchedEffect(employees) {
+    LaunchedEffect(employees, state.visibleMonth) {
         teamViewModel.employees.value.forEach {
             viewModel.getAssignments(it.id) { assignments ->
                 val currentMonth = YearMonth.now()
@@ -107,8 +99,6 @@ fun AssignmentScreen(
                 initialCalendarByEmployee[it.id] = getDaysOfMonthExpanded(selectedDays, selectedWeekdays, assignmentStates[it.id]?.map { it.toInt() } ?: listOf())
 
                 employeeId_assignmentId[it.id] = assignments.firstOrNull()?.id ?: ""
-
-                Log.d("AssignmentScreen", "Assignment dates: $employeeId_assignmentId")
             }
         }
     }
@@ -136,8 +126,6 @@ fun AssignmentScreen(
                         calendarByEmployee.forEach({ assignment ->
                             val employeeAssignmentId = employeeId_assignmentId[assignment.key]
 
-                            Log.d("AssignmentScreen", "Employee assignment id: $employeeAssignmentId")
-
                             if (employeeAssignmentId != null) {
                                 if (employeeAssignmentId.isNotBlank() && isEmployeeCalendarModified(assignment.key, initialCalendarByEmployee, calendarByEmployee)) {
                                     // Nếu bản ghi tồn tại và đã được sửa đổi, thực hiện cập nhật
@@ -148,7 +136,9 @@ fun AssignmentScreen(
                                             shiftId = selectedShift.convertToReference("shifts"),
                                             dates = assignment.value.filter { it.day.isNotBlank() && (it.isSelected || it.isAssigned) }
                                                 .map { it.day.toInt() }
-                                                .toList()
+                                                .toList(),
+                                            month = state.visibleMonth.monthValue,
+                                            year = state.visibleMonth.year
                                         )
                                     )
                                 } else if(employeeAssignmentId.isBlank()) {
@@ -159,7 +149,9 @@ fun AssignmentScreen(
                                             shiftId = selectedShift.convertToReference("shifts"),
                                             dates = assignment.value.filter { it.day.isNotBlank() && (it.isSelected || it.isAssigned) }
                                                 .map { it.day.toInt() }
-                                                .toList()
+                                                .toList(),
+                                            month = state.visibleMonth.monthValue,
+                                            year = state.visibleMonth.year
                                         )
                                     )
                                 }
@@ -241,9 +233,7 @@ fun AssignmentScreen(
                     calendar = individualCalendar,
                     onWeekdayToggle = { weekday -> individualCalendar.toggleWeekday(weekday, sharedCalendarDays) },
                     onClick = { clickedDay ->
-                        if (isSharedCalendar) {
-//                            shareCalendar.selectDay(clickedDay)
-                        }else{
+                        if (!isSharedCalendar) {
                             individualCalendar.selectDay(clickedDay)
                         }
                     },
