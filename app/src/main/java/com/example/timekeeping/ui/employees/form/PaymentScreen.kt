@@ -13,8 +13,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.timekeeping.models.Adjustment
+import com.example.timekeeping.models.Payment
 import com.example.timekeeping.ui.assignment.components.CalendarHeader
 import com.example.timekeeping.ui.calender.CalendarState
 import com.example.timekeeping.ui.components.TopBarClassic
@@ -69,14 +73,19 @@ fun PaymentScreen(
     onPaymentClick: () -> Unit,
     salaryViewModel: SalaryViewModel = hiltViewModel(),
     employeeViewModel: EmployeeViewModel = hiltViewModel(),
-    paymentViewModel: PaymentViewModel = hiltViewModel()
+    paymentViewModel: PaymentViewModel = hiltViewModel(),
+    onEditClick: (String) -> Unit,
+    onDeleteClick: (Payment) -> Unit
 ) {
 
     var name by remember { mutableStateOf("") }
 
     val adjustmentsInfo = salaryViewModel.salaryInfo.collectAsState()
-    val totalPayment = paymentViewModel.getTotalPayment()
+    val payments by paymentViewModel.payments.collectAsState()
 
+    val totalPayment by remember(payments) {
+        mutableStateOf(payments.sumOf { it.amount })
+    }
     val totalWage = remember { mutableStateOf(0) }
 
     LaunchedEffect(state.visibleMonth) {
@@ -84,7 +93,7 @@ fun PaymentScreen(
         salaryViewModel.calculateTotalWage(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year) {
             totalWage.value = it
         }
-        paymentViewModel.getPayments(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year)
+        paymentViewModel.getPayments(groupId, employeeId, state.visibleMonth.monthValue, state.visibleMonth.year)
         employeeViewModel.getName(employeeId, {
             name = it
         })
@@ -102,11 +111,23 @@ fun PaymentScreen(
         Column(
             modifier = Modifier.run {
                 padding(paddingValues)
-                        .padding(16.dp)
+                        .padding(8.dp)
                         .fillMaxSize()
             }
         ) {
             PaymentContent(name, state, adjustmentsInfo.value, totalWage.value, totalPayment)
+
+            LazyColumn(
+                modifier = Modifier.weight(1f)
+            ) {
+                items(payments) { payment ->
+                    PaymentItem(
+                        payment,
+                        onEditClick = onEditClick,
+                        onDeleteClick = onDeleteClick
+                    )
+                }
+            }
 
             Button(
                 onClick = onPaymentClick,
@@ -142,13 +163,13 @@ fun PaymentContent(name: String, state: CalendarState, salaryInfo: List<Adjustme
     val paymentInfo = listOf(
         PaymentItem("Nhân viên", salary.employeeName),
         PaymentItem("Thời gian", "${state.visibleMonth.month.value}/${state.visibleMonth.year}"),
-        PaymentItem("Tổng tiền công", formatCurrency(salary.totalWorkingSalary)),
-        PaymentItem("Tổng thưởng / Phụ cấp", formatCurrency(salary.totalBonus)),
-        PaymentItem("Tổng lương", formatCurrency(salary.totalSalary)),
-        PaymentItem("Tổng đã ứng", formatCurrency(salary.totalAdvance)),
-        PaymentItem("Tổng trừ lương", formatCurrency(salary.totalDeduct)),
-        PaymentItem("Tổng đã thanh toán", formatCurrency(salary.totalPaid)),
-        PaymentItem("Tổng chưa thanh toán", formatCurrency(salary.totalUnpaid)),
+        PaymentItem("Tổng tiền công", salary.totalWorkingSalary.formatCurrency()),
+        PaymentItem("Tổng thưởng / Phụ cấp", salary.totalBonus.formatCurrency()),
+        PaymentItem("Tổng lương", (salary.totalSalary.formatCurrency())),
+        PaymentItem("Tổng đã ứng", (salary.totalAdvance.formatCurrency())),
+        PaymentItem("Tổng trừ lương", (salary.totalDeduct.formatCurrency())),
+        PaymentItem("Tổng đã thanh toán", (salary.totalPaid.formatCurrency())),
+        PaymentItem("Tổng chưa thanh toán", (salary.totalUnpaid.formatCurrency())),
     )
 
     CalendarHeaderWithMonthYear(
@@ -218,5 +239,47 @@ fun Item(
             Text(text = value)
         }
         HorizontalDivider(color = Color.Gray.copy(alpha = 0.2f))
+    }
+}
+
+@Composable
+fun PaymentItem(
+    payment: Payment,
+    onEditClick: (String) -> Unit,
+    onDeleteClick: (Payment) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(text = "Ngày thanh toán: ${payment.createAt.format("dd/MM/yyyy HH:mm")}")
+            Text(text = "Số tiền: ${payment.amount.formatCurrency()}")
+            Text(text = "Ghi chú: ${payment.note}")
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit",
+                    modifier = Modifier
+                        .padding(end = 16.dp)
+                        .clickable { onEditClick(payment.id) }
+                )
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    modifier = Modifier.clickable { onDeleteClick(payment) }
+                )
+            }
+        }
     }
 }

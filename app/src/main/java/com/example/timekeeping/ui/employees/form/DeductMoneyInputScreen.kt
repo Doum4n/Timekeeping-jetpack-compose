@@ -52,11 +52,16 @@ enum class TypeDeduct(val label: String) {
     SalaryAdvance("Ứng lương")
 }
 
+fun String.convertTypeDeductToLabel(): TypeDeduct {
+    return TypeDeduct.entries.find { it.label == this } ?: TypeDeduct.Other
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DeductMoneyInputScreen(
     groupId: String = "",
     employeeId: String = "",
+    adjustmentId: String = "",
     onBackClick: () -> Unit = {},
     onSave: (Adjustment) -> Unit = {},
     salaryViewModel: SalaryViewModel = hiltViewModel(),
@@ -67,6 +72,24 @@ fun DeductMoneyInputScreen(
     var amount by remember { mutableStateOf(TextFieldValue()) }
     var note by remember { mutableStateOf(TextFieldValue()) }
     var selectedType by remember { mutableStateOf(TypeDeduct.NotCome) }
+
+    LaunchedEffect(adjustmentId) {
+        if (adjustmentId != "") {
+            salaryViewModel.getAdjustSalary(
+                groupId,
+                employeeId,
+                adjustmentId,
+                state.visibleMonth.monthValue,
+                state.visibleMonth.year,
+                { adjustment ->
+                    if (adjustment != null) {
+                        amount = TextFieldValue(adjustment.adjustmentAmount.toString())
+                        note = TextFieldValue(adjustment.note)
+                        selectedType = adjustment.adjustmentType.convertTypeDeductToLabel();
+                    }
+                })
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -93,7 +116,7 @@ fun DeductMoneyInputScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                TypeDeduct.entries.forEach { type ->
+                TypeDeduct.entries.filter { it.label != "Ứng lương" }.forEach { type ->
                     TypeDeductItem(
                         isSelected = type == selectedType,
                         onTypeClick = {
@@ -139,7 +162,7 @@ fun DeductMoneyInputScreen(
                 onClick = {onSave(
                     Adjustment(
                         adjustmentType = selectedType.label,
-                        adjustmentAmount = - amount.text.toInt(),
+                        adjustmentAmount = -amount.text.toInt(),
                         note = note.text,
                         createdAt = DateTimeMap.from(LocalDateTime.now())
                     )

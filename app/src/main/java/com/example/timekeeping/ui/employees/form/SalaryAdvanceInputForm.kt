@@ -14,6 +14,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.timekeeping.models.Adjustment
 import com.example.timekeeping.models.Salary
 import com.example.timekeeping.ui.assignment.components.CalendarHeader
@@ -28,17 +30,42 @@ import com.example.timekeeping.ui.calender.CalendarState
 import com.example.timekeeping.ui.components.TopBarClassic
 import com.example.timekeeping.utils.DateTimeMap
 import com.example.timekeeping.utils.convertLocalDateToDate
+import com.example.timekeeping.utils.formatCurrency
+import com.example.timekeeping.utils.toPositive
+import com.example.timekeeping.view_models.SalaryViewModel
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Composable
 fun SalaryAdvanceInputForm(
     groupId: String,
     employeeId: String,
+    adjustmentId: String = "",
     onBackClick: () -> Unit,
     onSave: (Adjustment) -> Unit,
-    state: CalendarState
+    state: CalendarState,
+    salaryViewModel: SalaryViewModel = hiltViewModel()
+
 ) {
-    var amount by remember { mutableStateOf(TextFieldValue()) }
-    var note by remember { mutableStateOf(TextFieldValue()) }
+    var amount by remember { mutableStateOf("") }
+    var note by remember { mutableStateOf("") }
+
+    LaunchedEffect(adjustmentId) {
+        if(adjustmentId == "")
+            return@LaunchedEffect
+        else {
+            salaryViewModel.getAdjustSalary(
+                groupId,
+                employeeId,
+                adjustmentId,
+                state.visibleMonth.monthValue,
+                state.visibleMonth.year,
+                { adjustment ->
+                    amount = (adjustment?.adjustmentAmount)?.toPositive().toString() ?: ""
+                    note = adjustment?.note ?: ""
+                })
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -63,13 +90,6 @@ fun SalaryAdvanceInputForm(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Text("Ngày ứng lương")
-            CalendarHeader(
-                state = state,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-
             Text("Hình ảnh")
             Image(
                 imageVector = Icons.Default.Warning,
@@ -91,9 +111,10 @@ fun SalaryAdvanceInputForm(
                 onClick = {
                     onSave(
                         Adjustment(
-                            adjustmentAmount = - amount.text.toInt(),
-                            createdAt = DateTimeMap.from(state.selectedDate),
+                            adjustmentAmount = - amount.toInt(),
+                            createdAt = DateTimeMap.from(LocalDateTime.now()),
                             adjustmentType = "Ứng lương",
+                            note = note,
                         )
                     )
                 },
@@ -106,7 +127,3 @@ fun SalaryAdvanceInputForm(
         }
     }
 }
-
-// Helper function nếu muốn xử lý khi nhập không đúng số
-fun String.toIntOrNullSafe(): Int? = this.filter { it.isDigit() }.toIntOrNull()
-fun Int?.orZero() = this ?: 0

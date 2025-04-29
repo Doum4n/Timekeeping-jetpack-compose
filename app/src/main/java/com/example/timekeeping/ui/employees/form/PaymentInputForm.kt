@@ -32,8 +32,6 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun PaymentInputForm(
-    employeeId: String,
-    groupId: String,
     state: CalendarState = CalendarState(),
     onPaymentClick: (Payment) -> Unit = {},
     paymentViewModel: PaymentViewModel = hiltViewModel(),
@@ -42,15 +40,29 @@ fun PaymentInputForm(
 ) {
 
     var name by remember { mutableStateOf("") }
+    var amount by remember { mutableStateOf("") }
+    var note by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        employeeViewModel.getName(employeeId, {
+        employeeViewModel.getName(paymentViewModel.employeeId, {
             name = it
         })
     }
 
-    var amount by remember { mutableStateOf("") }
-    var note by remember { mutableStateOf("") }
+    LaunchedEffect(paymentViewModel.paymentId) {
+        if(paymentViewModel.paymentId != "") {
+            paymentViewModel.getPaymentById(
+                paymentViewModel.groupId,
+                paymentViewModel.employeeId,
+                paymentViewModel.paymentId,
+                state.visibleMonth.monthValue,
+                state.visibleMonth.year,
+                {
+                    amount = it.amount.toString()
+                    note = it.note
+                })
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -172,8 +184,6 @@ fun PreviewPayMentInputForm() {
     val calendarState = remember { CalendarState() }
 
     PaymentInputForm(
-        employeeId = "Nguyễn Văn A",
-        groupId = "group001",
         state = calendarState,
         onBack = {}
     )
