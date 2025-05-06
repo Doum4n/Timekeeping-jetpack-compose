@@ -27,6 +27,7 @@ import com.example.timekeeping.navigation.team.addTeamScreen
 import com.example.timekeeping.ui.account.MyAccountScreen
 import com.example.timekeeping.ui.home.HomeScreen
 import com.example.timekeeping.utils.SessionManager
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
@@ -69,7 +70,10 @@ private fun NavGraphBuilder.addHomeScreen(navController: NavHostController) {
 private fun NavGraphBuilder.addProfileScreen(navController: NavHostController) {
     composable(Screen.Profile.route) {
         MyAccountScreen(
-            onLogout = { navController.navigate(Screen.Login.route) },
+            onLogout = {
+                navController.navigate(Screen.Login.route)
+                FirebaseAuth.getInstance().signOut()
+            },
             onShowCode = { employeeId ->
                 navController.navigate(Screen.MyQRCode.createRoute(employeeId))
             },

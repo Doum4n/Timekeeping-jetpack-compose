@@ -13,6 +13,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.timekeeping.view_models.AuthViewModel
+import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun LoginScreen(
@@ -30,11 +32,15 @@ fun LoginScreen(
         }
     }
 
-    LoginScreenContent(
-        state = uiState,
-        onEmailChange = viewModel::onEmailChange,
-        onPasswordChange = viewModel::onPasswordChange,
-        onLoginClick = { viewModel.loginUser(uiState.email, uiState.password) },
-        onNavigateToRegister = onNavigateToRegister
-    )
+    if(FirebaseAuth.getInstance().currentUser != null) {
+        onLoginSuccess()
+    }else {
+        LoginScreenContent(
+            state = uiState,
+            onEmailChange = viewModel::onEmailChange,
+            onPasswordChange = viewModel::onPasswordChange,
+            onLoginClick = { viewModel.loginUser(uiState.email, uiState.password) },
+            onNavigateToRegister = onNavigateToRegister
+        )
+    }
 }

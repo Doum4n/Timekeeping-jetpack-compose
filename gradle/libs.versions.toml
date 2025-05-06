@@ -4,6 +4,8 @@ bom = "3.1.4"
 cameraCamera2 = "1.4.2"
 cameraLifecycleVersion = "1.1.0"
 cameraViewVersion = "1.1.0"
+cloudinaryAndroid = "2.3.1"
+coilCompose = "2.2.2"
 core = "3.5.2"
 credentials = "1.5.0"
 firebaseAuthKtxVersion = "22.3.1"
@@ -47,6 +49,8 @@ androidx-credentials = { module = "androidx.credentials:credentials", version.re
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "bom" }
+cloudinary-android = { module = "com.cloudinary:cloudinary-android", version.ref = "cloudinaryAndroid" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 core = { module = "com.google.zxing:core", version.ref = "core" }
 firebase-auth-ktx-v2231 = { module = "com.google.firebase:firebase-auth-ktx", version.ref = "firebaseAuthKtxVersion" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }

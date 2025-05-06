@@ -7,6 +7,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.timekeeping.navigation.Screen
+import com.example.timekeeping.ui.calender.rememberCalendarState
 import com.example.timekeeping.ui.employees.details.EmployeeDetail
 import com.example.timekeeping.ui.employees.employee_info.EmployeeInfoScreen
 import com.example.timekeeping.ui.employees.EmployeeManagementScreen
@@ -75,7 +76,8 @@ fun NavGraphBuilder.addEmployeeScreen(navController: NavHostController) {
             onMinusMoneyClick = { navController.navigate(Screen.MinusMoneyForm.createRoute(groupId, employeeId)) },
             onAdvanceSalaryClick = { navController.navigate(Screen.SalaryAdvanceForm.createRoute(groupId, employeeId)) },
             onPaymentClick = { navController.navigate(Screen.PaymentForm.createRoute(groupId, employeeId)) },
-            onBackToEmployeeList = { navController.navigate(Screen.EmployeeManagement.createRoute(groupId)) }
+            onBackToEmployeeList = { navController.navigate(Screen.EmployeeManagement.createRoute(groupId)) },
+            state = rememberCalendarState()
         )
     }
 }

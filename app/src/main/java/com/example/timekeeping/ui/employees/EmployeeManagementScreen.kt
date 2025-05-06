@@ -150,6 +150,7 @@ fun MembersScreen(employees: List<Employee>, groupId: String, onEmployeeClick: (
             .fillMaxHeight()
     ){
         EmployeeCard(
+            groupId = groupId,
             employee = it,
             onClick = {employeesId -> onEmployeeClick(employeesId)}
         )

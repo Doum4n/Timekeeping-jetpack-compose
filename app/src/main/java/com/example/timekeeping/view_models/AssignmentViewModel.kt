@@ -15,8 +15,9 @@ class AssignmentViewModel @Inject constructor(
     private val assignmentRepo: AssignmentRepo
 ): ViewModel() {
 
-    fun getAssignments(employeeId: String, callback: (List<Assignment>) -> Unit) {
+    fun getAssignments(employeeId: String, shiftId: String, callback: (List<Assignment>) -> Unit) {
         assignmentRepo.getAssignments(
+            shiftId = shiftId,
             employeeId = employeeId,
             callback = callback
         )

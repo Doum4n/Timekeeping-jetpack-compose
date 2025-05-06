@@ -37,6 +37,10 @@ data class DateTimeMap(
                 this.year == other.year
     }
 
+    fun toLocalDate(): LocalDate {
+        return LocalDate.of(year, month, day)
+    }
+
     companion object {
         fun from(localDateTime: LocalDateTime): DateTimeMap {
             return DateTimeMap(

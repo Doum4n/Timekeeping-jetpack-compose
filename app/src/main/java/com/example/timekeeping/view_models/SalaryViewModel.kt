@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import com.example.timekeeping.models.Adjustment
 import com.example.timekeeping.models.Salary
 import com.example.timekeeping.repositories.SalaryRepo
+import com.example.timekeeping.ui.employees.form.TypeAllowance
+import com.example.timekeeping.ui.employees.form.TypeDeduct
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -65,6 +67,28 @@ class SalaryViewModel @Inject constructor (
         salaryRepo.getTotalUnpaidSalary(groupId) {
             _totalUnpaidSalary.value = it
         }
+    }
+
+    fun getTotalSalary(groupId: String, month: Int, year: Int, onResult: (Int) -> Unit) {
+        salaryRepo.getTotalSalary(groupId, month, year, onResult)
+    }
+
+    fun getTotalAdvanceMoney(groupId: String, month: Int, year: Int, onResult: (Int) -> Unit) {
+        salaryRepo.getTotalAdvance(groupId, month, year, onResult)
+    }
+
+    fun getTotalUnpaidSalaryByEmployee(totalWage: Int, totalPayment: Int): Int {
+        val allowanceLabels = TypeAllowance.entries.map { it.label }
+        val deductLabels = TypeDeduct.entries.map { it.label }.filter { it != "Ứng lương" }
+        val totalBonus = salaryInfo.value.filter { it.adjustmentType in allowanceLabels }.sumOf { it.adjustmentAmount }
+        val totalAdvance = salaryInfo.value.filter { it.adjustmentType == "Ứng lương" }.sumOf { it.adjustmentAmount }
+        val totalDeduct = salaryInfo.value.filter { it.adjustmentType in deductLabels }.sumOf { it.adjustmentAmount }
+
+        return totalWage + totalBonus + totalAdvance + totalDeduct - totalPayment
+    }
+
+    fun getSalaryById(groupId: String, employeeId: String, onSuccess: (Salary?) -> Unit) {
+        salaryRepo.getSalaryById(groupId, employeeId, onSuccess)
     }
 
     fun updateAdjustSalary(

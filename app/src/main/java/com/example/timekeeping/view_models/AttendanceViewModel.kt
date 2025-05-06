@@ -23,4 +23,8 @@ class AttendanceViewModel @Inject constructor (
     fun updateAttendance(attendanceId: String, attendance: Attendance) {
         attendanceRepository.updateAttendance(attendanceId, attendance)
     }
+
+    fun getAttendanceByEmployeeId(employeeId: String, month: Int, year: Int, onResult: (List<Attendance>) -> Unit) {
+        attendanceRepository.getAttendanceByEmployeeId(employeeId, month, year, onResult)
+    }
 }

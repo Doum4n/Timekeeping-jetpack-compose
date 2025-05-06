@@ -28,6 +28,7 @@ import com.example.timekeeping.view_models.ShiftViewModel
 import java.time.format.DateTimeFormatter
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -68,7 +69,7 @@ data class CheckInState(
     val employeeName: String,
     // Lưu trạng thái của các loại chấm công
     val attendanceStates: SnapshotStateMap<AttendanceType, Boolean> = mutableStateMapOf(),
-    var reason: String = ""
+    var reason: MutableState<String> = mutableStateOf("")
 )
 
 data class CheckInUiState(
@@ -143,7 +144,7 @@ fun CheckInManagementScreen(
                         CheckInState(
                             employeeId = empId,
                             employeeName = employeeName,
-                            reason = attendance.note
+                            reason = mutableStateOf(attendance.note)
                         )
                     }
 
@@ -192,7 +193,7 @@ fun CheckInManagementScreen(
                                             shiftId = alreadyAttended.shiftId,
                                             attendanceType = type.label,
                                             startTime = DateTimeMap.from(LocalDateTime.now()),
-                                            note = checkIn.reason
+                                            note = checkIn.reason.value
                                         )
                                     )
                                 else
@@ -202,7 +203,7 @@ fun CheckInManagementScreen(
                                             shiftId = uiState.value.selectedShiftId!!,
                                             attendanceType = type.label,
                                             startTime = DateTimeMap.from(LocalDateTime.now()),
-                                            note = checkIn.reason
+                                            note = checkIn.reason.value
                                         )
                                     )
                             }
@@ -249,8 +250,8 @@ fun CheckInManagementScreen(
                 EmployeeCheckInSection(
                     employeeName = employee.name.fullName,
                     shareCheckInStates = if (isSharedCheckIn) uiState.value.sharedAttendanceStates else checkIn.attendanceStates,
-                    reason = checkIn.reason,
-                    onReasonChange = { reason -> checkIn.reason = reason },
+                    reason = checkIn.reason.value,
+                    onReasonChange = { reason -> checkIn.reason.value = reason },
                     isLeave = checkIn.attendanceStates[AttendanceType.PaidLeave] == true ||
                             checkIn.attendanceStates[AttendanceType.UnpaidLeave] == true
                 )

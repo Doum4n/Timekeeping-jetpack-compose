@@ -51,8 +51,8 @@ class EmployeeViewModel @Inject constructor(
         employeeRepository.saveEmployees(employees, groupId, onSuccess, onFailure)
     }
 
-    fun deleteEmployee(employeeId: String) {
-        employeeRepository.deleteEmployee(employeeId)
+    fun deleteEmployee(groupId: String, employeeId: String) {
+        employeeRepository.deleteEmployee(groupId, employeeId)
     }
 
     // Load accepted employees for the given groupId
@@ -114,14 +114,6 @@ class EmployeeViewModel @Inject constructor(
 
     fun updateEmployee(employee: Employee) {
         employeeRepository.updateEmployee(employee)
-    }
-
-    fun getTotalOutstanding(groupId: String, employeeId: String, onSuccess: (Int) -> Unit, onFailure: (Exception) -> Unit){
-        employeeRepository.getTotalOutstanding(groupId, employeeId, onSuccess, onFailure)
-    }
-
-    fun deleteEmloyeeGroup(groupId: String, employeeId: String) {
-        employeeRepository.deleteEmloyeeGroup(groupId, employeeId)
     }
 
     fun grantPermission(groupId: String, employeeId: String, scannedResult: String?) {

@@ -1,5 +1,6 @@
 package com.example.timekeeping.navigation.account
 
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
@@ -8,6 +9,7 @@ import androidx.navigation.navArgument
 import com.example.timekeeping.navigation.Screen
 import com.example.timekeeping.ui.account.MyAccountInputScreen
 import com.example.timekeeping.ui.account.MyQRCodeScreen
+import com.example.timekeeping.view_models.EmployeeViewModel
 
 fun NavGraphBuilder.addMyAccountNav(navController: NavController){
     composable(
@@ -28,9 +30,15 @@ fun NavGraphBuilder.addMyAccountNav(navController: NavController){
     ){
         backStackEntry ->
         val employeeId = backStackEntry.arguments?.getString("employeeId") ?: ""
+
+        val employeeViewModel = hiltViewModel<EmployeeViewModel>()
+
         MyAccountInputScreen(
             employeeId = employeeId,
-            onBackClick = { navController.popBackStack() }
+            onBackClick = { navController.popBackStack() },
+            onUpdate = { employee ->
+                employeeViewModel.updateEmployee(employee)
+            }
         )
     }
 }

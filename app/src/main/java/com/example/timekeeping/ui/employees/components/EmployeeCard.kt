@@ -5,9 +5,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -28,30 +30,42 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.rememberAsyncImagePainter
 import com.example.timekeeping.R
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Name
+import com.example.timekeeping.view_models.SalaryViewModel
 
 @Composable
 fun EmployeeCard(
+    groupId: String = "",
     employee: Employee,
     isPending: Boolean = false,
     onClick: (String) -> Unit = {},
     onLinkClick: (String) -> Unit = {},
     onAcceptClick: () -> Unit = {},
-    onRejectClick: () -> Unit = {}
+    onRejectClick: () -> Unit = {},
+    salaryViewModel: SalaryViewModel = hiltViewModel()
 ) {
 
     var salary by remember { mutableStateOf<Double?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var salaryType by remember { mutableStateOf("") }
 
     LaunchedEffect(employee.id) {
-
+        salaryViewModel.getSalaryById(groupId, employee.id) {
+            salary = it?.salary?.toDouble()
+            salaryType = it?.salaryType ?: ""
+            isLoading = false
+        }
     }
 
     Card(
@@ -65,93 +79,94 @@ fun EmployeeCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+
+            // --- Avatar + Name + Settings Icon ---
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Row (
+                Image(
+                    painter = rememberAsyncImagePainter(employee.avatarUrl),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(48.dp)
-                        .weight(1f),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_launcher_background),
-                        contentDescription = "Avatar",
-                        modifier = Modifier
-                            .size(64.dp)
-                            .clip(CircleShape)
-                    )
-                    Text(
-                        text = employee.name.fullName,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
+                        .size(56.dp)
+                        .clip(CircleShape)
+                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Text(
+                    text = employee.name.fullName,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
+                )
+
                 IconButton(
-                    onClick = {onClick(employee.id)},
-                    modifier = Modifier.size(24.dp)
+                    onClick = { onClick(employee.id) }
                 ) {
                     Icon(
                         imageVector = Icons.Default.Settings,
-                        contentDescription = "Settings",
-                        modifier = Modifier.size(24.dp)
+                        contentDescription = "Settings"
                     )
                 }
             }
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                if (isLoading) {
-                    Text(text = "Loading salary...")
-                } else {
-                    if (salary != null) {
-                        Text(text = "${salary} VND")
-                    } else if (errorMessage != null) {
-                        Text(text = errorMessage ?: "Unknown error")
+            // --- Salary Info / Error / Loading ---
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                when {
+                    isLoading -> Text("Đang tải lương...", style = MaterialTheme.typography.bodyMedium)
+                    salary != null -> Text("${salary} VND", style = MaterialTheme.typography.bodyMedium)
+                    errorMessage != null -> {
+                        Text(errorMessage ?: "Lỗi không xác định", color = Color.Red)
                         Log.e("EmployeeCard", errorMessage ?: "Unknown error")
                     }
                 }
-                Text(text = "Thông tin bổ sung 2")
+                Text("Cách tính lương: $salaryType", style = MaterialTheme.typography.bodySmall)
             }
 
-            if (isPending) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = onAcceptClick,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Chấp nhận")
+            // --- Action Buttons ---
+            when {
+                isPending -> {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(
+                            onClick = onAcceptClick,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Chấp nhận")
+                        }
+                        Button(
+                            onClick = onRejectClick,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Từ chối")
+                        }
                     }
+                }
 
+                employee.userId.isEmpty() -> {
                     Button(
-                        onClick = onRejectClick,
-                        modifier = Modifier.weight(1f)
+                        onClick = { onLinkClick(employee.id) },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Từ chối")
+                        Text("Liên kết")
                     }
                 }
-            }else if (employee.userId.isEmpty()) {
-                Button(
-                    onClick =  {onLinkClick(employee.id)},
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Liên kết")
-                }
-            }else {
-                Button(
-                    onClick = {},
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Xem thông tin")
+
+                else -> {
+                    Button(
+                        onClick = {},
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Xem thông tin")
+                    }
                 }
             }
         }
     }
+
 }
 
 

@@ -11,9 +11,10 @@ import javax.inject.Inject
 class AssignmentRepo @Inject constructor(
     private val db: FirebaseFirestore
 ) {
-    fun getAssignments(employeeId: String, callback: (List<Assignment>) -> Unit) {
+    fun getAssignments(employeeId: String, shiftId: String, callback: (List<Assignment>) -> Unit) {
         db.collection("assignments")
             .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
+            .whereEqualTo("shiftId", shiftId.convertToReference("shifts"))
             .get()
             .addOnSuccessListener { documents ->
                 val assignments = documents.map { doc ->
@@ -29,8 +30,7 @@ class AssignmentRepo @Inject constructor(
 
     fun addAssignment(assignment: Assignment) {
         db.collection("assignments")
-            .document(assignment.employeeId.id)
-            .set(assignment)
+            .add(assignment)
             .addOnSuccessListener { documentReference ->
             }.addOnFailureListener { exception ->
             }

@@ -13,12 +13,16 @@ import com.example.timekeeping.models.Team
 import com.example.timekeeping.ui.employees.form.TypeAllowance
 import com.example.timekeeping.ui.employees.form.TypeDeduct
 import com.example.timekeeping.utils.convertToReference
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.getField
 import com.google.type.DateTime
+import kotlinx.coroutines.tasks.await
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
@@ -41,16 +45,49 @@ class EmployeeRepository @Inject constructor (
         load(groupId, Status.UNAUTHORIZED, onResult)
     }
 
-    fun deleteEmployee(employeeId: String) {
+    fun deleteEmployee(groupId: String, employeeId: String) {
         val batch = db.batch()
-        batch.delete(db.collection("employees").document(employeeId))
-        //TODO Thêm groupId
-//        batch.delete(db.collection("employee_group").document("$groupId-$employeeId"))
-//        batch.delete(db.collection("salaries").document(salaryDocId(groupId, employeeId)))
-        batch.delete(db.collection("attendances").document(employeeId))
-        batch.delete(db.collection("attendances").document(employeeId))
-        batch.delete(db.collection("assignments").document(employeeId))
-        batch.commit()
+
+        val employeeRef = db.collection("employees").document(employeeId)
+        val salaryRef = db.collection("salaries").document(salaryDocId(groupId, employeeId))
+        val empGroupRef = db.collection("employee_group").document("$groupId-$employeeId")
+
+        batch.delete(employeeRef)
+        batch.delete(empGroupRef)
+        batch.delete(salaryRef)
+
+        val assignmentsTask = db.collection("assignments")
+            .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
+            .get()
+
+        val attendancesTask = db.collection("attendances")
+            .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
+            .get()
+
+        Tasks.whenAllSuccess<QuerySnapshot>(assignmentsTask, attendancesTask)
+            .addOnSuccessListener { results ->
+                val assignments = results[0].documents
+                val attendances = results[1].documents
+
+                for (doc in assignments) {
+                    batch.delete(doc.reference)
+                }
+
+                for (doc in attendances) {
+                    batch.delete(doc.reference)
+                }
+
+                batch.commit()
+                    .addOnSuccessListener {
+                        Log.d("Firestore", "Employee and related data deleted successfully.")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("Firestore", "Error committing batch", e)
+                    }
+            }
+            .addOnFailureListener { e ->
+                Log.e("Firestore", "Error fetching documents for delete", e)
+            }
     }
 
     private fun load(
@@ -77,7 +114,7 @@ class EmployeeRepository @Inject constructor (
                 }
 
                 if (tasks != null) {
-                    com.google.android.gms.tasks.Tasks.whenAllSuccess<com.google.firebase.firestore.DocumentSnapshot>(tasks)
+                    Tasks.whenAllSuccess<DocumentSnapshot>(tasks)
                         .addOnSuccessListener { documents ->
                             val employees = documents.mapNotNull { doc ->
                                 Log.d("EmployeeRepository", "Loaded employee: $doc")
@@ -242,40 +279,6 @@ class EmployeeRepository @Inject constructor (
     fun updateEmployee(employee: Employee) {
         Log.d("EmployeeRepository_updateEmployee", "Updating employee: $employee")
         db.collection("employees").document(employee.id).set(employee.toMap())
-    }
-
-    fun getTotalOutstanding(groupId: String, employeeId: String, onSuccess: (Int) -> Unit, onFailure: (Exception) -> Unit){
-
-        var totalOutstanding = 0;
-
-        val salaryRef = db.collection("salaries")
-
-        salaryRef.document(salaryDocId(groupId, employeeId))
-            .collection("adjustments-${LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-M"))}")
-            .get()
-            .addOnSuccessListener({ document ->
-                document.toObjects(Adjustment::class.java).forEach({ salary ->
-                    TypeDeduct.entries.forEach({ type ->
-                        if (salary.adjustmentType == type.label) {
-                            totalOutstanding += salary.adjustmentAmount
-                        }
-                    })
-                    TypeAllowance.entries.forEach({ type ->
-                        if (salary.adjustmentType == type.label) {
-                            totalOutstanding += salary.adjustmentAmount
-                        }
-                    })
-                })
-                onSuccess(totalOutstanding)
-            }).addOnFailureListener { exception ->
-                onFailure(exception)
-                Log.e("EmployeeRepository", "Error loading salary", exception)
-                exception.printStackTrace()
-            }
-    }
-
-    fun deleteEmloyeeGroup(groupId: String, employeeId: String) {
-        db.collection("employee_group").document(employeeGroupDocId(groupId, employeeId)).delete()
     }
 
     private fun employeeGroupDocId(groupId: String, employeeId: String): String {

@@ -40,6 +40,7 @@ import com.example.timekeeping.models.Employee
 import com.example.timekeeping.ui.employees.components.SimpleDialogS
 import com.example.timekeeping.utils.SessionManager
 import com.example.timekeeping.view_models.EmployeeViewModel
+import com.example.timekeeping.view_models.GroupViewModel
 
 enum class SettingItem(val icon: ImageVector, val title: String) {
     CODE(Icons.Default.Info, "Mã nhân viên"),
@@ -56,6 +57,7 @@ fun convertSettingItemToEnum(title: String): SettingItem? {
 @Composable
 fun MyAccountScreen(
     employeeViewModel: EmployeeViewModel = hiltViewModel(),
+    groupViewModel: GroupViewModel = hiltViewModel(),
     onShowCode: (String) -> Unit = {},
     onLogout: () -> Unit,
     onEdit: () -> Unit
@@ -126,7 +128,9 @@ fun MyAccountScreen(
                     question = message.value,
                     onConfirm = {
                         if (employeeId != null) {
-                            employeeViewModel.deleteEmployee(employeeId)
+                            groupViewModel.joinedGroups.value.forEach({
+                                employeeViewModel.deleteEmployee(it.id, employeeId)
+                            })
                             onLogout()
                         }
                         showDeleteDialog.value = false
@@ -144,6 +148,7 @@ fun MyAccountScreen(
                     onConfirm = {
                         onLogout()
                         showLogoutDialog.value = false
+
                     },
                     onDismiss = {
                         showLogoutDialog.value = false

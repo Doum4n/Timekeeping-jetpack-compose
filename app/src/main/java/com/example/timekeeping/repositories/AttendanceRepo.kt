@@ -16,7 +16,22 @@ class AttendanceRepo @Inject constructor(
     val db: FirebaseFirestore
 ) {
     fun CheckIn(attendance: Attendance){
-        db.collection("attendances").document(attendance.employeeId.id).set(attendance)
+        db.collection("attendances")
+            .add(attendance)
+    }
+
+    fun getAttendanceByEmployeeId(employeeId: String, month: Int, year: Int, onResult: (List<Attendance>) -> Unit) {
+        db.collection("attendances")
+            .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
+            .whereEqualTo("startTime.month", month)
+            .whereEqualTo("startTime.year", year)
+            .get()
+            .addOnSuccessListener { result ->
+                val attendances = result.documents.mapNotNull { doc ->
+                    doc.toObject(Attendance::class.java)?.apply { id = doc.id }
+                }
+                onResult(attendances)
+            }
     }
 
     fun CheckOut(){

@@ -81,24 +81,29 @@ fun AssignmentScreen(
     }
 
     // Load assignment dates
-    LaunchedEffect(employees, state.visibleMonth) {
-        teamViewModel.employees.value.forEach {
-            viewModel.getAssignments(it.id) { assignments ->
-                val currentMonth = YearMonth.now()
-                assignmentStates.put(
-                    it.id,
-                    assignments
-                        .flatMap { it.dates }
-                        .map { date ->
-                            currentMonth.atDay(date).dayOfMonth.toString()
-                        }
-                        .toMutableStateList()
-                )
-                assignmentDates = assignmentStates[it.id]?.map { it.toInt() } ?: listOf()
+    LaunchedEffect(employees, state.visibleMonth, selectedShift) {
+        if(selectedShift != "") {
+            teamViewModel.employees.value.forEach {
+                viewModel.getAssignments(it.id, selectedShift) { assignments ->
+                    val currentMonth = YearMonth.now()
+                    assignmentStates.put(
+                        it.id,
+                        assignments
+                            .flatMap { it.dates }
+                            .map { date ->
+                                currentMonth.atDay(date).dayOfMonth.toString()
+                            }
+                            .toMutableStateList()
+                    )
+                    assignmentDates = assignmentStates[it.id]?.map { it.toInt() } ?: listOf()
 
-                initialCalendarByEmployee[it.id] = getDaysOfMonthExpanded(selectedDays, selectedWeekdays, assignmentStates[it.id]?.map { it.toInt() } ?: listOf())
+                    initialCalendarByEmployee[it.id] = getDaysOfMonthExpanded(
+                        selectedDays,
+                        selectedWeekdays,
+                        assignmentStates[it.id]?.map { it.toInt() } ?: listOf())
 
-                employeeId_assignmentId[it.id] = assignments.firstOrNull()?.id ?: ""
+                    employeeId_assignmentId[it.id] = assignments.firstOrNull()?.id ?: ""
+                }
             }
         }
     }

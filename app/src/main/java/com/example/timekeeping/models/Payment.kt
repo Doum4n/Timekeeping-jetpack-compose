@@ -6,6 +6,7 @@ data class Payment(
     var id: String = "",
     val amount: Int = 0,
     val createAt: DateTimeMap = DateTimeMap(),
+    val imageUrl: String = "",
     val note: String = "",
 ) {
 }
