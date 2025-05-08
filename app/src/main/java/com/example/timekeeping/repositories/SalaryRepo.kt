@@ -4,19 +4,29 @@ import android.util.Log
 import com.example.timekeeping.models.Adjustment
 import com.example.timekeeping.models.Assignment
 import com.example.timekeeping.models.Attendance
+import com.example.timekeeping.models.ConditionNode
 import com.example.timekeeping.models.Payment
 import com.example.timekeeping.models.Salary
 import com.example.timekeeping.models.Shift
 import com.example.timekeeping.ui.employees.form.TypeAllowance
 import com.example.timekeeping.ui.employees.form.TypeDeduct
 import com.example.timekeeping.ui.employees.form.TypeDeductItem
+import com.example.timekeeping.ui.rule.SalaryFieldName
 import com.example.timekeeping.utils.DateTimeMap
+import com.example.timekeeping.utils.RuleEvaluator
 import com.example.timekeeping.utils.convertToReference
 import com.example.timekeeping.utils.toPositive
+import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.TaskCompletionSource
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.Source
+import com.google.firebase.firestore.model.FieldPath
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.checkerframework.checker.units.qual.A
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -24,6 +34,8 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 class SalaryRepo @Inject constructor(
     private val firestore: FirebaseFirestore
@@ -45,9 +57,11 @@ class SalaryRepo @Inject constructor(
         onSuccess: (List<Adjustment>) -> Unit,
         onFailure: (Exception) -> Unit = {}
     ) {
-        firestore.collection("salaries")
-            .document(salaryDocId(groupId, employeeId))
-            .collection("adjustments-$year-$month")
+        firestore.collection("adjustments")
+            .whereEqualTo("groupId", groupId)
+            .whereEqualTo("employeeId", employeeId)
+            .whereEqualTo("createdAt.month", month)
+            .whereEqualTo("createdAt.year", year)
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .get()
             .addOnSuccessListener { documents ->
@@ -61,13 +75,17 @@ class SalaryRepo @Inject constructor(
 
                 onSuccess(result)
             }
-            .addOnFailureListener { onFailure(it) }
+            .addOnFailureListener {
+                onFailure(it)
+            }
     }
 
     fun getDeductMoney(groupId: String, employeeId: String, month: Int, year: Int, onSuccess: (List<Adjustment>) -> Unit, onFailure: (Exception) -> Unit = {}){
-        firestore.collection("salaries")
-            .document(salaryDocId(groupId, employeeId))
-            .collection("adjustments-$year-$month")
+        firestore.collection("adjustments")
+            .whereEqualTo("groupId", groupId)
+            .whereEqualTo("employeeId", employeeId)
+            .whereEqualTo("createdAt.month", month)
+            .whereEqualTo("createdAt.year", year)
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .get()
             .addOnSuccessListener({
@@ -86,9 +104,11 @@ class SalaryRepo @Inject constructor(
     }
 
     fun getBonusAdjustment(groupId: String, employeeId: String, month: Int, year: Int, onSuccess: (List<Adjustment>) -> Unit, onFailure: (Exception) -> Unit = {}){
-        firestore.collection("salaries")
-            .document(salaryDocId(groupId, employeeId))
-            .collection("adjustments-$year-$month")
+        firestore.collection("adjustments")
+            .whereEqualTo("groupId", groupId)
+            .whereEqualTo("employeeId", employeeId)
+            .whereEqualTo("createdAt.month", month)
+            .whereEqualTo("createdAt.year", year)
             .orderBy("createdAt", Query.Direction.DESCENDING)
             .get()
             .addOnSuccessListener({
@@ -107,12 +127,13 @@ class SalaryRepo @Inject constructor(
     }
 
     fun getSalaryInfoByMonth(groupId: String, employeeId: String, month: Int, year: Int, onSuccess: (List<Adjustment>) -> Unit, onFailure: (Exception) -> Unit = {}){
-        firestore.collection("salaries")
-            .document(salaryDocId(groupId, employeeId))
-            .collection("adjustments-$year-$month")
+        firestore.collection("adjustments")
+            .whereEqualTo("groupId", groupId)
+            .whereEqualTo("employeeId", employeeId)
+            .whereEqualTo("createdAt.month", month)
+            .whereEqualTo("createdAt.year", year)
             .get()
             .addOnSuccessListener { documents ->
-                // !!!
                 val salaries = documents.mapNotNull { doc ->
                     doc.toObject(Adjustment::class.java).copy(id = doc.id)
                 }
@@ -123,29 +144,121 @@ class SalaryRepo @Inject constructor(
     }
 
     fun createAdjustSalary(
-        groupId: String,
-        employeeId: String,
         adjustment: Adjustment,
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        val docRef = firestore.collection("salaries").document(salaryDocId(groupId, employeeId))
+        firestore.collection("adjustments")
+            .add(adjustment)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { onFailure(it) }
+    }
 
-        Log.d("SalaryRepo_createAdjustSalary", "groupId: $groupId, employeeId: $employeeId, adjustment: $adjustment")
+    @OptIn(DelicateCoroutinesApi::class)
+    fun calculateAllTotalWage(groupId: String, employeeId: String, onResult: (Int) -> Unit) {
+        var totalWage: Int = 0
+        var salaryType = ""
+        var salaryAmount = 0
 
-        docRef.get()
-            .addOnSuccessListener { document ->
-                val currentSalary = document.toObject(Salary::class.java)
-                if (currentSalary != null) {
-                    docRef.collection("adjustments-$localDateTimeMonth")
-                        .add(adjustment)
-                        .addOnSuccessListener { onSuccess() }
-                        .addOnFailureListener { onFailure(it) }
-                } else {
-                    onFailure(Exception("Salary not found"))
+        val AttendanceType = listOf("Đi làm", "Chấm 1/2 công", "Nghỉ có lương")
+
+        firestore.collection("salaries").document(salaryDocId(groupId, employeeId)).get().addOnSuccessListener({
+                documents ->
+            val salary = documents.toObject(Salary::class.java)
+            salaryType = salary?.salaryType ?: ""
+            salaryAmount = salary?.salary ?: 0
+
+            when(salaryType) {
+//                "Giờ" -> {
+//                    firestore.collection("attendances")
+//                        .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
+//                        .whereEqualTo("startTime.month", month)
+//                        .whereEqualTo("startTime.year", year)
+//                        .get()
+//                        .addOnSuccessListener({
+//                            val assignments = it.toObjects(Attendance::class.java)
+//                            totalWage = (assignments.sumOf { it.totalHours } * salaryAmount)
+//                            onResult(totalWage)
+//                        })
+//                }
+                "Ca" -> {
+                    val attendancesRef = firestore.collection("attendances")
+                    attendancesRef
+                        .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
+                        .get()
+                        .addOnSuccessListener { snapshot ->
+                            val assignments = snapshot.toObjects(Attendance::class.java).filter { it.attendanceType in AttendanceType }
+
+                            if (assignments.isEmpty()) {
+                                onResult(0)
+                                return@addOnSuccessListener
+                            }
+
+                            var fetched = 0
+
+                            for (attendance in assignments) {
+                                val shiftId = attendance.shiftId
+                                firestore.collection("shifts")
+                                    .document(shiftId)
+                                    .get()
+                                    .addOnSuccessListener { shiftSnap ->
+                                        val shift = shiftSnap.toObject(Shift::class.java)
+                                        val coefficient = shift?.coefficient ?: 1.0
+                                        val allowance = shift?.allowance ?: 0
+                                        totalWage += (salaryAmount * coefficient + allowance).toInt()
+
+                                        fetched++
+                                        if (fetched == assignments.size) {
+
+                                            GlobalScope.launch {
+                                                val comparisonMap = mapOf(
+                                                    SalaryFieldName.NUMBER_OF_DAYS.label to assignments.size
+                                                )
+
+                                                try {
+                                                    val finalWage = applyWageRules(groupId, comparisonMap, totalWage)
+                                                    onResult(finalWage) // Trả kết quả sau khi có finalWage
+                                                } catch (e: Exception) {
+                                                    onResult(totalWage) // Fallback nếu có lỗi
+                                                }
+                                            }
+
+                                            Log.d("SalaryRepo", "Final totalWage: $totalWage")
+                                        }
+                                    }
+                                    .addOnFailureListener {
+                                    }
+                            }
+                        }
+                }
+                "Tháng" -> {
+                    firestore.collection("attendances")
+                        .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
+                        .get()
+                        .addOnSuccessListener({
+                            val assignments = it.toObjects(Assignment::class.java)
+                            totalWage = (assignments.size * salaryAmount / 30)
+
+                            /* ============================================================================
+                             * Apply Rule
+                             * ============================================================================
+                             */
+                            GlobalScope.launch {
+                                val comparisonMap = mapOf(
+                                    SalaryFieldName.NUMBER_OF_DAYS.label to assignments.size
+                                )
+
+                                try {
+                                    val finalWage = applyWageRules(groupId, comparisonMap, totalWage)
+                                    onResult(finalWage) // Trả kết quả sau khi có finalWage
+                                } catch (e: Exception) {
+                                    onResult(totalWage) // Fallback nếu có lỗi
+                                }
+                            }
+                        })
                 }
             }
-            .addOnFailureListener { onFailure(it) }
+        })
     }
 
     fun calculateTotalWage(groupId: String, employeeId: String, month: Int, year: Int, onResult: (Int) -> Unit) {
@@ -205,7 +318,25 @@ class SalaryRepo @Inject constructor(
 
                                         fetched++
                                         if (fetched == assignments.size) {
-                                            onResult(totalWage)
+
+                                            /* ============================================================================
+                                             * Apply Rule
+                                             * ============================================================================
+                                             */
+
+                                            GlobalScope.launch {
+                                                val comparisonMap = mapOf(
+                                                    SalaryFieldName.NUMBER_OF_DAYS.label to assignments.size
+                                                )
+
+                                                try {
+                                                    val finalWage = applyWageRules(groupId, comparisonMap, totalWage)
+                                                    onResult(finalWage) // Trả kết quả sau khi có finalWage
+                                                } catch (e: Exception) {
+                                                    onResult(totalWage) // Fallback nếu có lỗi
+                                                }
+                                            }
+
                                             Log.d("SalaryRepo", "Final totalWage: $totalWage")
                                         }
                                     }
@@ -230,7 +361,102 @@ class SalaryRepo @Inject constructor(
         })
     }
 
-    fun getTotalUnpaidSalary(groupId: String, onResult: (Int) -> Unit) {
+    fun getTotalUnpaidSalary(
+        groupId: String,
+        month: Int,
+        year: Int,
+        isAllTime: Boolean,
+        onResult: (Int) -> Unit
+    ) {
+        if (!isAllTime) {
+            // ✅ Dùng logic hiện tại nếu là theo tháng
+            getTotalUnpaidSalaryByMonth(groupId, month, year, onResult)
+            return
+        }
+
+        // ✅ Tính tổng toàn bộ thời gian bằng cách gom tất cả các khoản
+        var totalWage = 0
+        var totalBonus = 0
+        var totalAdvance = 0
+        var totalDeduct = 0
+        var totalPayment = 0
+        var doneCount = 0
+
+        fun checkDone() {
+            doneCount++
+            if (doneCount == 5) {
+                val totalUnpaid = totalWage + totalBonus + totalDeduct + totalAdvance - totalPayment
+                Log.d("SalaryRepo_getTotalUnpaidSalary", "totalWage: $totalWage, totalBonus: $totalBonus, totalDeduct: $totalDeduct, totalAdvance: $totalAdvance, totalPayment: $totalPayment, totalUnpaid: $totalUnpaid")
+                onResult(totalUnpaid)
+            }
+        }
+
+        getAllSalaries(groupId,
+            onSuccess = {
+                totalWage = it
+                checkDone()
+            },
+            onFailure = {
+                Log.e("SalaryRepo_getTotalUnpaidSalary", "Error getting salaries", it)
+            }
+        )
+
+        getAllBonusAdjustment(groupId,
+            onSuccess = { bonusAdjustments ->
+                totalBonus = bonusAdjustments.sumOf { it.adjustmentAmount }
+                checkDone()
+            },
+            onFailure = {
+                Log.e("SalaryRepo_getTotalUnpaidSalary", "Error getting bonus adjustments", it)
+            }
+        )
+
+        getAllDeductMoney(groupId,
+            onSuccess = { deductAdjustments ->
+                totalDeduct = deductAdjustments.sumOf { it.adjustmentAmount }
+                checkDone()
+            },
+            onFailure = {
+                Log.e("SalaryRepo_getTotalUnpaidSalary", "Error getting deduct money", it)
+            }
+        )
+
+        getAllAdvanceMoney(groupId,
+            onSuccess = { advanceAdjustments ->
+                totalAdvance = advanceAdjustments.sumOf { it.adjustmentAmount }
+                checkDone()
+            },
+            onFailure = {
+                Log.e("SalaryRepo_getTotalUnpaidSalary", "Error getting advance money", it)
+            }
+        )
+
+        // 🔥 Truy vấn tất cả payments theo groupId (nếu bạn lưu `groupId` trong mỗi `payments` document)
+        firestore.collectionGroup("payments")
+            .whereEqualTo("groupId", groupId)
+            .get()
+            .addOnSuccessListener { payments ->
+                totalPayment = payments.sumOf { it.toObject(Payment::class.java).amount }
+                checkDone()
+            }
+            .addOnFailureListener {
+                Log.e("SalaryRepo_getTotalUnpaidSalary", "Error getting payments", it)
+            }
+    }
+
+
+    fun getTotalUnpaidSalaryByMonth(
+        groupId: String,
+        month: Int,
+        year: Int,
+        onResult: (Int) -> Unit,
+    ) {
+
+        var totalWage = 0
+        var totalBonus = 0
+        var totalAdvance = 0
+        var totalDeduct = 0
+
         firestore.collection("salaries")
             .whereEqualTo("groupId", groupId)
             .get()
@@ -250,8 +476,6 @@ class SalaryRepo @Inject constructor(
                 for (document in documents) {
                     val salary = document.toObject(Salary::class.java)
                     val employeeId = salary.employeeId
-                    val month = LocalDateTime.now().monthValue
-                    val year = LocalDateTime.now().year
 
                     // Khởi tạo entry cho employee
                     results[employeeId] = IntArray(5) // [wage, bonus, deduction, advance, payment]
@@ -268,7 +492,6 @@ class SalaryRepo @Inject constructor(
                             results[employeeId]?.let {
                                 totalUnpaidSalary += it[0] + it[1] + it[2] + it[3] - it[4] // Dấu "+" là vì các loại trừ tiền trong csdl là "_"
                                 Log.d("SalaryRepo_getTotalUnpaidSalary", "wage: ${it[0]}, bonus: ${it[1]}, deduction: ${it[2]}, advance: ${it[3]}, payment: ${it[4]}, totalUnpaidSalary: $totalUnpaidSalary")
-
                             }
 
                             // Khi tất cả employee đã xử lý xong
@@ -281,26 +504,35 @@ class SalaryRepo @Inject constructor(
 
                     firestore.collection("salaries")
                         .document(salaryDocId(groupId, employeeId))
-                        .collection("payments-$year-$month")
+                        .collection("payments") // theo tháng như cũ
+                        .whereEqualTo("createdAt.month", month)
+                        .whereEqualTo("createdAt.year", year)
                         .get()
                         .addOnSuccessListener { payments ->
                             val totalPayment = payments.sumOf { it.toObject(Payment::class.java).amount }
                             results[employeeId]?.set(4, totalPayment)
                             checkAllCallbacksDone()
+
+                            Log.d("SalaryRepo_getTotalUnpaidSalary", "totalPayment: $totalPayment")
                         }
 
                     calculateTotalWage(groupId, employeeId, month, year) { wage ->
                         results[employeeId]?.set(0, wage)
+                        totalWage += wage
                         checkAllCallbacksDone()
                     }
 
                     getSalaryInfoByMonth(
                         groupId, employeeId, month, year,
                         onSuccess = { adjustments ->
+
                             val bonus = adjustments.filter { it.adjustmentType in TypeAllowance.entries.map { it.label } }
                                 .sumOf { it.adjustmentAmount }
+                            totalBonus += bonus
+
                             val deduction = adjustments.filter { it.adjustmentType in TypeDeduct.entries.map { it.label } && it.adjustmentType != "Ứng lương" }
                                 .sumOf { it.adjustmentAmount }
+                            totalDeduct += deduction
 
                             results[employeeId]?.let {
                                 it[1] = bonus
@@ -315,6 +547,7 @@ class SalaryRepo @Inject constructor(
                         onSuccess = { advances ->
                             val advanceTotal = advances.sumOf { it.adjustmentAmount }
                             results[employeeId]?.set(3, advanceTotal)
+                            totalAdvance += advanceTotal
                             checkAllCallbacksDone()
                         }
                     ) {
@@ -329,17 +562,87 @@ class SalaryRepo @Inject constructor(
             }
     }
 
+    fun getAllDeductMoney(groupId: String, onSuccess: (List<Adjustment>) -> Unit, onFailure: (Exception) -> Unit = {}) {
+        firestore.collection("adjustments")
+            .whereEqualTo("groupId", groupId) // Trường này phải tồn tại trong documents trong `adjustments`
+            .whereIn("adjustmentType", TypeDeduct.entries.filter { it.label != "Ứng lương" }.map { it.label })
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val adjustments = snapshot.toObjects(Adjustment::class.java)
+                Log.d("SalaryRepo_getAllDeductMoney", "adjustments: $adjustments")
+                onSuccess(adjustments)
+            }
+            .addOnFailureListener { onFailure(it) }
+    }
+
+    fun getAllBonusAdjustment(groupId: String, onSuccess: (List<Adjustment>) -> Unit, onFailure: (Exception) -> Unit = {}) {
+        firestore.collection("adjustments")
+            .whereIn("adjustmentType", TypeAllowance.entries.map { it.label })
+            .whereEqualTo("groupId", groupId) // Trường này phải tồn tại trong documents trong `adjustments`
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val adjustments = snapshot.toObjects(Adjustment::class.java)
+                Log.d("SalaryRepo_getAllBonusAdjustment", "adjustments: $adjustments")
+                onSuccess(adjustments)
+            }
+            .addOnFailureListener { onFailure(it) }
+    }
+
+    fun getAllAdvanceMoney(groupId: String, onSuccess: (List<Adjustment>) -> Unit, onFailure: (Exception) -> Unit = {}) {
+        firestore.collection("adjustments")  // Truy vấn qua tất cả các subcollection adjustments
+            .whereEqualTo("adjustmentType", "Ứng lương")  // Lọc các điều chỉnh có loại "Ứng lương"
+            .whereEqualTo("groupId", groupId)  // Lọc theo groupId đã lưu trong adjustments
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val adjustments = snapshot.toObjects(Adjustment::class.java)  // Chuyển đổi thành danh sách Adjustment
+                Log.d("SalaryRepo_getAllAdvanceMoney", "adjustments: $adjustments")
+                onSuccess(adjustments)  // Gọi onSuccess với kết quả
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)  // Gọi onFailure nếu có lỗi
+            }
+    }
+
+    fun getAllSalaries(groupId: String, onSuccess: (Int) -> Unit, onFailure: (Exception) -> Unit) {
+        var totalWage = 0
+        val tasks = mutableListOf<Task<Void>>()
+
+        firestore.collection("salaries")
+            .whereEqualTo("groupId", groupId)
+            .get()
+            .addOnSuccessListener { documents ->
+                for (document in documents) {
+                    val salary = document.toObject(Salary::class.java)
+                    val employeeId = salary.employeeId
+
+                    // Create a TaskCompletionSource for each calculation
+                    val taskSource = TaskCompletionSource<Void>()
+
+                    calculateAllTotalWage(groupId, employeeId,
+                    ) { wage ->
+                        totalWage += wage
+                        Log.d("SalaryRepo_getAllSalaries", "totalWage: $totalWage")
+                        taskSource.setResult(null) // Mark task as complete
+                    }
+
+                    tasks.add(taskSource.task)
+                }
+
+                Tasks.whenAllComplete(tasks).addOnCompleteListener {
+                    onSuccess(totalWage)
+                }
+            }
+            .addOnFailureListener { exception ->
+                onFailure(exception)
+            }
+    }
+
+
     fun getAdjustSalary(
-        groupId: String,
-        employeeId: String,
         adjustmentId: String,
-        month: Int,
-        year: Int,
         onSuccess: (Adjustment?) -> Unit, // nên cho nullable vì có thể không tìm thấy
     ) {
-        firestore.collection("salaries")
-            .document(salaryDocId(groupId, employeeId))
-            .collection("adjustments-$year-$month")
+        firestore.collection("adjustments")
             .document(adjustmentId)
             .get()
             .addOnSuccessListener { documents ->
@@ -349,16 +652,12 @@ class SalaryRepo @Inject constructor(
     }
 
     fun updateAdjustSalary(
-        groupId: String,
-        employeeId: String,
         adjustmentId: String,
         adjustments: Adjustment,
         onSuccess: () -> Boolean,
         onFailure: (Exception) -> Unit = {}
     ) {
-        firestore.collection("salaries")
-            .document(salaryDocId(groupId, employeeId))
-            .collection("adjustments-${adjustments.createdAt.year}-${adjustments.createdAt.month}")
+        firestore.collection("adjustments")
             .document(adjustmentId)
             .set(adjustments)
             .addOnSuccessListener { onSuccess() }
@@ -366,15 +665,11 @@ class SalaryRepo @Inject constructor(
     }
 
     fun deleteAdjustSalary(
-        groupId: String,
-        employeeId: String,
         adjustment: Adjustment,
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        firestore.collection("salaries")
-            .document(salaryDocId(groupId, employeeId))
-            .collection("adjustments-$localDateTimeMonth")
+        firestore.collection("adjustments")
             .document(adjustment.id)
             .delete()
             .addOnSuccessListener { onSuccess() }
@@ -451,8 +746,139 @@ class SalaryRepo @Inject constructor(
             }
     }
 
+    fun getTotalBonus(groupId: String, month: Int, year: Int, onResult: (Int) -> Unit) {
+        firestore.collection("salaries")
+            .whereEqualTo("groupId", groupId)
+            .get()
+            .addOnSuccessListener { documents ->
+                val salaries = documents.toObjects(Salary::class.java)
+                var totalBonus = 0
+                var finishedCount = 0
+                if (salaries.isEmpty()) {
+                    onResult(0)
+                    return@addOnSuccessListener
+                }
+                salaries.forEach { salary ->
+                    getBonusAdjustment(groupId, salary.employeeId, month, year,
+                        onSuccess = { bonuses ->
+                            totalBonus += bonuses.filter { it.adjustmentType in TypeAllowance.entries.map { it.label }.filter { it != "Ứng lương" } }.sumOf { it.adjustmentAmount }
+                            finishedCount++
+                            if (finishedCount == salaries.size) {
+                                onResult(totalBonus)
+                            }
+                            Log.d("SalaryRepo_getTotalBonus", "totalBonus: $totalBonus")
+                        }
+                    ) {
+                        finishedCount++
+                        if (finishedCount == salaries.size) {
+                            onResult(totalBonus.toPositive())
+                        }
+                        Log.d("SalaryRepo_getTotalBonus", "error: $it")
+                    }
+                }
+                Log.d("SalaryRepo_getTotalBonus", "totalBonus: $totalBonus")
+            }
+    }
+
+    fun getTotalWorkDay(
+        groupId: String,
+        month: Int,
+        year: Int,
+        onResult: (workDays: Int, paidLeaveDays: Int) -> Unit
+    ) {
+        firestore.collection("shifts")
+            .whereEqualTo("groupId", groupId)
+            .get()
+            .addOnSuccessListener { shiftSnapshot ->
+
+                val shifts = shiftSnapshot.documents.mapNotNull { doc ->
+                    val shift = doc.toObject(Shift::class.java)
+                    shift?.id = doc.id
+                    shift
+                }
+
+                val shiftsId = shifts.map { it.id }
+                Log.d("SalaryRepo_getTotalWorkDay", "shiftsId: $shiftsId")
+
+                if (shiftsId.isEmpty()) {
+                    onResult(0, 0)
+                    Log.d("SalaryRepo_getTotalWorkDay", "shiftsId is empty")
+                    return@addOnSuccessListener
+                }
+
+                firestore.collection("attendances")
+                    .whereIn("shiftId", shiftsId)
+                    .get()
+                    .addOnSuccessListener { attendanceSnapshot ->
+                        val attendances = attendanceSnapshot.toObjects(Attendance::class.java)
+                            .filter {
+                                it.startTime.month == month &&
+                                        it.startTime.year == year
+                            }
+
+                        val workDays = attendances.count {
+                            it.attendanceType == "Đi làm" || it.attendanceType == "Chấm 1/2 công"
+                        }
+
+                        val paidLeaveDays = attendances.count {
+                            it.attendanceType == "Nghỉ có lương"
+                        }
+
+                        Log.d("SalaryRepo_getTotalWorkDay", "workDays: $workDays, paidLeaveDays: $paidLeaveDays")
+                        onResult(workDays, paidLeaveDays)
+                    }
+                    .addOnFailureListener {
+                        Log.d("SalaryRepo_getTotalWorkDay", "attendance error: $it")
+                        onResult(0, 0)
+                    }
+            }
+            .addOnFailureListener {
+                Log.d("SalaryRepo_getTotalWorkDay", "shift error: $it")
+                onResult(0, 0)
+            }
+    }
+
+    /* ============================================================================
+     * Apply Rule
+     * ============================================================================
+     */
+
+    suspend fun applyWageRules(
+        groupId: String,
+        comparisonMap: Map<String, Int>,
+        originalValue: Int
+    ): Int {
+        return suspendCoroutine { continuation ->
+            firestore.collection("rules")
+                .whereEqualTo("groupId", groupId)
+                .get()
+                .addOnSuccessListener { snapshot ->
+                    var adjustedValue = originalValue
+                    for (doc in snapshot.documents) {
+                        val data = doc.data ?: continue
+                        val conditionMap = data["condition"] as? Map<String, Any> ?: continue
+                        val condition = RuleEvaluator.mapToConditionNode(conditionMap)
+                        val bonus = (data["bonus"] as? Number)?.toInt() ?: 0
+                        if (RuleEvaluator.evaluate(condition, comparisonMap)) {
+                            adjustedValue += bonus
+                        }
+                    }
+                    continuation.resume(adjustedValue) // Kết thúc bất đồng bộ và trả giá trị
+                }
+                .addOnFailureListener {
+                    continuation.resume(originalValue) // Fallback nếu lỗi
+                }
+        }
+    }
+
 }
 
 fun salaryDocId(groupId: String, employeeId: String): String {
     return "${groupId}-${employeeId}"
+}
+
+fun applyRule(originalValue: Int): Map<String, Int> {
+    return mapOf(
+        SalaryFieldName.NUMBER_OF_DAYS.label to originalValue
+    )
 }

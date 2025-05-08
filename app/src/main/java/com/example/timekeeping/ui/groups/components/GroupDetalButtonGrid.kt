@@ -20,7 +20,8 @@ fun GroupDetailButtonGrid(
     onCheckInClick: () -> Unit,
     onScheduleClick: () -> Unit,
     onEmployeeManagementClick: () -> Unit,
-    onShiftManagementClick: () -> Unit
+    onShiftManagementClick: () -> Unit,
+    onRuleManagementClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -44,9 +45,9 @@ fun GroupDetailButtonGrid(
                 label = "Xếp lịch"
             )
             IconButtonWithLabel(
-                onClick = {},
+                onClick = onRuleManagementClick,
                 icon = Icons.Default.Warning,
-                label = "Button 3"
+                label = "Quản lý qui tác tính lương"
             )
         }
 
@@ -80,5 +81,6 @@ fun PreviewGroupDetailButtonGrid(){
         onCheckInClick = {},
         onScheduleClick = {},
         onEmployeeManagementClick = {},
-        onShiftManagementClick = {})
+        onShiftManagementClick = {},
+        onRuleManagementClick = {})
 }

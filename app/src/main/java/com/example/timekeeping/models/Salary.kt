@@ -12,7 +12,9 @@ data class Adjustment(
     val adjustmentType: String = "", // Loại điều chỉnh (tăng hoặc giảm)
     val adjustmentAmount: Int = 0, // Số tiền điều chỉnh
     val note: String = "", // Ghi chú
-    val createdAt: DateTimeMap = DateTimeMap.from(LocalDateTime.now()) // Ngày tạo điều chỉnh
+    val createdAt: DateTimeMap = DateTimeMap.from(LocalDateTime.now()), // Ngày tạo điều chỉnh
+    val groupId: String = "",
+    val employeeId: String = ""
 )
 
 data class Salary(

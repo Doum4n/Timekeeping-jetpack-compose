@@ -144,6 +144,12 @@ sealed class Screen(val route: String) {
     }
     // endregion
 
+    // region Payroll
+    object MonthlyPayroll : Screen("monthlyPayroll/{groupId}") {
+        fun createRoute(groupId: String) = "monthlyPayroll/$groupId"
+    }
+    // endregion
+
     // region Misc
     object RequestJoinGroup : Screen("requestJoinGroup")
     // endregion
@@ -166,4 +172,21 @@ sealed class Screen(val route: String) {
     }
     // endregion
 
+    // region Rule
+    object RuleManagement : Screen("ruleManagement/{groupId}") {
+        fun createRoute(groupId: String) = "ruleManagement/$groupId"
+    }
+    object RuleInputScreen : Screen("ruleInputScreen/{groupId}"){
+        fun createRoute(groupId: String) = "ruleInputScreen/$groupId"
+    }
+    object RuleEditScreen : Screen("ruleEditScreen/{groupId}/{ruleId}"){
+        fun createRoute(groupId: String, ruleId: String) = "ruleEditScreen/$groupId/$ruleId"
+    }
+    // endregion
+
+    // region Request Advance Salary
+    object RequestAdvanceSalary : Screen("requestAdvanceSalary/{groupId}/{employeeId}") {
+        fun createRoute(groupId: String, employeeId: String) = "requestAdvanceSalary/$groupId/$employeeId"
+    }
+    // endregion
 }

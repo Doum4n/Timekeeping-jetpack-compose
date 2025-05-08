@@ -43,6 +43,8 @@ fun GroupDetailScreen(
     onCheckInClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onDelete: () -> Unit,
+    onSalaryClick: (String) -> Unit,
+    onRuleManagementClick: () -> Unit,
 
     salaryViewModel: SalaryViewModel = hiltViewModel()
 ) {
@@ -51,7 +53,7 @@ fun GroupDetailScreen(
     var totalAdvance by remember { mutableStateOf(0) }
 
     LaunchedEffect(groupId) {
-        salaryViewModel.getTotalUnpaidSalary(groupId)
+        salaryViewModel.getTotalUnpaidSalary(groupId, LocalDate.now().monthValue, LocalDate.now().year, isAllTime = true)
 
         salaryViewModel.getTotalSalary(groupId, LocalDate.now().monthValue, LocalDate.now().year) {
             totalSalary = it
@@ -96,7 +98,8 @@ fun GroupDetailScreen(
                     onCheckInClick = onCheckInClick,
                     onScheduleClick = onScheduleClick,
                     onEmployeeManagementClick = onEmployeeManagementClick,
-                    onShiftManagementClick = onShiftManagementClick
+                    onShiftManagementClick = onShiftManagementClick,
+                    onRuleManagementClick = onRuleManagementClick
                 )
             }
 
@@ -106,6 +109,9 @@ fun GroupDetailScreen(
                         .fillMaxWidth()
                         .wrapContentHeight()
                         .background(colorScheme.surfaceVariant)
+                        .clickable {
+                            onSalaryClick(groupId)
+                        }
                 ) {
                     SalarySection(totalSalary = totalSalary.formatCurrency(), totalAdvance = totalAdvance.toPositive().formatCurrency())
                 }
@@ -191,7 +197,9 @@ fun GroupDetailScreenPreview() {
         onCheckInClick = { /*TODO*/ },
         onSettingsClick = { /*TODO*/ },
         onDelete = { /*TODO*/ },
-        groupId = ""
+        groupId = "",
+        onSalaryClick = {},
+        onRuleManagementClick = {}
     )
 
 }

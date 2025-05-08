@@ -4,22 +4,23 @@ import android.util.Log
 import com.example.timekeeping.models.Name
 import com.example.timekeeping.models.Payment
 import com.example.timekeeping.utils.DateTimeMap
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.getField
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 class PaymentRepo @Inject constructor(
     val firestore: FirebaseFirestore
 ) {
-    private val createAt = LocalDate.now().year.toString() + "-" + LocalDate.now().month.value.toString()
+    private val createdAt = LocalDate.now().year.toString() + "-" + LocalDate.now().month.value.toString()
 
+    // TODO fix this
     fun createPayment(groupId: String, employeeId: String, payment: Payment, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) {
-        firestore.collection("salaries")
-            .document(salaryDocId(groupId, employeeId))
-            .collection("payments-$createAt")
-            .document(LocalDate.now().dayOfMonth.toString())
-            .set(payment)
+        firestore.collection("payments")
+//            .document(LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")).toString())
+            .add(payment)
             .addOnSuccessListener({
                 onSuccess()
             }).addOnFailureListener({
@@ -28,9 +29,11 @@ class PaymentRepo @Inject constructor(
     }
 
     fun getPayments(groupId: String, employeeId: String, onSuccess: (List<Payment>) -> Unit, onFailure: (Exception) -> Unit, month: Int, year: Int) {
-        firestore.collection("salaries")
-            .document(salaryDocId(groupId, employeeId))
-            .collection("payments-$year-$month")
+        firestore.collection("payments")
+            .whereEqualTo("groupId", groupId)
+            .whereEqualTo("employeeId", employeeId)
+            .whereEqualTo("createdAt.year", year)
+            .whereEqualTo("createdAt.month", month)
             .get()
             .addOnSuccessListener({
                 val payments = it.documents.mapNotNull({ document ->
@@ -45,7 +48,7 @@ class PaymentRepo @Inject constructor(
     fun updatePayment(groupId: String, employeeId: String, payment: Payment, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) {
         firestore.collection("salaries")
             .document(salaryDocId(groupId, employeeId))
-            .collection("payments-${payment.createAt.year}-${payment.createAt.month}")
+            .collection("payments-${payment.createdAt.year}-${payment.createdAt.month}")
             .document(payment.id)
             .set(payment)
             .addOnSuccessListener({
@@ -58,7 +61,7 @@ class PaymentRepo @Inject constructor(
     fun deletePayment(groupId: String, employeeId: String, payment: Payment, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) {
         firestore.collection("salaries")
             .document(salaryDocId(groupId, employeeId))
-            .collection("payments-${payment.createAt.year}-${payment.createAt.month}")
+            .collection("payments-${payment.createdAt.year}-${payment.createdAt.month}")
             .document(payment.id)
             .delete()
             .addOnSuccessListener({
@@ -79,11 +82,13 @@ class PaymentRepo @Inject constructor(
     ) {
         firestore.collection("salaries")
             .document(salaryDocId(groupId, employeeId))
-            .collection("payments-$year-$month")
-            .document(paymentId)
+            .collection("payments")
+            .whereEqualTo("createdAt.year", year)
+            .whereEqualTo("createdAt.month", month)
+            .whereEqualTo(FieldPath.documentId(), paymentId)
             .get()
             .addOnSuccessListener({
-                val payment = it.toObject(Payment::class.java)?.copy(id = it.id)
+                val payment = it.documents.firstOrNull()?.toObject(Payment::class.java)?.copy(id = paymentId)
                 if (payment != null) {
                     onSuccess(payment)
                 }

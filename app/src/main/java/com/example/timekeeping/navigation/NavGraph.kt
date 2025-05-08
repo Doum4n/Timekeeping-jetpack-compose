@@ -19,6 +19,9 @@ import com.example.timekeeping.navigation.groups.addGroupFormScreen
 import com.example.timekeeping.navigation.groups.addGroupScreen
 import com.example.timekeeping.navigation.payment.addPaymentFormNav
 import com.example.timekeeping.navigation.payment.addPaymentNav
+import com.example.timekeeping.navigation.payroll.addPayrollNav
+import com.example.timekeeping.navigation.rule.addRuleInputNav
+import com.example.timekeeping.navigation.rule.addRuleNav
 import com.example.timekeeping.navigation.schedule.addScheduleScreen
 import com.example.timekeeping.navigation.shifts.addShiftFormScreen
 import com.example.timekeeping.navigation.shifts.addShiftScreen
@@ -48,10 +51,15 @@ fun AppNavigation(navController: NavHostController) {
         addTeamFormScreen(navController)
         addCheckInNav(navController)
 
+        addPayrollNav(navController)
+
         addPaymentNav(navController)
         addPaymentFormNav(navController)
 
         addGrantPermissionNav(navController)
+
+        addRuleNav(navController)
+        addRuleInputNav(navController)
 
         addCheckInScreen(navController)
         addProfileScreen(navController)

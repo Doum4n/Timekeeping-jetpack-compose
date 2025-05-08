@@ -55,11 +55,7 @@ fun SalaryAdvanceInputForm(
             return@LaunchedEffect
         else {
             salaryViewModel.getAdjustSalary(
-                groupId,
-                employeeId,
                 adjustmentId,
-                state.visibleMonth.monthValue,
-                state.visibleMonth.year,
                 { adjustment ->
                     amount = (adjustment?.adjustmentAmount)?.toPositive().toString() ?: ""
                     note = adjustment?.note ?: ""
@@ -111,6 +107,8 @@ fun SalaryAdvanceInputForm(
                 onClick = {
                     onSave(
                         Adjustment(
+                            groupId = groupId,
+                            employeeId = employeeId,
                             adjustmentAmount = - amount.toInt(),
                             createdAt = DateTimeMap.from(LocalDateTime.now()),
                             adjustmentType = "Ứng lương",

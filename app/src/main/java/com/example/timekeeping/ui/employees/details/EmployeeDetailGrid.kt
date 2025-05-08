@@ -81,6 +81,9 @@ fun EmployeeDetailGrid(
     LaunchedEffect(state.visibleMonth) {
         attendanceNumber.clear() // Reset dữ liệu cũ
 
+        // Load dữ liệu cho "getTotalUnpaidSalaryByEmployee" phía dưới
+        salaryViewModel.getSalaryInfoByMonth(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year)
+
         attendanceViewModel.getAttendanceByEmployeeId(employeeId, state.visibleMonth.monthValue, state.visibleMonth.year) { _attendances ->
             _attendances.forEach { attendance ->
                 attendances[attendance.startTime.toLocalDate()] = when (attendance.attendanceType) {

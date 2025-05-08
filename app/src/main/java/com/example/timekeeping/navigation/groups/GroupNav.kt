@@ -41,6 +41,12 @@ fun NavGraphBuilder.addGroupScreen(navController: NavHostController) {
             },
             onDelete = {
                 groupViewModel.deleteGroup(groupId)
+            },
+            onSalaryClick = {
+                navController.navigate(Screen.MonthlyPayroll.createRoute(groupId))
+            },
+            onRuleManagementClick = {
+                navController.navigate(Screen.RuleManagement.createRoute(groupId))
             }
         )
     }

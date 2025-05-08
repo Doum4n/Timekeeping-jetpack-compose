@@ -48,7 +48,7 @@ fun BonusInputForm(
     LaunchedEffect(salaryViewModel.adjustmentId) {
         Log.d("BonusInputForm_adjustmentId", salaryViewModel.adjustmentId)
         if(salaryViewModel.adjustmentId != ""){
-            salaryViewModel.getAdjustSalary(salaryViewModel.groupId, salaryViewModel.employeeId, salaryViewModel.adjustmentId, state.visibleMonth.monthValue, state.visibleMonth.year, {
+            salaryViewModel.getAdjustSalary(salaryViewModel.adjustmentId, {
                 if (it != null) {
                     note = TextFieldValue(it.note)
                     amount = it.adjustmentAmount
@@ -128,6 +128,8 @@ fun BonusInputForm(
             Button(
                 onClick = {onSave(
                     Adjustment(
+                        groupId = salaryViewModel.groupId,
+                        employeeId = salaryViewModel.employeeId,
                         adjustmentType = selectedType.label,
                         adjustmentAmount = amount,
                         note = note.text,

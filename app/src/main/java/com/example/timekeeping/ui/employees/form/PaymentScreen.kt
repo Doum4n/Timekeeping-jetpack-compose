@@ -257,7 +257,7 @@ fun PaymentItem(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text(text = "Ngày thanh toán: ${payment.createAt.format("dd/MM/yyyy HH:mm")}")
+            Text(text = "Ngày thanh toán: ${payment.createdAt.format("dd/MM/yyyy HH:mm")}")
             Text(text = "Số tiền: ${payment.amount.formatCurrency()}")
             Text(text = "Ghi chú: ${payment.note}")
 

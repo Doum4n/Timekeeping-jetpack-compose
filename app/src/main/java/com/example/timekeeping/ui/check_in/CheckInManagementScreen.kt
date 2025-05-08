@@ -122,15 +122,18 @@ fun CheckInManagementScreen(
 
     val visibleDate = state.visibleDate
 
-    LaunchedEffect(shiftViewModel.shifts.value, visibleDate) {
+    LaunchedEffect(shiftViewModel.shifts.value, visibleDate, uiState.value.selectedShiftId) {
         val shifts = shiftViewModel.shifts.value
         if (shifts.isNotEmpty()) {
-
             // reset
             uiState.value.checkInStates = mutableStateMapOf()
 
-            val shiftId = shifts.first().id
-            uiState.value.selectedShiftId = shiftId
+            // Dùng selectedShiftId nếu có, nếu không thì chọn ca đầu tiên
+            val shiftId = uiState.value.selectedShiftId ?: shifts.first().id
+            // Nếu chưa chọn trước đó thì lưu lại shiftId đã chọn mặc định
+            if (uiState.value.selectedShiftId == null) {
+                uiState.value.selectedShiftId = shiftId
+            }
 
             attendanceViewModel.getAttendanceByShiftId(shiftId, state.visibleDate.convertLocalDateToDate()) { attendances ->
                 shiftViewModel.loadEmployees(shiftId, state.visibleDate.dayOfMonth)
@@ -157,7 +160,6 @@ fun CheckInManagementScreen(
             }
         }
     }
-
 
     Scaffold(
         topBar = {
@@ -224,7 +226,7 @@ fun CheckInManagementScreen(
                 ShiftSection(
                     shiftViewModel = shiftViewModel,
                     onShiftSelected = {
-                        uiState.value.selectedShiftId = it
+                        uiState.value = uiState.value.copy(selectedShiftId = it)
                         shiftViewModel.loadEmployees(it, state.visibleDate.dayOfMonth)
                     },
                     selectedShiftId = uiState.value.selectedShiftId

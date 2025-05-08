@@ -4,7 +4,7 @@ import com.google.firebase.firestore.Exclude
 
 data class Shift(
     @Exclude
-    val id: String = "",
+    var id: String = "",
     val shiftName: String = "",
     val startTime: String = "",
     val endTime: String = "",

@@ -90,7 +90,11 @@ dependencies {
     implementation(libs.cloudinary.android)
     implementation(libs.coil.compose)
 
+    testImplementation(libs.org.mockito.mockito.core2)
+    testImplementation(libs.mockito.kotlin)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.junit)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

@@ -76,11 +76,7 @@ fun DeductMoneyInputScreen(
     LaunchedEffect(adjustmentId) {
         if (adjustmentId != "") {
             salaryViewModel.getAdjustSalary(
-                groupId,
-                employeeId,
                 adjustmentId,
-                state.visibleMonth.monthValue,
-                state.visibleMonth.year,
                 { adjustment ->
                     if (adjustment != null) {
                         amount = TextFieldValue(adjustment.adjustmentAmount.toString())
@@ -161,6 +157,8 @@ fun DeductMoneyInputScreen(
             Button(
                 onClick = {onSave(
                     Adjustment(
+                        groupId = groupId,
+                        employeeId = employeeId,
                         adjustmentType = selectedType.label,
                         adjustmentAmount = -amount.text.toInt(),
                         note = note.text,

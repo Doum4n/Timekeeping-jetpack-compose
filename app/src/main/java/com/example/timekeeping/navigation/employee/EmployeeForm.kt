@@ -70,8 +70,6 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
                 },
                 onDeleteClick = { _employeeId, adjustment ->
                     salaryViewModel.deleteAdjustSalary(
-                        groupId,
-                        _employeeId,
                         adjustment,
                         onSuccess = {
                             Toast.makeText(navController.context, "Xóa thành công!", Toast.LENGTH_SHORT).show()
@@ -100,8 +98,6 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
             onBackClick = { navController.popBackStack() },
             onSave = { adjustments ->
                 salaryViewModel.createAdjustSalary(
-                    groupId,
-                    employeeId,
                     adjustments,
                     onSuccess = {
                         Toast.makeText(navController.context, "Salary saved successfully", Toast.LENGTH_SHORT).show()
@@ -132,9 +128,6 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
             onBackClick = { navController.popBackStack() },
             onSave = { adjustments ->
                 salaryViewModel.updateAdjustSalary(
-//                    groupId,
-//                    employeeId,
-//                    adjustmentId,
                     adjustments,
                     onSuccess = {
                         Toast.makeText(
@@ -182,8 +175,6 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
                 },
                 onDeleteClick = { _employeeId, adjustment ->
                     salaryViewModel.deleteAdjustSalary(
-                        groupId,
-                        _employeeId,
                         adjustment,
                         onSuccess = {
                             Toast.makeText(navController.context, "Xóa thành công!", Toast.LENGTH_SHORT).show()
@@ -214,8 +205,6 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
             onBackClick = { navController.popBackStack() },
             onSave = { adjustments ->
                 salaryViewModel.createAdjustSalary(
-                    groupId,
-                    employeeId,
                     adjustments,
                     onSuccess = {
                         Toast.makeText(navController.context, "Salary saved successfully", Toast.LENGTH_SHORT).show()
@@ -290,8 +279,6 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
             onDeleteClick = {
                 _employeeId, adjustmentId ->
                 salaryViewModel.deleteAdjustSalary(
-                    groupId,
-                    _employeeId,
                     adjustmentId,
                     onSuccess = {
                         Toast.makeText(navController.context, "Xóa thành công!", Toast.LENGTH_SHORT).show()
@@ -323,8 +310,6 @@ fun NavGraphBuilder.addEmployeeFormScreen(navController: NavHostController) {
             onBackClick = { navController.popBackStack() },
             onSave = { adjustments ->
                 salaryViewModel.createAdjustSalary(
-                    groupId,
-                    employeeId,
                     adjustments,
                     onSuccess = {
                         Toast.makeText(navController.context, "Salary saved successfully", Toast.LENGTH_SHORT).show()

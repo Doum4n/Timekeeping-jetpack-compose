@@ -180,9 +180,11 @@ fun PaymentInputForm(
                                 onPaymentClick(
                                     Payment(
                                         amount = amount.toInt(),
-                                        createAt = DateTimeMap.from(LocalDateTime.now()),
+                                        createdAt = DateTimeMap.from(LocalDateTime.now()),
                                         imageUrl = imageUrl,
-                                        note = note
+                                        note = note,
+                                        groupId = paymentViewModel.groupId,
+                                        employeeId = paymentViewModel.employeeId
                                     )
                                 )
 

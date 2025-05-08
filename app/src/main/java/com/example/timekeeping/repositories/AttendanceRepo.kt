@@ -1,5 +1,6 @@
 package com.example.timekeeping.repositories
 
+import android.util.Log
 import com.example.timekeeping.models.Attendance
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.utils.convertToReference
@@ -52,6 +53,8 @@ class AttendanceRepo @Inject constructor(
         val day = calendar.get(Calendar.DAY_OF_MONTH)
         val month = calendar.get(Calendar.MONTH) + 1 // Tháng tính từ 0
         val year = calendar.get(Calendar.YEAR)
+        Log.d("AttendanceRepo", "shiftId: $shiftId, month: $month, year: $year, day: $day")
+
         db.collection("attendances")
             .whereEqualTo("shiftId", shiftId)
             .whereEqualTo("startTime.month", month)
@@ -62,6 +65,7 @@ class AttendanceRepo @Inject constructor(
                 val attendances = result.documents.mapNotNull { doc ->
                     doc.toObject(Attendance::class.java)?.apply { id = doc.id }
                 }
+                Log.d("AttendanceRepo", "getAttendanceByShiftId: $attendances")
                 onResult(attendances)
             }
             .addOnFailureListener { exception ->
