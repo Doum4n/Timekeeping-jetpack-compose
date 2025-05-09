@@ -47,6 +47,9 @@ fun NavGraphBuilder.addGroupScreen(navController: NavHostController) {
             },
             onRuleManagementClick = {
                 navController.navigate(Screen.RuleManagement.createRoute(groupId))
+            },
+            onApproveRequestClick = {
+                navController.navigate(Screen.ApprovalRequest.createRoute(groupId))
             }
         )
     }

@@ -12,6 +12,7 @@ import javax.inject.Inject
 class AttendanceViewModel @Inject constructor (
     private val attendanceRepository: AttendanceRepo
 ) : ViewModel() {
+
     fun CheckIn(attendance: Attendance){
         attendanceRepository.CheckIn(attendance)
     }

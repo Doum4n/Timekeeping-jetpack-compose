@@ -68,8 +68,8 @@ fun RuleManagement(
         LazyColumn(
             modifier = Modifier
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            contentPadding = paddingValues
+                .padding(16.dp),
+//            contentPadding = paddingValues
         ) {
             items(rules.size) { index ->
                 val rule = rules[index]
@@ -102,8 +102,7 @@ fun RuleItem(
 ) {
     androidx.compose.material3.Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
         elevation = androidx.compose.material3.CardDefaults.cardElevation(4.dp)
     ) {

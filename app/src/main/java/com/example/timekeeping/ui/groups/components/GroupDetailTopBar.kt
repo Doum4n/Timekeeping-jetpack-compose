@@ -40,7 +40,7 @@ fun GroupDetailTopBar(
     var showDialog = remember { mutableStateOf(false) }
 
     TopAppBar(
-        title = { Text("Group Management") },
+        title = { Text("Quản lý nhóm") },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")

@@ -23,6 +23,7 @@ fun EmployeeDetail(
     onAdvanceSalaryClick: () -> Unit = {},
     onPaymentClick: () -> Unit = {},
     onBackToEmployeeList: () -> Unit = {},
+    onRequestAdvanceSalaryClick: () -> Unit = {},
 
     state: CalendarState
 ) {
@@ -45,6 +46,7 @@ fun EmployeeDetail(
                     onAdvanceSalaryClick = onAdvanceSalaryClick,
                     onPaymentClick = onPaymentClick,
                     onBackToEmployeeList = onBackToEmployeeList,
+                    onRequestAdvanceSalaryClick = onRequestAdvanceSalaryClick,
                     state = state
                 )
             }

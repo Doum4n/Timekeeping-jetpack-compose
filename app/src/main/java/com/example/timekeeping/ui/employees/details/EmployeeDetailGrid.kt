@@ -56,6 +56,7 @@ fun EmployeeDetailGrid(
     onMinusMoneyClick: () -> Unit = {},
     onAdvanceSalaryClick: () -> Unit = {},
     onPaymentClick: () -> Unit = {},
+    onRequestAdvanceSalaryClick: () -> Unit = {},
 
     onBackToEmployeeList: () -> Unit = {},
     state: CalendarState
@@ -131,6 +132,11 @@ fun EmployeeDetailGrid(
                     label = "Ứng lương"
                 )
                 IconButtonWithLabel(
+                    onClick = {onRequestAdvanceSalaryClick()},
+                    icon = Icons.Default.Warning,
+                    label = "Gửi yêu cầu ứng lương"
+                )
+                IconButtonWithLabel(
                     onClick = {onBonusClick()},
                     icon = Icons.Default.Warning,
                     label = "Thưởng/Phụ cấp"
@@ -140,17 +146,17 @@ fun EmployeeDetailGrid(
                     icon = Icons.Default.Warning,
                     label = "Trừ tiền"
                 )
-                IconButtonWithLabel(
-                    onClick = {onPaymentClick()},
-                    icon = Icons.Default.Warning,
-                    label = "Thanh toán"
-                )
             }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Start
             ) {
+                IconButtonWithLabel(
+                    onClick = {onPaymentClick()},
+                    icon = Icons.Default.Warning,
+                    label = "Thanh toán"
+                )
                 IconButtonWithLabel(
                     onClick = {onEmployeeInfoClick()},
                     icon = Icons.Default.Info,

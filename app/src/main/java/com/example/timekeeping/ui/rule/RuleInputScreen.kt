@@ -175,7 +175,7 @@ fun RuleInputScreen(
             modifier = Modifier
                 .padding(paddingValues)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.Top
         ) {
             item {
                 // Nhập tên quy tắc

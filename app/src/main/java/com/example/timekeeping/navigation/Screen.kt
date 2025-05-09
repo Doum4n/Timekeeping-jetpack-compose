@@ -185,8 +185,21 @@ sealed class Screen(val route: String) {
     // endregion
 
     // region Request Advance Salary
-    object RequestAdvanceSalary : Screen("requestAdvanceSalary/{groupId}/{employeeId}") {
-        fun createRoute(groupId: String, employeeId: String) = "requestAdvanceSalary/$groupId/$employeeId"
+    object RequestInput : Screen("requestInput/{groupId}/{employeeId}") {
+        fun createRoute(groupId: String, employeeId: String) = "requestInput/$groupId/$employeeId"
+    }
+    object RequestEdit : Screen("requestEdit/{groupId}/{employeeId}/{requestId}") {
+        fun createRoute(groupId: String, employeeId: String, requestId: String) = "requestEdit/$groupId/$employeeId/$requestId"
+    }
+    object RequestManagement : Screen("requestManagement/{groupId}/{employeeId}") {
+        fun createRoute(groupId: String, employeeId: String) = "requestManagement/$groupId/$employeeId"
     }
     // endregion
+
+    // region Approval Request
+    object ApprovalRequest : Screen("approvalRequest/{groupId}") {
+        fun createRoute(groupId: String) = "approvalRequest/$groupId"
+    }
+    // endregion
+
 }

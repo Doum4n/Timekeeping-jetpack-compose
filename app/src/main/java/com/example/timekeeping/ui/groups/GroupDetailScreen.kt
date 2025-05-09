@@ -45,6 +45,7 @@ fun GroupDetailScreen(
     onDelete: () -> Unit,
     onSalaryClick: (String) -> Unit,
     onRuleManagementClick: () -> Unit,
+    onApproveRequestClick: () -> Unit,
 
     salaryViewModel: SalaryViewModel = hiltViewModel()
 ) {
@@ -99,7 +100,8 @@ fun GroupDetailScreen(
                     onScheduleClick = onScheduleClick,
                     onEmployeeManagementClick = onEmployeeManagementClick,
                     onShiftManagementClick = onShiftManagementClick,
-                    onRuleManagementClick = onRuleManagementClick
+                    onRuleManagementClick = onRuleManagementClick,
+                    onApproveRequestClick = onApproveRequestClick
                 )
             }
 
@@ -199,7 +201,8 @@ fun GroupDetailScreenPreview() {
         onDelete = { /*TODO*/ },
         groupId = "",
         onSalaryClick = {},
-        onRuleManagementClick = {}
+        onRuleManagementClick = {},
+        onApproveRequestClick = {}
     )
 
 }

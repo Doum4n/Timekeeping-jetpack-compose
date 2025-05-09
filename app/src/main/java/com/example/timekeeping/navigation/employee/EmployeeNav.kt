@@ -77,6 +77,7 @@ fun NavGraphBuilder.addEmployeeScreen(navController: NavHostController) {
             onAdvanceSalaryClick = { navController.navigate(Screen.SalaryAdvanceForm.createRoute(groupId, employeeId)) },
             onPaymentClick = { navController.navigate(Screen.PaymentForm.createRoute(groupId, employeeId)) },
             onBackToEmployeeList = { navController.navigate(Screen.EmployeeManagement.createRoute(groupId)) },
+            onRequestAdvanceSalaryClick = { navController.navigate(Screen.RequestManagement.createRoute(groupId, employeeId)) },
             state = rememberCalendarState()
         )
     }

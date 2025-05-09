@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.example.timekeeping.CheckInScreen
 import com.example.timekeeping.RequestJoinGroupScreen
 import com.example.timekeeping.navigation.account.addMyAccountNav
+import com.example.timekeeping.navigation.approvalRequest.addApprovalRequestNav
 import com.example.timekeeping.navigation.auth.addAuthScreens
 import com.example.timekeeping.navigation.checkin.addCheckInNav
 import com.example.timekeeping.navigation.employee.addEmployeeFormScreen
@@ -20,6 +21,8 @@ import com.example.timekeeping.navigation.groups.addGroupScreen
 import com.example.timekeeping.navigation.payment.addPaymentFormNav
 import com.example.timekeeping.navigation.payment.addPaymentNav
 import com.example.timekeeping.navigation.payroll.addPayrollNav
+import com.example.timekeeping.navigation.request.addRequestAdvanceNav
+import com.example.timekeeping.navigation.request.addRequestFormNav
 import com.example.timekeeping.navigation.rule.addRuleInputNav
 import com.example.timekeeping.navigation.rule.addRuleNav
 import com.example.timekeeping.navigation.schedule.addScheduleScreen
@@ -60,6 +63,11 @@ fun AppNavigation(navController: NavHostController) {
 
         addRuleNav(navController)
         addRuleInputNav(navController)
+
+        addRequestAdvanceNav(navController)
+        addRequestFormNav(navController)
+
+        addApprovalRequestNav(navController)
 
         addCheckInScreen(navController)
         addProfileScreen(navController)
