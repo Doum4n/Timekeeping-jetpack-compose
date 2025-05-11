@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -24,61 +25,106 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.timekeeping.models.Group
 import com.example.timekeeping.navigation.Screen
-import com.example.timekeeping.ui.employees.components.SearchBar
+import com.example.timekeeping.ui.admin.employees.components.SearchBar
 import com.example.timekeeping.ui.home.components.GroupList
 import com.example.timekeeping.ui.home.components.HomeFloatingActionButton
 import com.example.timekeeping.ui.home.components.HomeTopAppBar
+import com.example.timekeeping.utils.SessionManager
+import com.example.timekeeping.view_models.EmployeeViewModel
 import com.example.timekeeping.view_models.GroupViewModel
 
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: GroupViewModel = hiltViewModel()
+    viewModel: GroupViewModel = hiltViewModel(),
+    employeeViewModel: EmployeeViewModel = hiltViewModel()
 ) {
     var searchQuery by remember { mutableStateOf("") }
+
+    val role = SessionManager.getRole()
+    val employeeId = SessionManager.getEmployeeId()
 
     Scaffold(
         topBar = { HomeTopAppBar(navController) },
         floatingActionButton = { HomeFloatingActionButton(navController) }
     ) { paddingValues ->
         val keyboardController = LocalSoftwareKeyboardController.current
-        Column(
+        LazyColumn (
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
         ) {
             val joinedGroups by viewModel.joinedGroups
+            val createdGroups by viewModel.createdGroups
 
-            // Search bar
-            SearchBar(
-                searchText = searchQuery,
-                onTextChanged = { searchQuery = it },
-                onSearch = {
-                    viewModel.searchGroupsByName(searchQuery)
-                    keyboardController?.hide()
-                }
-            )
+            item {
+                // Search bar
+                SearchBar(
+                    searchText = searchQuery,
+                    onTextChanged = { searchQuery = it },
+                    onSearch = {
+                        viewModel.searchGroupsByName(searchQuery)
+                        keyboardController?.hide()
+                    }
+                )
+            }
 
-            // Joined groups
-            Text(
-                text = "Joined Groups",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(16.dp)
-            )
-            GroupList(
-                groups = joinedGroups,
-                onItemClick = { group -> navController.navigate(Screen.GroupDetail.createRoute(group.id)) },
-                onCheckInClick = { group -> navController.navigate(Screen.CheckIn.createRoute(group.id)) }
-            )
+            item {
+                // Joined groups
+                Text(
+                    text = "Nhóm đã tham gia",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
 
-            // Created groups
-            Text(
-                text = "Created Groups",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(16.dp)
-            )
+            item {
+                GroupList(
+                    groups = joinedGroups,
+                    onItemClick = {group ->
 
-            // Add LazyColumn for created groups here
+                        employeeViewModel.getRole(employeeId.toString(), group.id) { role ->
+                            SessionManager.setRole(role)
+                        }
+
+                        if (role == "ADMIN") {
+                            navController.navigate(Screen.GroupDetail.createRoute(group.id))
+                        }else if (role == "EMPLOYEE") {
+                            navController.navigate(Screen.EmployeeDetail.createRoute(group.id,
+                                employeeId.toString()
+                            ))
+                        }
+                    },
+                    onCheckInClick = { group -> navController.navigate(Screen.CheckIn.createRoute(group.id)) }
+                )
+            }
+
+            item {
+                // Created groups
+                Text(
+                    text = "Nhóm đã tạo",
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(16.dp)
+                )
+                GroupList(
+                    groups = createdGroups,
+                    onItemClick = {group ->
+
+                        employeeViewModel.getRole(employeeId.toString(), group.id) { role ->
+                            SessionManager.setRole(role)
+                        }
+
+                        if (role == "ADMIN") {
+                            navController.navigate(Screen.GroupDetail.createRoute(group.id))
+                        }else if (role == "EMPLOYEE") {
+                            navController.navigate(Screen.EmployeeDetail.createRoute(group.id,
+                                employeeId.toString()
+                            ))
+                        }
+                    },
+                    onCheckInClick = { group -> navController.navigate(Screen.CheckIn.createRoute(group.id)) }
+                )
+            }
         }
     }
 }

@@ -25,9 +25,9 @@ class GroupViewModel @Inject constructor(
 
     private fun loadGroups() {
         // Load joined groups
-//        groupRepository.loadCreatedGroups { groups ->
-//            createdGroups.value = groups
-//        }
+        groupRepository.loadCreatedGroups { groups ->
+            createdGroups.value = groups
+        }
 
         // Load created groups
         groupRepository.loadJoinedGroups{ groups ->

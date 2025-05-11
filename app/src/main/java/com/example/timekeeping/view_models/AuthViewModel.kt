@@ -1,10 +1,12 @@
 package com.example.timekeeping.view_models
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.timekeeping.models.Employee
 import com.example.timekeeping.repositories.AuthRepository
-import com.example.timekeeping.ui.auth.state.LoginUiState
+import com.example.timekeeping.ui.admin.auth.state.LoginUiState
+import com.example.timekeeping.utils.SessionManager
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,13 +16,35 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
     private val _loginUiState = MutableStateFlow(LoginUiState())
     val loginUiState: StateFlow<LoginUiState> = _loginUiState
 
     private val _registerState = MutableStateFlow<RegisterState>(RegisterState.Initial)
     val registerState: StateFlow<RegisterState> = _registerState
+
+    fun createLoginSession() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+
+        SessionManager.getEmployeeReferenceByUserId(userId.toString()) { employeeRef ->
+            val employeeId = employeeRef?.id
+
+            if (employeeId != null) {
+                SessionManager.createLoginSession(
+                    userId.toString(),
+                    employeeId,
+                )
+            } else {
+                Log.e("Login", "employeeId is null, cannot create session")
+            }
+
+            _loginUiState.value = _loginUiState.value.copy(
+                isLoading = false,
+                isSuccess = true
+            )
+        }
+    }
 
     // Đăng nhập
     fun loginUser(email: String, password: String) = viewModelScope.launch {
@@ -35,8 +59,8 @@ class AuthViewModel @Inject constructor(
                 isLoading = false,
                 isSuccess = true
             )
-            //_isLoggedIn.value = true
-        } else {
+        }
+        else {
             _loginUiState.value = _loginUiState.value.copy(
                 isLoading = false,
                 errorMessage = result.exceptionOrNull()?.message ?: "Đã xảy ra lỗi"

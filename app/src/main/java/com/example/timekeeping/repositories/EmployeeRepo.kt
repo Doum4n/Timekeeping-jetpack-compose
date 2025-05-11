@@ -10,8 +10,6 @@ import com.example.timekeeping.models.Role
 import com.example.timekeeping.models.Salary
 import com.example.timekeeping.models.Status
 import com.example.timekeeping.models.Team
-import com.example.timekeeping.ui.employees.form.TypeAllowance
-import com.example.timekeeping.ui.employees.form.TypeDeduct
 import com.example.timekeeping.utils.convertToReference
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Timestamp
@@ -230,7 +228,7 @@ class EmployeeRepository @Inject constructor (
                 status = Status.UNAUTHORIZED,
                 isCreator = false,
                 dayJoined = Timestamp.now().toDate(),
-                role = Role.MEMBER
+                role = Role.EMPLOYEE
             )
             batch.set(employeeGroupRef, employeeData)
 
@@ -333,5 +331,19 @@ class EmployeeRepository @Inject constructor (
 
     fun deleteTeam(teamId: String) {
         db.collection("teams").document(teamId).delete()
+    }
+
+    fun getRoleByUserId(employeeId: String, groupId: String, onResult: (String) -> Unit) {
+        db.collection("employee_group")
+            .whereEqualTo("groupId", groupId.convertToReference("groups"))
+            .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val role = querySnapshot.documents.firstOrNull()?.getString("role")
+                onResult(role.toString())
+            }.addOnFailureListener { exception ->
+                Log.e("EmployeeRepository_getRoleByUserId", "Error getting role by userId", exception)
+            }
+
     }
 }

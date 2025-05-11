@@ -7,7 +7,7 @@ import java.util.Date
 
 enum class Role {
     ADMIN,
-    MEMBER,
+    EMPLOYEE,
     // Thêm các vai trò khác nếu cần
 }
 
@@ -24,7 +24,7 @@ class Employee_Group (
     var groupId: DocumentReference = FirebaseFirestore.getInstance().collection("groups").document(""),
     val isCreator: Boolean = false,
     val dayJoined: Date = Date(),
-    var role: Role = Role.MEMBER,
+    var role: Role = Role.EMPLOYEE,
     var status: Status = Status.PENDING,
 ) {
 }

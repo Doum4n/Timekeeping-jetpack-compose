@@ -1,5 +1,6 @@
 package com.example.timekeeping.utils
 
+import com.example.timekeeping.models.Time
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -39,6 +40,10 @@ data class DateTimeMap(
 
     fun toLocalDate(): LocalDate {
         return LocalDate.of(year, month, day)
+    }
+
+    fun toTime(): Time {
+        return Time(hour, minute)
     }
 
     companion object {

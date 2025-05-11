@@ -1,6 +1,8 @@
 package com.example.timekeeping.repositories
 
 import android.util.Log
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 import com.example.timekeeping.models.Attendance
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.utils.convertToReference
@@ -16,6 +18,7 @@ import javax.inject.Inject
 class AttendanceRepo @Inject constructor(
     val db: FirebaseFirestore
 ) {
+
     fun CheckIn(attendance: Attendance){
         db.collection("attendances")
             .add(attendance)
@@ -31,19 +34,32 @@ class AttendanceRepo @Inject constructor(
                 val attendances = result.documents.mapNotNull { doc ->
                     doc.toObject(Attendance::class.java)?.apply { id = doc.id }
                 }
+                Log.d("AttendanceRepo", "getAttendanceByEmployeeId: $attendances")
                 onResult(attendances)
             }
     }
 
-    fun CheckOut(){
-//        val attendance = Attendance(
-//            employeeId = "employeeId",
-//            shiftId = "shiftId",
-//            startTime = Timestamp.now(),
-//            endTime = Date(),
-//            dayCheckIn = Timestamp.now().toDate()
-//        )
-//        db.collection("attendances").add(attendance)
+    fun getAttendanceByEmployeeIdAndDate(employeeId: String, date: LocalDate, onResult: (List<Attendance>) -> Unit) {
+        db.collection("attendances")
+            .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
+            .whereEqualTo("startTime.year", date.year)
+            .whereEqualTo("startTime.month", date.monthValue)
+            .whereEqualTo("startTime.day", date.dayOfMonth)
+            .get()
+            .addOnSuccessListener { result ->
+                val attendances = result.documents.mapNotNull { doc ->
+                    doc.toObject(Attendance::class.java)?.apply { id = doc.id }
+                }
+                Log.d("AttendanceRepo", "getAttendanceByEmployeeId: $attendances")
+                onResult(attendances)
+            }
+    }
+
+    fun CheckOut(attendance: Attendance){
+        Log.d("AttendanceRepo", "CheckOut: $attendance")
+        db.collection("attendances")
+            .document(attendance.id)
+            .update(attendance.toMap())
     }
 
     fun getAttendanceByShiftId(shiftId: String, dayCheckIn: Date, onResult: (List<Attendance>) -> Unit) {

@@ -11,6 +11,7 @@ object SessionManager {
     private const val PREF_NAME = "TimekeepingSession"
     private const val KEY_EMPLOYEE_ID = "employeeId"
     private const val KEY_USER_ID = "userId"
+    private const val ROLE = "role"
 
     private lateinit var pref: SharedPreferences
     private lateinit var editor: SharedPreferences.Editor
@@ -34,11 +35,24 @@ object SessionManager {
         editor.putString(KEY_USER_ID, userId)
         editor.putString(KEY_EMPLOYEE_ID, employeeId)
         editor.apply()
+
+        Log.d("SessionManager", "Login session created: userId=$userId, employeeId=$employeeId")
     }
 
     fun getEmployeeId(): String? {
         checkInitialized()
         return pref.getString(KEY_EMPLOYEE_ID, null)
+    }
+
+    fun getRole(): String? {
+        checkInitialized()
+        return pref.getString(ROLE, null)
+    }
+
+    fun setRole(role: String) {
+        checkInitialized()
+        editor.putString(ROLE, role)
+        editor.apply()
     }
 
     fun getUserId(): String? {
@@ -55,12 +69,6 @@ object SessionManager {
                 val doc = querySnapshot.documents.firstOrNull()
                 val employeeId = doc?.id
                 val ref = doc?.reference
-
-                // Lưu vào session nếu có
-                employeeId?.let {
-                    createLoginSession(userId, it)
-                    Log.d("SessionManager", "Saved employeeId to session: $it")
-                }
 
                 onResult(ref)
             }

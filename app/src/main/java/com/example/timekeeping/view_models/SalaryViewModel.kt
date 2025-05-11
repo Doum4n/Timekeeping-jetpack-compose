@@ -6,8 +6,8 @@ import androidx.lifecycle.ViewModel
 import com.example.timekeeping.models.Adjustment
 import com.example.timekeeping.models.Salary
 import com.example.timekeeping.repositories.SalaryRepo
-import com.example.timekeeping.ui.employees.form.TypeAllowance
-import com.example.timekeeping.ui.employees.form.TypeDeduct
+import com.example.timekeeping.ui.admin.employees.form.TypeAllowance
+import com.example.timekeeping.ui.admin.employees.form.TypeDeduct
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

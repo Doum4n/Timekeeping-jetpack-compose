@@ -9,28 +9,29 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.timekeeping.CheckInScreen
 import com.example.timekeeping.RequestJoinGroupScreen
-import com.example.timekeeping.navigation.account.addMyAccountNav
-import com.example.timekeeping.navigation.approvalRequest.addApprovalRequestNav
-import com.example.timekeeping.navigation.auth.addAuthScreens
-import com.example.timekeeping.navigation.checkin.addCheckInNav
-import com.example.timekeeping.navigation.employee.addEmployeeFormScreen
-import com.example.timekeeping.navigation.employee.addEmployeeScreen
-import com.example.timekeeping.navigation.grant_permission.addGrantPermissionNav
-import com.example.timekeeping.navigation.groups.addGroupFormScreen
-import com.example.timekeeping.navigation.groups.addGroupScreen
-import com.example.timekeeping.navigation.payment.addPaymentFormNav
-import com.example.timekeeping.navigation.payment.addPaymentNav
-import com.example.timekeeping.navigation.payroll.addPayrollNav
-import com.example.timekeeping.navigation.request.addRequestAdvanceNav
-import com.example.timekeeping.navigation.request.addRequestFormNav
-import com.example.timekeeping.navigation.rule.addRuleInputNav
-import com.example.timekeeping.navigation.rule.addRuleNav
-import com.example.timekeeping.navigation.schedule.addScheduleScreen
-import com.example.timekeeping.navigation.shifts.addShiftFormScreen
-import com.example.timekeeping.navigation.shifts.addShiftScreen
-import com.example.timekeeping.navigation.team.addTeamFormScreen
-import com.example.timekeeping.navigation.team.addTeamScreen
-import com.example.timekeeping.ui.account.MyAccountScreen
+import com.example.timekeeping.navigation.admin.account.addMyAccountNav
+import com.example.timekeeping.navigation.admin.approvalRequest.addApprovalRequestNav
+import com.example.timekeeping.navigation.admin.auth.addAuthScreens
+import com.example.timekeeping.navigation.admin.checkin.addCheckInNav
+import com.example.timekeeping.navigation.admin.employee.addEmployeeFormScreen
+import com.example.timekeeping.navigation.admin.employee.addEmployeeScreen
+import com.example.timekeeping.navigation.admin.grant_permission.addGrantPermissionNav
+import com.example.timekeeping.navigation.admin.groups.addGroupFormScreen
+import com.example.timekeeping.navigation.admin.groups.addGroupScreen
+import com.example.timekeeping.navigation.admin.payment.addPaymentFormNav
+import com.example.timekeeping.navigation.admin.payment.addPaymentNav
+import com.example.timekeeping.navigation.admin.payroll.addPayrollNav
+import com.example.timekeeping.navigation.admin.request.addRequestAdvanceNav
+import com.example.timekeeping.navigation.admin.request.addRequestFormNav
+import com.example.timekeeping.navigation.admin.rule.addRuleInputNav
+import com.example.timekeeping.navigation.admin.rule.addRuleNav
+import com.example.timekeeping.navigation.admin.schedule.addScheduleScreen
+import com.example.timekeeping.navigation.admin.shifts.addShiftFormScreen
+import com.example.timekeeping.navigation.admin.shifts.addShiftScreen
+import com.example.timekeeping.navigation.admin.team.addTeamFormScreen
+import com.example.timekeeping.navigation.admin.team.addTeamScreen
+import com.example.timekeeping.navigation.employee.addAttendanceNav
+import com.example.timekeeping.ui.admin.account.MyAccountScreen
 import com.example.timekeeping.ui.home.HomeScreen
 import com.example.timekeeping.utils.SessionManager
 import com.google.firebase.auth.FirebaseAuth
@@ -66,6 +67,8 @@ fun AppNavigation(navController: NavHostController) {
 
         addRequestAdvanceNav(navController)
         addRequestFormNav(navController)
+
+        addAttendanceNav(navController)
 
         addApprovalRequestNav(navController)
 

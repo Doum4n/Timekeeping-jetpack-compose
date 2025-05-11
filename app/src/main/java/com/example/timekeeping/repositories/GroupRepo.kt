@@ -6,6 +6,7 @@ import com.example.timekeeping.models.Group
 import com.example.timekeeping.models.Group.Companion.fromDocument
 import com.example.timekeeping.models.Status
 import com.example.timekeeping.utils.SessionManager
+import com.example.timekeeping.utils.convertToReference
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
@@ -26,6 +27,29 @@ class GroupRepository @Inject constructor (
             if (employeeRef != null) {
                 db.collection("employee_group")
                     .whereEqualTo("employeeId", employeeRef)
+                    .whereEqualTo("isCreator", false)
+                    .whereEqualTo("status", Status.ACCEPTED.toString())
+                    .get()
+                    .addOnSuccessListener { snapshot ->
+                        processSnapshot(snapshot, onResult)
+                    }
+                    .addOnFailureListener {
+                        Log.e("GroupRepository", "Failed to load joined groups", it)
+                        onResult(emptyList())
+                        it.printStackTrace()
+                    }
+            } else {
+                Log.e("TAG", "Không tìm thấy employee với userId=$currentUserId")
+            }
+        }
+    }
+
+    fun loadCreatedGroups(onResult: (List<Group>) -> Unit) {
+        SessionManager.getEmployeeReferenceByUserId(currentUserId) { employeeRef ->
+            if (employeeRef != null) {
+                db.collection("employee_group")
+                    .whereEqualTo("employeeId", employeeRef)
+                    .whereEqualTo("isCreator", true)
                     .whereEqualTo("status", Status.ACCEPTED.toString())
                     .get()
                     .addOnSuccessListener { snapshot ->
@@ -66,12 +90,6 @@ class GroupRepository @Inject constructor (
             }
     }
 
-
-    // BỎ
-    fun loadCreatedGroups(onResult: (List<Group>) -> Unit) {
-
-    }
-
     // Create a new group
     fun createGroup(group: Group, onSuccess: () -> Unit, onFailure: (Exception) -> Unit = {}) {
         val newGroupRef = db.collection("groups").document()  // <-- tạo document trước để lấy ID
@@ -81,9 +99,11 @@ class GroupRepository @Inject constructor (
                 // Sau khi lưu group thành công, thêm vào bảng liên kết
                 db.collection("employee_group").add(
                     mapOf(
-                        "employeeId" to currentUserId,
+                        "employeeId" to SessionManager.getEmployeeId().toString().convertToReference("employees"),
                         "groupId" to newGroupRef,                // <-- dùng ID ở đây
-                        "status" to Status.ACCEPTED.toString()
+                        "status" to Status.ACCEPTED.toString(),
+                        "role" to "ADMIN",
+                        "isCreator" to true,
                     )
                 ).addOnSuccessListener {
                     onSuccess()

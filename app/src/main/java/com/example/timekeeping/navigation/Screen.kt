@@ -202,4 +202,10 @@ sealed class Screen(val route: String) {
     }
     // endregion
 
+    // region Attendance
+    object AttendanceForm : Screen("attendanceForm/{groupId}/{employeeId}") {
+        fun createRoute(groupId: String, employeeId: String) = "attendanceForm/$groupId/$employeeId"
+    }
+    // endregion
+
 }

@@ -55,6 +55,10 @@ class EmployeeViewModel @Inject constructor(
         employeeRepository.deleteEmployee(groupId, employeeId)
     }
 
+    fun getRole(employeeId: String, groupId: String, onResult: (String) -> Unit) {
+        employeeRepository.getRoleByUserId(employeeId, groupId, onResult)
+    }
+
     // Load accepted employees for the given groupId
     private fun loadEmployees() {
         employeeRepository.loadEmployees(groupId) { employeesList ->

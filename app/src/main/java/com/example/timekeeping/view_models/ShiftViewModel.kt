@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Shift
 import com.example.timekeeping.repositories.ShiftRepository
+import com.example.timekeeping.utils.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -60,6 +61,12 @@ class ShiftViewModel @Inject constructor(
     fun getShiftById(callback: (Shift) -> Unit) {
         shiftRepository.getShiftById(shiftId) { shift ->
             shift?.let { callback(it) }
+        }
+    }
+
+    fun getOnGoingShift(callback: (List<Shift>) -> Unit) {
+        shiftRepository.getOnGoingShift(SessionManager.getEmployeeId().toString(), groupId) { shift ->
+            callback(shift)
         }
     }
 

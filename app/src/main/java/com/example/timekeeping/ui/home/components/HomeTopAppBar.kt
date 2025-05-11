@@ -26,13 +26,13 @@ import com.example.timekeeping.navigation.Screen
 fun HomeTopAppBar(navController: NavController) {
     TopAppBar(
         title = { Text("Trang chủ") },
-        actions = {
-            IconButton(onClick = {
-                navController.navigate("groupForm")
-            }) {
-                Icon(Icons.Default.Add, contentDescription = "Thêm ca làm")
-            }
-        }
+//        actions = {
+//            IconButton(onClick = {
+//                navController.navigate("groupForm")
+//            }) {
+//                Icon(Icons.Default.Add, contentDescription = "")
+//            }
+//        }
     )
 }
 
@@ -57,7 +57,7 @@ fun HomeFloatingActionButton(navController: NavController) {
                 text = { Text("Thêm nhóm") },
                 onClick = {
                     expanded = false
-                    // Xử lý thêm nhóm
+                    navController.navigate("groupForm")
                 },
                 leadingIcon = { Icon(Icons.Default.Warning, null) }
             )

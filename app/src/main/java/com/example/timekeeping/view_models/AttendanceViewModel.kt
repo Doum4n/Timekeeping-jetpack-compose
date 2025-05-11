@@ -5,6 +5,7 @@ import com.example.timekeeping.models.Attendance
 import com.example.timekeeping.repositories.AttendanceRepo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.checkerframework.checker.units.qual.A
+import java.time.LocalDate
 import java.util.Date
 import javax.inject.Inject
 
@@ -27,5 +28,13 @@ class AttendanceViewModel @Inject constructor (
 
     fun getAttendanceByEmployeeId(employeeId: String, month: Int, year: Int, onResult: (List<Attendance>) -> Unit) {
         attendanceRepository.getAttendanceByEmployeeId(employeeId, month, year, onResult)
+    }
+
+    fun getAttendanceByEmployeeIdAndDate(employeeId: String, date: LocalDate, onResult: (List<Attendance>) -> Unit) {
+        attendanceRepository.getAttendanceByEmployeeIdAndDate(employeeId, date, onResult)
+    }
+
+    fun CheckOut(attendance: Attendance) {
+        attendanceRepository.CheckOut(attendance)
     }
 }
