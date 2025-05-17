@@ -54,7 +54,7 @@ fun IconButtonWithLabelPreview() {
     IconButtonWithLabel(
         onClick = { /*TODO*/ },
         icon = Icons.Filled.Home,
-        label = "Home",
+        label = "Trang chủ",
         modifier = Modifier
     )
 }

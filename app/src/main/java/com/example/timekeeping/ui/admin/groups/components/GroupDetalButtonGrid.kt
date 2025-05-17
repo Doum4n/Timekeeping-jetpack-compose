@@ -7,12 +7,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.FactCheck
+import androidx.compose.material.icons.filled.Beenhere
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.EditCalendar
+import androidx.compose.material.icons.filled.PeopleAlt
+
+import androidx.compose.material.icons.filled.PermContactCalendar
+import androidx.compose.material.icons.filled.PlaylistAddCheckCircle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+
 
 @Composable
 fun GroupDetailButtonGrid(
@@ -36,18 +43,18 @@ fun GroupDetailButtonGrid(
         ) {
             IconButtonWithLabel(
                 onClick = onCheckInClick,
-                icon = Icons.Default.CheckCircle,
+                icon = Icons.Default.Beenhere,
                 label = "Chấm công"
             )
             IconButtonWithLabel(
                 onClick = onScheduleClick,
-                icon = Icons.Default.Warning,
+                icon = Icons.Default.EditCalendar,
                 label = "Xếp lịch"
             )
             IconButtonWithLabel(
                 onClick = onRuleManagementClick,
-                icon = Icons.Default.Warning,
-                label = "Qui tác tính lương"
+                icon = Icons.Default.PermContactCalendar,
+                label = "Qui tắc tính lương"
             )
         }
 
@@ -57,17 +64,19 @@ fun GroupDetailButtonGrid(
         ) {
             IconButtonWithLabel(
                 onClick = onEmployeeManagementClick,
-                icon = Icons.Default.Warning,
+                icon = Icons.Default.PeopleAlt,
                 label = "Danh sách nhân viên"
             )
             IconButtonWithLabel(
                 onClick = onShiftManagementClick,
-                icon = Icons.Default.Warning,
-                label = "Quản lý ca"
+                icon = Icons.AutoMirrored.Filled.FactCheck,
+
+
+                        label = "Quản lý ca"
             )
             IconButtonWithLabel(
                 onClick = onApproveRequestClick,
-                icon = Icons.Default.Warning,
+                icon = Icons.Default.PlaylistAddCheckCircle,
                 label = "Duyệt yêu cầu"
             )
         }

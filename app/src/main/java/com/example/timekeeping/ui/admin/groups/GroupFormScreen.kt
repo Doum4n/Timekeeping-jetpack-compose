@@ -33,12 +33,12 @@ fun GroupFormScreen(
         TextField(
             value = nameState.value,
             onValueChange = { nameState.value = it },
-            label = { Text("Group Name") },
+            label = { Text("Tên công việc") },
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
         // Hiển thị ngày đã chọn
-        Text("Payday: ${paydayState.value?.let { dateFormatter.format(it) } ?: "Chưa chọn"}")
+        Text("Ngày trả lương: ${paydayState.value?.let { dateFormatter.format(it) } ?: "Chưa chọn"}")
 
         Button(
             onClick = {
@@ -60,7 +60,7 @@ fun GroupFormScreen(
                 onSubmit(group)
             }
         ) {
-            Text("Submit")
+            Text("Lưu")
         }
     }
 }

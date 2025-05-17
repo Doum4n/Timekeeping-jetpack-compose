@@ -33,7 +33,7 @@ fun EmployeeInputForm(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Employee Form") },
+                title = { Text("Thêm nhân viên") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
@@ -79,7 +79,7 @@ fun EmployeeInputForm(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Icon(Icons.Filled.Add, contentDescription = "Add Employee")
-                        Text("Add Employee")
+                        Text("Thêm nhân viên")
                     }
                 }
             }

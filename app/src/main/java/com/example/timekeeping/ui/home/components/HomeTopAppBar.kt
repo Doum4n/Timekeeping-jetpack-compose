@@ -59,15 +59,15 @@ fun HomeFloatingActionButton(navController: NavController) {
                     expanded = false
                     navController.navigate("groupForm")
                 },
-                leadingIcon = { Icon(Icons.Default.Warning, null) }
+                leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) }
             )
             DropdownMenuItem(
-                text = { Text("Thêm tham gia nhóm") },
+                text = { Text("Tham gia nhóm") },
                 onClick = {
                     expanded = false
                     navController.navigate(Screen.RequestJoinGroup.route)
                 },
-                leadingIcon = { Icon(Icons.Default.Warning, null) }
+                leadingIcon = { Icon(Icons.Default.Add, contentDescription = null) }
             )
         }
     }

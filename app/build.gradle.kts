@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.dagger.hilt)
 
     id("kotlin-kapt")
-    kotlin("kapt")
+
 }
 
 kapt {
@@ -53,6 +53,10 @@ hilt {
 }
 
 dependencies {
+
+    implementation(libs.androidx.material.icons.extended.v170)
+
+    implementation(libs.androidx.material.icons.extended)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

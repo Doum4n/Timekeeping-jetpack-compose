@@ -44,7 +44,7 @@ fun MainScreen() {
             // Hiển thị TopAppBar chỉ khi ở route "Home"
             if (currentRoute == Screen.Home.route) {
                 TopAppBar(
-                    title = { Text("App Title") },
+                    title = { Text("TimeKeeping") },
                     modifier = Modifier.fillMaxWidth()
                 )
             }

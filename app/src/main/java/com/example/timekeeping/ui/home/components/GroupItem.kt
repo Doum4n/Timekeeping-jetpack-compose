@@ -34,7 +34,7 @@ fun GroupItem(group: Group, onClick: () -> Unit, onCheckInClick: () -> Unit = {}
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "? thành viên",
+                text = "2 thành viên",
                 style = MaterialTheme.typography.bodyMedium
             )
 

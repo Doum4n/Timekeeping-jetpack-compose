@@ -1,4 +1,6 @@
 [versions]
+
+
 agp = "8.8.2"
 bom = "3.1.4"
 cameraCamera2 = "1.4.2"
@@ -25,6 +27,8 @@ ktorClientAndroid = "3.1.2"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.10.1"
 composeBom = "2024.04.01"
+materialIconsExtended = "1.7.8"
+materialIconsExtendedVersion = "1.7.0"
 mockitoInlineVersion = "5.2.0"
 mockitoKotlin = "4.0.0"
 navigationCompose = "2.8.9"
@@ -44,6 +48,7 @@ firebaseDatabaseKtx = "21.0.0"
 firebaseMessagingKtx = "24.1.1"
 zxingAndroidEmbedded = "4.3.0"
 
+
 [libraries]
 androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCamera2" }
 androidx-camera-lifecycle-v110 = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraLifecycleVersion" }
@@ -52,6 +57,8 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
+androidx-material-icons-extended-v170 = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtendedVersion" }
 bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "bom" }
 cloudinary-android = { module = "com.cloudinary:cloudinary-android", version.ref = "cloudinaryAndroid" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }

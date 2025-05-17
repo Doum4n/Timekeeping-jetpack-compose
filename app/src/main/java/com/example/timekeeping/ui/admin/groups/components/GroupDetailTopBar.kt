@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
@@ -27,6 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.timekeeping.ui.admin.employees.components.SimpleDialogS
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GroupDetailTopBar(
@@ -38,7 +40,7 @@ fun GroupDetailTopBar(
     var showDialog = remember { mutableStateOf(false) }
 
     TopAppBar(
-        title = { Text("Quản lý nhóm") },
+        title = { Text("Quản lý công việc") },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -73,7 +75,7 @@ fun GroupDetailTopBar(
                         onClick = {
                             showDialog.value = showDialog.value.not()
                         },
-                        leadingIcon = { Icon(Icons.Default.ExitToApp, null) }
+                        leadingIcon = { Icon(Icons.Default.CheckCircle, null) }
                     )
 
                     if (showDialog.value){
