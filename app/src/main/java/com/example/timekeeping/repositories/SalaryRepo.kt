@@ -138,11 +138,38 @@ class SalaryRepo @Inject constructor(
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        val payrollRef = firestore.collection("payrolls")
+            .whereEqualTo("groupId", adjustment.groupId)
+            .whereEqualTo("employeeId", adjustment.employeeId)
+            .whereEqualTo("month", adjustment.createdAt.month)
+            .whereEqualTo("year", adjustment.createdAt.year)
+
         firestore.collection("adjustments")
             .add(adjustment)
-            .addOnSuccessListener { onSuccess() }
+            .addOnSuccessListener {
+                payrollRef.get()
+                    .addOnSuccessListener { querySnapshot ->
+                        val document = querySnapshot.documents.firstOrNull()
+                        if (document != null) {
+                            val payrollRef = document.reference
+
+                            firestore.runTransaction { transaction ->
+                                val snapshot = transaction.get(payrollRef)
+                                val oldPayment = snapshot.getDouble("totalPayment") ?: 0.0
+                                val newPayment = oldPayment - adjustment.adjustmentAmount
+
+                                transaction.update(payrollRef, "totalPayment", newPayment)
+                            }.addOnSuccessListener { onSuccess() }
+                                .addOnFailureListener { onFailure(it) }
+                        } else {
+                            onFailure(Exception("Payroll document not found"))
+                        }
+                    }
+                    .addOnFailureListener { onFailure(it) }
+            }
             .addOnFailureListener { onFailure(it) }
     }
+
 
     @OptIn(DelicateCoroutinesApi::class)
     fun calculateAllTotalWage(groupId: String, employeeId: String, onResult: (Int) -> Unit) {
@@ -318,10 +345,10 @@ class SalaryRepo @Inject constructor(
                                                 val comparisonMap = mapOf(
                                                     SalaryFieldName.NUMBER_OF_DAYS.label to assignments.size
                                                 )
-
                                                 try {
                                                     val finalWage = applyWageRules(groupId, comparisonMap, totalWage)
                                                     onResult(finalWage) // Trả kết quả sau khi có finalWage
+//                                                    firestore.collection("payrolls").document(payrollDocId(groupId, employeeId, month, year)).update("totalWage", finalWage)
                                                 } catch (e: Exception) {
                                                     onResult(totalWage) // Fallback nếu có lỗi
                                                 }
@@ -364,75 +391,91 @@ class SalaryRepo @Inject constructor(
             return
         }
 
-        // ✅ Tính tổng toàn bộ thời gian bằng cách gom tất cả các khoản
-        var totalWage = 0
-        var totalBonus = 0
-        var totalAdvance = 0
-        var totalDeduct = 0
-        var totalPayment = 0
-        var doneCount = 0
-
-        fun checkDone() {
-            doneCount++
-            if (doneCount == 5) {
-                val totalUnpaid = totalWage + totalBonus + totalDeduct + totalAdvance - totalPayment
-                Log.d("SalaryRepo_getTotalUnpaidSalary", "totalWage: $totalWage, totalBonus: $totalBonus, totalDeduct: $totalDeduct, totalAdvance: $totalAdvance, totalPayment: $totalPayment, totalUnpaid: $totalUnpaid")
-                onResult(totalUnpaid)
-            }
-        }
-
-        getAllSalaries(groupId,
-            onSuccess = {
-                totalWage = it
-                checkDone()
-            },
-            onFailure = {
-                Log.e("SalaryRepo_getTotalUnpaidSalary", "Error getting salaries", it)
-            }
-        )
-
-        getAllBonusAdjustment(groupId,
-            onSuccess = { bonusAdjustments ->
-                totalBonus = bonusAdjustments.sumOf { it.adjustmentAmount }
-                checkDone()
-            },
-            onFailure = {
-                Log.e("SalaryRepo_getTotalUnpaidSalary", "Error getting bonus adjustments", it)
-            }
-        )
-
-        getAllDeductMoney(groupId,
-            onSuccess = { deductAdjustments ->
-                totalDeduct = deductAdjustments.sumOf { it.adjustmentAmount }
-                checkDone()
-            },
-            onFailure = {
-                Log.e("SalaryRepo_getTotalUnpaidSalary", "Error getting deduct money", it)
-            }
-        )
-
-        getAllAdvanceMoney(groupId,
-            onSuccess = { advanceAdjustments ->
-                totalAdvance = advanceAdjustments.sumOf { it.adjustmentAmount }
-                checkDone()
-            },
-            onFailure = {
-                Log.e("SalaryRepo_getTotalUnpaidSalary", "Error getting advance money", it)
-            }
-        )
-
-        // 🔥 Truy vấn tất cả payments theo groupId (nếu bạn lưu `groupId` trong mỗi `payments` document)
-        firestore.collectionGroup("payments")
+        firestore.collection("payrolls")
             .whereEqualTo("groupId", groupId)
             .get()
-            .addOnSuccessListener { payments ->
-                totalPayment = payments.sumOf { it.toObject(Payment::class.java).amount }
-                checkDone()
+            .addOnSuccessListener { documents ->
+                val totalPayment = documents.sumOf { it.getLong("totalPayment")?.toInt() ?: 0 }
+                val totalWage = documents.sumOf { it.getLong("totalWage")?.toInt() ?: 0 }
+                val totalUnpaidSalary = totalWage - totalPayment
+                onResult(totalUnpaidSalary)
+                Log.d("SalaryRepo_getTotalUnpaidSalary", "totalUnpaidSalary: $totalUnpaidSalary")
             }
             .addOnFailureListener {
-                Log.e("SalaryRepo_getTotalUnpaidSalary", "Error getting payments", it)
+                onResult(0)
             }
     }
+
+        // ✅ Tính tổng toàn bộ thời gian bằng cách gom tất cả các khoản
+//        var totalWage = 0
+//        var totalBonus = 0
+//        var totalAdvance = 0
+//        var totalDeduct = 0
+//        var totalPayment = 0
+//        var doneCount = 0
+//
+//        fun checkDone() {
+//            doneCount++
+//            if (doneCount == 5) {
+//                val totalUnpaid = totalWage + totalBonus + totalDeduct + totalAdvance - totalPayment
+//                Log.d("SalaryRepo_getTotalUnpaidSalary", "totalWage: $totalWage, totalBonus: $totalBonus, totalDeduct: $totalDeduct, totalAdvance: $totalAdvance, totalPayment: $totalPayment, totalUnpaid: $totalUnpaid")
+//                onResult(totalUnpaid)
+////                firestore.collection("payrolls").document(payrollDocId(groupId, "", month, year)).update("totalPayment", totalUnpaid)
+//            }
+//        }
+//
+//        getAllSalaries(groupId,
+//            onSuccess = {
+//                totalWage = it
+//                checkDone()
+//            },
+//            onFailure = {
+//                Log.e("SalaryRepo_getTotalUnpaidSalary", "Error getting salaries", it)
+//            }
+//        )
+//
+//        getAllBonusAdjustment(groupId,
+//            onSuccess = { bonusAdjustments ->
+//                totalBonus = bonusAdjustments.sumOf { it.adjustmentAmount }
+//                checkDone()
+//            },
+//            onFailure = {
+//                Log.e("SalaryRepo_getTotalUnpaidSalary", "Error getting bonus adjustments", it)
+//            }
+//        )
+//
+//        getAllDeductMoney(groupId,
+//            onSuccess = { deductAdjustments ->
+//                totalDeduct = deductAdjustments.sumOf { it.adjustmentAmount }
+//                checkDone()
+//            },
+//            onFailure = {
+//                Log.e("SalaryRepo_getTotalUnpaidSalary", "Error getting deduct money", it)
+//            }
+//        )
+//
+//        getAllAdvanceMoney(groupId,
+//            onSuccess = { advanceAdjustments ->
+//                totalAdvance = advanceAdjustments.sumOf { it.adjustmentAmount }
+//                checkDone()
+//            },
+//            onFailure = {
+//                Log.e("SalaryRepo_getTotalUnpaidSalary", "Error getting advance money", it)
+//            }
+//        )
+//
+//        // 🔥 Truy vấn tất cả payments theo groupId (nếu bạn lưu `groupId` trong mỗi `payments` document)
+//        firestore.collectionGroup("payments")
+//            .whereEqualTo("groupId", groupId)
+//            .get()
+//            .addOnSuccessListener { payments ->
+//                totalPayment = payments.sumOf { it.toObject(Payment::class.java).amount }
+//                checkDone()
+//            }
+//            .addOnFailureListener {
+//                Log.e("SalaryRepo_getTotalUnpaidSalary", "Error getting payments", it)
+//            }
+//    }
 
 
     fun getTotalUnpaidSalaryByMonth(
@@ -441,116 +484,131 @@ class SalaryRepo @Inject constructor(
         year: Int,
         onResult: (Int) -> Unit,
     ) {
-
-        var totalWage = 0
-        var totalBonus = 0
-        var totalAdvance = 0
-        var totalDeduct = 0
-
-        firestore.collection("salaries")
+        firestore.collection("payrolls")
             .whereEqualTo("groupId", groupId)
+            .whereEqualTo("month", month)
+            .whereEqualTo("year", year)
             .get()
             .addOnSuccessListener { documents ->
-                val totalResults = documents.size()
-                if (totalResults == 0) {
-                    onResult(0)
-                    return@addOnSuccessListener
-                }
-
-                var completedCount = 0
-                var totalUnpaidSalary = 0
-
-                // Tạo một object để lưu trữ các giá trị tạm thời
-                val results = mutableMapOf<String, IntArray>() // employeeId to [wage, bonus, deduction, advance]
-
-                for (document in documents) {
-                    val salary = document.toObject(Salary::class.java)
-                    val employeeId = salary.employeeId
-
-                    // Khởi tạo entry cho employee
-                    results[employeeId] = IntArray(5) // [wage, bonus, deduction, advance, payment]
-
-                    // Đếm số lượng callback đã hoàn thành
-                    var callbacksCompleted = 0
-                    val totalCallbacks = 4 // calculateTotalWage, getSalaryInfoByMonth, getAdvanceMoney
-
-                    fun checkAllCallbacksDone() {
-                        callbacksCompleted++
-                        if (callbacksCompleted == totalCallbacks) {
-                            completedCount++
-                            // Khi tất cả callback cho employee này hoàn thành, cộng vào tổng
-                            results[employeeId]?.let {
-                                totalUnpaidSalary += it[0] + it[1] + it[2] + it[3] - it[4] // Dấu "+" là vì các loại trừ tiền trong csdl là "_"
-                                Log.d("SalaryRepo_getTotalUnpaidSalary", "wage: ${it[0]}, bonus: ${it[1]}, deduction: ${it[2]}, advance: ${it[3]}, payment: ${it[4]}, totalUnpaidSalary: $totalUnpaidSalary")
-                            }
-
-                            // Khi tất cả employee đã xử lý xong
-                            if (completedCount == totalResults) {
-                                Log.d("SalaryRepo_getTotalUnpaidSalary", "totalUnpaidSalary: $totalUnpaidSalary")
-                                onResult(totalUnpaidSalary)
-                            }
-                        }
-                    }
-
-                    firestore.collection("salaries")
-                        .document(salaryDocId(groupId, employeeId))
-                        .collection("payments") // theo tháng như cũ
-                        .whereEqualTo("createdAt.month", month)
-                        .whereEqualTo("createdAt.year", year)
-                        .get()
-                        .addOnSuccessListener { payments ->
-                            val totalPayment = payments.sumOf { it.toObject(Payment::class.java).amount }
-                            results[employeeId]?.set(4, totalPayment)
-                            checkAllCallbacksDone()
-
-                            Log.d("SalaryRepo_getTotalUnpaidSalary", "totalPayment: $totalPayment")
-                        }
-
-                    calculateTotalWage(groupId, employeeId, month, year) { wage ->
-                        results[employeeId]?.set(0, wage)
-                        totalWage += wage
-                        checkAllCallbacksDone()
-                    }
-
-                    getSalaryInfoByMonth(
-                        groupId, employeeId, month, year,
-                        onSuccess = { adjustments ->
-
-                            val bonus = adjustments.filter { it.adjustmentType in TypeAllowance.entries.map { it.label } }
-                                .sumOf { it.adjustmentAmount }
-                            totalBonus += bonus
-
-                            val deduction = adjustments.filter { it.adjustmentType in TypeDeduct.entries.map { it.label } && it.adjustmentType != "Ứng lương" }
-                                .sumOf { it.adjustmentAmount }
-                            totalDeduct += deduction
-
-                            results[employeeId]?.let {
-                                it[1] = bonus
-                                it[2] = deduction
-                            }
-                            checkAllCallbacksDone()
-                        }
-                    )
-
-                    getAdvanceMoney(
-                        groupId, employeeId, month, year,
-                        onSuccess = { advances ->
-                            val advanceTotal = advances.sumOf { it.adjustmentAmount }
-                            results[employeeId]?.set(3, advanceTotal)
-                            totalAdvance += advanceTotal
-                            checkAllCallbacksDone()
-                        }
-                    ) {
-                        // Xử lý lỗi nếu cần
-                        checkAllCallbacksDone()
-                    }
-                }
+                val totalPayment = documents.sumOf { it.getLong("totalPayment")?.toInt() ?: 0 }
+                val totalWage = documents.sumOf { it.getLong("totalWage")?.toInt() ?: 0 }
+                val totalUnpaidSalary = totalWage - totalPayment
+                onResult(totalUnpaidSalary)
             }
             .addOnFailureListener {
-                // Xử lý lỗi nếu cần
                 onResult(0)
             }
     }
+
+//        var totalWage = 0
+//        var totalBonus = 0
+//        var totalAdvance = 0
+//        var totalDeduct = 0
+//
+//        firestore.collection("salaries")
+//            .whereEqualTo("groupId", groupId)
+//            .get()
+//            .addOnSuccessListener { documents ->
+//                val totalResults = documents.size()
+//                if (totalResults == 0) {
+//                    onResult(0)
+//                    return@addOnSuccessListener
+//                }
+//
+//                var completedCount = 0
+//                var totalUnpaidSalary = 0
+//
+//                // Tạo một object để lưu trữ các giá trị tạm thời
+//                val results = mutableMapOf<String, IntArray>() // employeeId to [wage, bonus, deduction, advance]
+//
+//                for (document in documents) {
+//                    val salary = document.toObject(Salary::class.java)
+//                    val employeeId = salary.employeeId
+//
+//                    // Khởi tạo entry cho employee
+//                    results[employeeId] = IntArray(5) // [wage, bonus, deduction, advance, payment]
+//
+//                    // Đếm số lượng callback đã hoàn thành
+//                    var callbacksCompleted = 0
+//                    val totalCallbacks = 4 // calculateTotalWage, getSalaryInfoByMonth, getAdvanceMoney
+//
+//                    fun checkAllCallbacksDone() {
+//                        callbacksCompleted++
+//                        if (callbacksCompleted == totalCallbacks) {
+//                            completedCount++
+//                            // Khi tất cả callback cho employee này hoàn thành, cộng vào tổng
+//                            results[employeeId]?.let {
+//                                totalUnpaidSalary += it[0] + it[1] + it[2] + it[3] - it[4] // Dấu "+" là vì các loại trừ tiền trong csdl là "_"
+//                                Log.d("SalaryRepo_getTotalUnpaidSalary", "wage: ${it[0]}, bonus: ${it[1]}, deduction: ${it[2]}, advance: ${it[3]}, payment: ${it[4]}, totalUnpaidSalary: $totalUnpaidSalary")
+//                            }
+//
+//                            // Khi tất cả employee đã xử lý xong
+//                            if (completedCount == totalResults) {
+//                                Log.d("SalaryRepo_getTotalUnpaidSalary", "totalUnpaidSalary: $totalUnpaidSalary")
+//                                onResult(totalUnpaidSalary)
+//                            }
+//                        }
+//                    }
+//
+//                    firestore.collection("salaries")
+//                        .document(salaryDocId(groupId, employeeId))
+//                        .collection("payments") // theo tháng như cũ
+//                        .whereEqualTo("createdAt.month", month)
+//                        .whereEqualTo("createdAt.year", year)
+//                        .get()
+//                        .addOnSuccessListener { payments ->
+//                            val totalPayment = payments.sumOf { it.toObject(Payment::class.java).amount }
+//                            results[employeeId]?.set(4, totalPayment)
+//                            checkAllCallbacksDone()
+//
+//                            Log.d("SalaryRepo_getTotalUnpaidSalary", "totalPayment: $totalPayment")
+//                        }
+//
+//                    calculateTotalWage(groupId, employeeId, month, year) { wage ->
+//                        results[employeeId]?.set(0, wage)
+//                        totalWage += wage
+//                        checkAllCallbacksDone()
+//                    }
+//
+//                    getSalaryInfoByMonth(
+//                        groupId, employeeId, month, year,
+//                        onSuccess = { adjustments ->
+//
+//                            val bonus = adjustments.filter { it.adjustmentType in TypeAllowance.entries.map { it.label } }
+//                                .sumOf { it.adjustmentAmount }
+//                            totalBonus += bonus
+//
+//                            val deduction = adjustments.filter { it.adjustmentType in TypeDeduct.entries.map { it.label } && it.adjustmentType != "Ứng lương" }
+//                                .sumOf { it.adjustmentAmount }
+//                            totalDeduct += deduction
+//
+//                            results[employeeId]?.let {
+//                                it[1] = bonus
+//                                it[2] = deduction
+//                            }
+//                            checkAllCallbacksDone()
+//                        }
+//                    )
+//
+//                    getAdvanceMoney(
+//                        groupId, employeeId, month, year,
+//                        onSuccess = { advances ->
+//                            val advanceTotal = advances.sumOf { it.adjustmentAmount }
+//                            results[employeeId]?.set(3, advanceTotal)
+//                            totalAdvance += advanceTotal
+//                            checkAllCallbacksDone()
+//                        }
+//                    ) {
+//                        // Xử lý lỗi nếu cần
+//                        checkAllCallbacksDone()
+//                    }
+//                }
+//            }
+//            .addOnFailureListener {
+//                // Xử lý lỗi nếu cần
+//                onResult(0)
+//            }
+//    }
 
     fun getAllDeductMoney(groupId: String, onSuccess: (List<Adjustment>) -> Unit, onFailure: (Exception) -> Unit = {}) {
         firestore.collection("adjustments")

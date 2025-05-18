@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.timekeeping.ui.admin.components.TopBarClassic
+import com.example.timekeeping.utils.SessionManager
 import com.example.timekeeping.utils.generateQRCode
 import com.example.timekeeping.view_models.EmployeeViewModel
 
@@ -63,7 +64,7 @@ fun MyQRCodeScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Hiển thị QR Code
-            QRCodeImage(employeeId)
+            QRCodeImage(SessionManager.getUserId().toString())
 
             // Tên
             Column(

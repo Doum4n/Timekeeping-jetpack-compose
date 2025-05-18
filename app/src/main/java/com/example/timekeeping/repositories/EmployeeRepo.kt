@@ -46,23 +46,23 @@ class EmployeeRepository @Inject constructor (
     fun deleteEmployee(groupId: String, employeeId: String) {
         val batch = db.batch()
 
-        val employeeRef = db.collection("employees").document(employeeId)
-        val salaryRef = db.collection("salaries").document(salaryDocId(groupId, employeeId))
+//        val employeeRef = db.collection("employees").document(employeeId)
+//        val salaryRef = db.collection("salaries").document(salaryDocId(groupId, employeeId))
         val empGroupRef = db.collection("employee_group").document("$groupId-$employeeId")
 
-        batch.delete(employeeRef)
+//        batch.delete(employeeRef)
         batch.delete(empGroupRef)
-        batch.delete(salaryRef)
+//        batch.delete(salaryRef)
 
-        val assignmentsTask = db.collection("assignments")
-            .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
-            .get()
+//        val assignmentsTask = db.collection("assignments")
+//            .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
+//            .get()
 
         val attendancesTask = db.collection("attendances")
             .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
             .get()
 
-        Tasks.whenAllSuccess<QuerySnapshot>(assignmentsTask, attendancesTask)
+        Tasks.whenAllSuccess<QuerySnapshot>(attendancesTask)
             .addOnSuccessListener { results ->
                 val assignments = results[0].documents
                 val attendances = results[1].documents
@@ -345,5 +345,36 @@ class EmployeeRepository @Inject constructor (
                 Log.e("EmployeeRepository_getRoleByUserId", "Error getting role by userId", exception)
             }
 
+    }
+
+    fun acceptEmployee(employeeId: String, groupId: String, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) {
+        db.collection("employee_group")
+            .whereEqualTo("groupId", groupId.convertToReference("groups"))
+            .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val document = querySnapshot.documents.firstOrNull()
+                document?.reference?.update("status", Status.ACCEPTED.toString())
+                onSuccess()
+            }.addOnFailureListener { exception ->
+                Log.e("EmployeeRepository_acceptEmployee", "Error accepting employee", exception)
+                onFailure(exception)
+            }
+    }
+
+    fun rejectEmployee(employeeId: kotlin.String, groupId: kotlin.String, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) {
+        db.collection("employee_group")
+            .whereEqualTo("groupId", groupId.convertToReference("groups"))
+            .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val document = querySnapshot.documents.firstOrNull()
+                document?.reference?.update("status", Status.REJECTED.toString())
+                onSuccess()
+            }.addOnFailureListener { exception ->
+                Log.e("EmployeeRepository_rejectEmployee", "Error rejecting employee", exception)
+                exception.printStackTrace()
+                onFailure(exception)
+            }
     }
 }

@@ -186,15 +186,17 @@ fun CheckInManagementScreen(
                                 Log.d("CheckInManagementScreen", "alreadyAttended: $alreadyAttended")
 
                                 if (alreadyAttended != null)
-                                    attendanceViewModel.updateAttendance(
-                                        alreadyAttended.id,
+                                    attendanceViewModel.CheckIn(
                                         Attendance(
-                                            employeeId = alreadyAttended.employeeId,
-                                            shiftId = alreadyAttended.shiftId,
+                                            id = alreadyAttended.id,
+                                            employeeId = employeeId.convertToReference("employees"),
+                                            shiftId = uiState.value.selectedShiftId!!,
                                             attendanceType = type.label,
                                             startTime = DateTimeMap.from(LocalDateTime.now()),
                                             note = checkIn.reason.value
-                                        )
+                                        ),
+                                        groupId,
+                                        isUpdate = true
                                     )
                                 else
                                     attendanceViewModel.CheckIn(
@@ -204,7 +206,8 @@ fun CheckInManagementScreen(
                                             attendanceType = type.label,
                                             startTime = DateTimeMap.from(LocalDateTime.now()),
                                             note = checkIn.reason.value
-                                        )
+                                        ),
+                                        groupId
                                     )
                             }
                         }

@@ -16,17 +16,45 @@ class PaymentRepo @Inject constructor(
 ) {
     private val createdAt = LocalDate.now().year.toString() + "-" + LocalDate.now().month.value.toString()
 
-    // TODO fix this
-    fun createPayment(groupId: String, employeeId: String, payment: Payment, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) {
+    fun createPayment(
+        groupId: String,
+        employeeId: String,
+        payment: Payment,
+        onSuccess: () -> Unit = {},
+        onFailure: (Exception) -> Unit = {}
+    ) {
+        val payrollQuery = firestore.collection("payrolls")
+            .whereEqualTo("groupId", groupId)
+            .whereEqualTo("employeeId", employeeId)
+            .whereEqualTo("month", payment.createdAt.month)
+            .whereEqualTo("year", payment.createdAt.year)
+
         firestore.collection("payments")
-//            .document(LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")).toString())
             .add(payment)
-            .addOnSuccessListener({
-                onSuccess()
-            }).addOnFailureListener({
-                onFailure(it)
-            })
+            .addOnSuccessListener {
+                payrollQuery.get()
+                    .addOnSuccessListener { querySnapshot ->
+                        val document = querySnapshot.documents.firstOrNull()
+                        if (document != null) {
+                            val payrollRef = document.reference
+
+                            firestore.runTransaction { transaction ->
+                                val snapshot = transaction.get(payrollRef)
+                                val oldPayment = snapshot.getDouble("totalPayment") ?: 0.0
+                                val newPayment = oldPayment - payment.amount
+
+                                transaction.update(payrollRef, "totalPayment", newPayment)
+                            }.addOnSuccessListener { onSuccess() }
+                                .addOnFailureListener { onFailure(it) }
+                        } else {
+                            onFailure(Exception("Payroll document not found"))
+                        }
+                    }
+                    .addOnFailureListener { onFailure(it) }
+            }
+            .addOnFailureListener { onFailure(it) }
     }
+
 
     fun getPayments(groupId: String, employeeId: String, onSuccess: (List<Payment>) -> Unit, onFailure: (Exception) -> Unit, month: Int, year: Int) {
         firestore.collection("payments")
@@ -80,9 +108,7 @@ class PaymentRepo @Inject constructor(
         onSuccess: (Payment) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        firestore.collection("salaries")
-            .document(salaryDocId(groupId, employeeId))
-            .collection("payments")
+        firestore.collection("payments")
             .whereEqualTo("createdAt.year", year)
             .whereEqualTo("createdAt.month", month)
             .whereEqualTo(FieldPath.documentId(), paymentId)
@@ -90,6 +116,7 @@ class PaymentRepo @Inject constructor(
             .addOnSuccessListener({
                 val payment = it.documents.firstOrNull()?.toObject(Payment::class.java)?.copy(id = paymentId)
                 if (payment != null) {
+                    Log.d("PaymentRepo", "Payment: $payment")
                     onSuccess(payment)
                 }
             }).addOnFailureListener({

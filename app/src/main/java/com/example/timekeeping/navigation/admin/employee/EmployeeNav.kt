@@ -1,5 +1,6 @@
 package com.example.timekeeping.navigation.admin.employee
 
+import android.widget.Toast
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
@@ -36,6 +37,20 @@ fun NavGraphBuilder.addEmployeeScreen(navController: NavHostController) {
             },
             onLinkClick = { employeeId ->
                 navController.navigate(Screen.GrantPermission.createRoute(groupId, employeeId))
+            },
+            onAcceptClick = { employeeId ->
+                employeeViewModel.acceptEmployee(groupId, employeeId, {
+                    Toast.makeText(navController.context, "Đã chấp nhận yêu cầu", Toast.LENGTH_SHORT).show()
+                }, {
+                    Toast.makeText(navController.context, "Có lỗi xảy ra", Toast.LENGTH_SHORT).show()
+                })
+            },
+            onRejectClick = { employeeId ->
+                employeeViewModel.rejectEmployee(groupId, employeeId, {
+                    Toast.makeText(navController.context, "Đã từ chối yêu cầu", Toast.LENGTH_SHORT).show()
+                }, {
+                    Toast.makeText(navController.context, "Có lỗi xảy ra", Toast.LENGTH_SHORT).show()
+                })
             }
         )
     }

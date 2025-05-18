@@ -82,6 +82,7 @@ object RepositoryModule {
     fun provideAttendanceRepository(): AttendanceRepo {
         return AttendanceRepo(
             FirebaseFirestore.getInstance(),
+            SalaryRepo(FirebaseFirestore.getInstance()),
         )
     }
 

@@ -106,6 +106,7 @@ class GroupRepository @Inject constructor (
                         "isCreator" to true,
                     )
                 ).addOnSuccessListener {
+                    Log.d("GroupRepository_createGroup", "${SessionManager.getEmployeeId().toString()}")
                     onSuccess()
                 }.addOnFailureListener {
                     onFailure(it)

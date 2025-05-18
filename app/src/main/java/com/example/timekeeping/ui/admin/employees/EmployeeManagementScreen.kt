@@ -35,7 +35,9 @@ fun EmployeeManagementScreen(
     onBackClick: () -> Unit,
     onMenuItemClick: (MenuItem) -> Unit,
     onEmployeeIdClick: (String) -> Unit,
-    onLinkClick: (String) -> Unit
+    onLinkClick: (String) -> Unit,
+    onAcceptClick: (String) -> Unit,
+    onRejectClick: (String) -> Unit
 ) {
     EmployeeManagementContentScreen(
         groupId = viewModel.groupId,
@@ -46,7 +48,9 @@ fun EmployeeManagementScreen(
         onBackClick = onBackClick,
         onMenuItemClick = onMenuItemClick,
         onEmployeeIdClick = { onEmployeeIdClick(it) },
-        onLinkClick = { employeeId -> onLinkClick(employeeId) }
+        onLinkClick = { employeeId -> onLinkClick(employeeId) },
+        onAcceptClick = onAcceptClick,
+        onRejectClick = onRejectClick
     )
 }
 
@@ -65,7 +69,9 @@ fun EmployeeManagementContentScreen(
 
     onEmployeeIdClick: (String) -> Unit,
 
-    onLinkClick: (String) -> Unit
+    onLinkClick: (String) -> Unit,
+    onAcceptClick: (String) -> Unit,
+    onRejectClick: (String) -> Unit
 ) {
     val searchText = remember { mutableStateOf("") }
 
@@ -108,8 +114,8 @@ fun EmployeeManagementContentScreen(
                 EmployeePage.Members(employees),
                 EmployeePage.Approval(
                     pendingEmployees,
-                    onAcceptClick = {},
-                    onRejectClick = {}
+                    onAcceptClick = { onAcceptClick },
+                    onRejectClick = { onRejectClick }
                 )
             )
 
@@ -157,7 +163,7 @@ fun MembersScreen(employees: List<Employee>, groupId: String, onEmployeeClick: (
 }
 
 @Composable
-fun ApprovalScreen(pendingEmployees: List<Employee>, groupId: String, onAcceptClick: () -> Unit = {}) {
+fun ApprovalScreen(pendingEmployees: List<Employee>, groupId: String, onAcceptClick: (String) -> Unit = {}) {
     EntityList(
         pendingEmployees,
         modifier = Modifier
@@ -165,8 +171,9 @@ fun ApprovalScreen(pendingEmployees: List<Employee>, groupId: String, onAcceptCl
             .fillMaxHeight()
     ){
         EmployeeCard(
+            isPending = true,
             employee = it,
-            onAcceptClick = onAcceptClick,
+            onAcceptClick = { onAcceptClick(it) },
             onRejectClick = {}
         )
     }
@@ -199,6 +206,8 @@ fun EmployeeManagementScreenPreview() {
         onBackClick = {},
         onMenuItemClick = {},
         onEmployeeIdClick = {},
-        onLinkClick = {}
+        onLinkClick = {},
+        onAcceptClick = {},
+        onRejectClick = {}
     )
 }

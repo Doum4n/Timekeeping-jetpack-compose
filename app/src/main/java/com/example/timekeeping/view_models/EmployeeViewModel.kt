@@ -108,6 +108,10 @@ class EmployeeViewModel @Inject constructor(
         unlinkedEmployees.value = unlinkedEmployees.value.filter { it.name.fullName.contains(searchText, ignoreCase = true) }
     }
 
+    fun acceptEmployee(groupId: String, employeeId: String, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) {
+        employeeRepository.acceptEmployee(groupId, employeeId, onSuccess, onFailure)
+    }
+
     fun loadEmployeeByShiftId(shiftId: String, onSuccess: (List<Employee>) -> Unit){
         employeeRepository.loadEmployeeByShiftId(shiftId, onSuccess)
     }
@@ -134,5 +138,9 @@ class EmployeeViewModel @Inject constructor(
 
     fun deleteTeam(teamId: String) {
         employeeRepository.deleteTeam(teamId)
+    }
+
+    fun rejectEmployee(employeeId: kotlin.String, groupId: kotlin.String, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) {
+        employeeRepository.rejectEmployee(employeeId, groupId, onSuccess, onFailure)
     }
 }

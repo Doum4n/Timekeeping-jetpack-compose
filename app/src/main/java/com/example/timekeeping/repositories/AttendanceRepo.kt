@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import com.example.timekeeping.models.Attendance
 import com.example.timekeeping.models.Employee
+import com.example.timekeeping.models.Salary
 import com.example.timekeeping.utils.convertToReference
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Timestamp
@@ -16,12 +17,193 @@ import java.util.Date
 import javax.inject.Inject
 
 class AttendanceRepo @Inject constructor(
-    val db: FirebaseFirestore
+    val db: FirebaseFirestore,
+    val salaryRepo: SalaryRepo
 ) {
 
-    fun CheckIn(attendance: Attendance){
-        db.collection("attendances")
-            .add(attendance)
+    fun checkIn(attendance: Attendance, groupId: String, isUpdate: Boolean = false) {
+        Log.d("AttendanceRepo_checkIn", attendance.employeeId.id)
+
+        salaryRepo.getSalaryById(groupId, attendance.employeeId.id) { salary ->
+            if (salary == null) {
+                Log.e("AttendanceRepo", "Salary not found.")
+                return@getSalaryById
+            }
+
+            Log.d("AttendanceRepo_checkIn", "Salary: $salary")
+
+            db.collection("shifts").document(attendance.shiftId).get()
+                .addOnSuccessListener { shiftSnapshot ->
+                    val coefficient = shiftSnapshot.getDouble("coefficient") ?: 1.0
+                    val allowance = shiftSnapshot.getLong("allowance")?.toInt() ?: 0
+
+                    Log.d("AttendanceRepo_checkIn", "Coefficient: $coefficient, Allowance: $allowance")
+
+                    db.collection("assignments")
+                        .whereEqualTo("employeeId", attendance.employeeId)
+                        .whereEqualTo("shiftId", attendance.shiftId.convertToReference("shifts"))
+                        .whereEqualTo("month", attendance.startTime.month)
+                        .whereEqualTo("year", attendance.startTime.year)
+                        .get()
+                        .addOnSuccessListener { assignmentSnapshot ->
+
+                            Log.d("AttendanceRepo_checkIn", "it work")
+
+                            val assignmentDoc = assignmentSnapshot.documents.firstOrNull()
+                            val dates = assignmentDoc?.get("dates") as? List<*>
+                            val assignmentDates = dates?.size ?: 0
+
+                            var salaryAmount = 0
+//                            if (attendance.attendanceType != "Nghỉ không lương") {
+                                salaryAmount = when (salary.salaryType) {
+                                    "Ca" -> salary.salary * coefficient.toInt() + allowance
+                                    "Tháng" -> if (assignmentDates > 0) salary.salary / assignmentDates else 0
+                                    else -> 0
+                                }
+//                            }
+
+                            if (!isUpdate) {
+                                // Thêm attendance trước
+                                db.collection("attendances").add(attendance)
+                                    .addOnSuccessListener { docRef ->
+                                        val payrollQuery = db.collection("payrolls")
+                                            .whereEqualTo("employeeId", attendance.employeeId)
+                                            .whereEqualTo("groupId", groupId)
+                                            .whereEqualTo("month", attendance.startTime.month)
+                                            .whereEqualTo("year", attendance.startTime.year).get()
+                                            .addOnSuccessListener { payrollSnapshot ->
+                                                val payrollDoc = payrollSnapshot.documents.firstOrNull()
+                                                if (payrollDoc != null) {
+                                                    val payrollRef = payrollDoc.reference
+                                                    db.runTransaction { transaction ->
+                                                        val snapshot = transaction.get(payrollRef)
+                                                        val oldWage = snapshot.getLong("totalWage")?.toInt() ?: 0
+                                                        val newWage = oldWage + salaryAmount
+                                                        Log.d("AttendanceRepo_checkIn", "Old wage: $oldWage, New wage: $newWage")
+                                                        transaction.update(payrollRef, "totalWage", newWage)
+                                                    }.addOnSuccessListener {
+                                                        Log.d("AttendanceRepo_checkIn", "Payroll updated.")
+                                                    }.addOnFailureListener {
+                                                        Log.e("AttendanceRepo_checkIn", "Failed to update payroll", it)
+                                                    }
+                                                } else {
+                                                    // Payroll chưa tồn tại ⇒ tạo mới
+                                                    val newPayroll = hashMapOf(
+                                                        "employeeId" to attendance.employeeId.id,
+                                                        "groupId" to groupId,
+                                                        "month" to attendance.startTime.month,
+                                                        "year" to attendance.startTime.year,
+                                                        "totalPayment" to 0.0,
+                                                        "totalWage" to salaryAmount
+                                                    )
+                                                    db.collection("payrolls").add(newPayroll)
+                                                }
+
+                                                Log.d("AttendanceRepo_checkIn", "Attendance saved with ID: ${docRef.id}")
+                                            }
+                                    }
+                                    .addOnFailureListener {
+                                        Log.e("AttendanceRepo", "Failed to add attendance", it)
+                                    }
+                            } else {
+
+                                update(attendance, groupId, salaryAmount = salaryAmount, salary = salary, coefficient = coefficient, allowance = allowance, assignmentDates = assignmentDates)
+
+                            }
+                        }
+                }
+        }
+    }
+
+    private fun update(
+        attendance: Attendance,
+        groupId: String,
+        salaryAmount: Int,
+        salary: Salary,
+        coefficient: Double,
+        allowance: Int,
+        assignmentDates: Int
+    ) {
+        db.collection("attendances").document(attendance.id).update(attendance.toMap())
+        // Lấy oldAttendance trước khi chạy transaction
+        db.collection("attendances").document(attendance.id).get()
+            .addOnSuccessListener { oldAttendanceSnapshot ->
+                val oldAttendance =
+                    oldAttendanceSnapshot.toObject(Attendance::class.java)
+                if (oldAttendance != null) {
+                    db.collection("payrolls")
+                        .whereEqualTo("employeeId", attendance.employeeId.id)
+                        .whereEqualTo("groupId", groupId)
+                        .whereEqualTo("month", attendance.startTime.month)
+                        .whereEqualTo("year", attendance.startTime.year)
+                        .get()
+                        .addOnSuccessListener { payrollSnapshot ->
+                            val payrollDoc =
+                                payrollSnapshot.documents.firstOrNull()
+                            if (payrollDoc != null) {
+                                val payrollRef = payrollDoc.reference
+
+                                db.runTransaction { transaction ->
+                                    val snapshot = transaction.get(payrollRef)
+                                    val oldWage = snapshot.getLong("totalWage")?.toInt() ?: 0
+
+                                    // Tính lương cũ dựa trên oldAttendance
+                                    val oldSalaryAmount = if (oldAttendance.attendanceType != "Nghỉ không lương") {
+                                        when (salary.salaryType) {
+                                            "Ca" -> salary.salary * coefficient.toInt() + allowance
+                                            "Tháng" -> if (assignmentDates > 0) salary.salary / assignmentDates else 0
+                                            else -> 0
+                                        }
+                                    } else 0
+
+                                    // Tính lương mới dựa trên attendance hiện tại
+                                    val newSalaryAmount = if (attendance.attendanceType != "Nghỉ không lương") salaryAmount else 0
+
+                                    val newWage = oldWage - oldSalaryAmount + newSalaryAmount
+
+                                    Log.d("AttendanceRepo_checkIn", "Old wage: $oldWage, Old salary amount: $oldSalaryAmount, New salary amount: $newSalaryAmount, New wage: $newWage")
+
+                                    transaction.update(payrollRef, "totalWage", newWage)
+                                }.addOnSuccessListener {
+                                    Log.d(
+                                        "AttendanceRepo_checkIn",
+                                        "Payroll updated."
+                                    )
+                                }.addOnFailureListener {
+                                    Log.e(
+                                        "AttendanceRepo_checkIn",
+                                        "Failed to update payroll",
+                                        it
+                                    )
+                                }
+                            } else {
+                                // Payroll chưa tồn tại ⇒ tạo mới
+                                val newPayroll = hashMapOf(
+                                    "employeeId" to attendance.employeeId.id,
+                                    "groupId" to groupId,
+                                    "month" to attendance.startTime.month,
+                                    "year" to attendance.startTime.year,
+                                    "totalPayment" to 0.0,
+                                    "totalWage" to salaryAmount
+                                )
+                                db.collection("payrolls")
+                                    .add(newPayroll)
+                            }
+                        }
+                } else {
+                    Log.e(
+                        "AttendanceRepo_checkIn",
+                        "Old attendance not found"
+                    )
+                }
+            }
+            .addOnFailureListener {
+                Log.e(
+                    "AttendanceRepo_checkIn",
+                    "Failed to get old attendance",
+                    it
+                )
+            }
     }
 
     fun getAttendanceByEmployeeId(employeeId: String, month: Int, year: Int, onResult: (List<Attendance>) -> Unit) {
@@ -87,10 +269,5 @@ class AttendanceRepo @Inject constructor(
             .addOnFailureListener { exception ->
                 println("Error getting documents: $exception")
             }
-    }
-
-
-    fun updateAttendance(attendanceId: String, attendance: Attendance) {
-        val attendanceRef = db.collection("attendances").document(attendanceId).update(attendance.toMap())
     }
 }

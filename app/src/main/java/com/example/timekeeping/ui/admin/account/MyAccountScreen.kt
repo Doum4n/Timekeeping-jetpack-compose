@@ -145,7 +145,7 @@ fun MyAccountScreen(
                     onConfirm = {
                         onLogout()
                         showLogoutDialog.value = false
-
+                        SessionManager.forgetLoginSession()
                     },
                     onDismiss = {
                         showLogoutDialog.value = false

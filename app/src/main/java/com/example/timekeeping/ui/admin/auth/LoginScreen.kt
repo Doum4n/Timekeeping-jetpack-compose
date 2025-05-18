@@ -20,6 +20,7 @@ fun LoginScreen(
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
             onLoginSuccess()
+            viewModel.createLoginSession()
             viewModel.resetLoginState()
         }
     }

@@ -42,7 +42,8 @@ fun NavGraphBuilder.addAttendanceNav(navController: NavController) {
                         shiftId = it.id,
                         startTime = DateTimeMap.from(LocalDateTime.now()),
                         attendanceType = "Đi làm"
-                    )
+                    ),
+                    groupId
                 )
                 Toast.makeText(navController.context, "Vào ca thành công", Toast.LENGTH_SHORT).show()
             },

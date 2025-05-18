@@ -39,6 +39,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import androidx.core.net.toUri
 
 @Composable
 fun PaymentInputForm(
@@ -76,7 +77,7 @@ fun PaymentInputForm(
                 {
                     amount = it.amount.toString()
                     note = it.note
-                    selectedImageUri = Uri.parse(it.imageUrl)
+                    selectedImageUri = it.imageUrl.toUri()
                 })
         }
     }

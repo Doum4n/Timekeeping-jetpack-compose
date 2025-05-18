@@ -50,8 +50,8 @@ fun EmployeeCard(
     isPending: Boolean = false,
     onClick: (String) -> Unit = {},
     onLinkClick: (String) -> Unit = {},
-    onAcceptClick: () -> Unit = {},
-    onRejectClick: () -> Unit = {},
+    onAcceptClick: (String) -> Unit = {},
+    onRejectClick: (String) -> Unit = {},
     salaryViewModel: SalaryViewModel = hiltViewModel()
 ) {
 
@@ -128,40 +128,22 @@ fun EmployeeCard(
             }
 
             // --- Action Buttons ---
-            when {
-                isPending -> {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
-                            onClick = onAcceptClick,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("Chấp nhận")
-                        }
-                        Button(
-                            onClick = onRejectClick,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text("Từ chối")
-                        }
+            if (isPending) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { onAcceptClick(employee.id) }, modifier = Modifier.weight(1f)) {
+                        Text("Chấp nhận")
+                    }
+                    Button(onClick = { onRejectClick(employee.id) }, modifier = Modifier.weight(1f)) {
+                        Text("Từ chối")
                     }
                 }
-
-                employee.userId.isEmpty() -> {
-                    Button(
-                        onClick = { onLinkClick(employee.id) },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Liên kết")
-                    }
+            } else if (employee.userId.isEmpty()) {
+                Button(onClick = { onLinkClick(employee.id) }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Liên kết")
                 }
-
-                else -> {
-                    Button(
-                        onClick = {},
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Xem thông tin")
-                    }
+            } else {
+                Button(onClick = {}, modifier = Modifier.fillMaxWidth()) {
+                    Text("Xem thông tin")
                 }
             }
         }

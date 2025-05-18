@@ -14,16 +14,12 @@ class AttendanceViewModel @Inject constructor (
     private val attendanceRepository: AttendanceRepo
 ) : ViewModel() {
 
-    fun CheckIn(attendance: Attendance){
-        attendanceRepository.CheckIn(attendance)
+    fun CheckIn(attendance: Attendance, groupId: String, isUpdate: Boolean = false){
+        attendanceRepository.checkIn(attendance, groupId, isUpdate)
     }
 
     fun getAttendanceByShiftId(shiftId: String, dayCheckIn: Date, onResult: (List<Attendance>) -> Unit){
         attendanceRepository.getAttendanceByShiftId(shiftId, dayCheckIn, onResult)
-    }
-
-    fun updateAttendance(attendanceId: String, attendance: Attendance) {
-        attendanceRepository.updateAttendance(attendanceId, attendance)
     }
 
     fun getAttendanceByEmployeeId(employeeId: String, month: Int, year: Int, onResult: (List<Attendance>) -> Unit) {

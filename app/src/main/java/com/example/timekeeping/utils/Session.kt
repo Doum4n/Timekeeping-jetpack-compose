@@ -39,6 +39,14 @@ object SessionManager {
         Log.d("SessionManager", "Login session created: userId=$userId, employeeId=$employeeId")
     }
 
+    fun forgetLoginSession() {
+        checkInitialized()
+        editor.remove(KEY_USER_ID)
+        editor.remove(KEY_EMPLOYEE_ID)
+        editor.remove(ROLE)
+        editor.apply()
+    }
+
     fun getEmployeeId(): String? {
         checkInitialized()
         return pref.getString(KEY_EMPLOYEE_ID, null)
