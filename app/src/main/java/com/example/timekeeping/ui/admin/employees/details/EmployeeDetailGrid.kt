@@ -11,7 +11,18 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AssignmentInd
+import androidx.compose.material.icons.filled.AssignmentTurnedIn
+import androidx.compose.material.icons.filled.Beenhere
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.DriveFileRenameOutline
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Paid
+import androidx.compose.material.icons.filled.PersonAddAlt
+import androidx.compose.material.icons.filled.PersonRemoveAlt1
+import androidx.compose.material.icons.filled.PublishedWithChanges
+import androidx.compose.material.icons.filled.RequestQuote
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -126,22 +137,22 @@ fun EmployeeDetailGrid(
             ) {
                 IconButtonWithLabel(
                     onClick = {onAttendanceClick()},
-                    icon = Icons.Default.Warning,
+                    icon =  Icons.Default.Beenhere,
                     label = "Chấm công"
                 )
                 IconButtonWithLabel(
                     onClick = {onAdvanceSalaryClick()},
-                    icon = Icons.Default.Warning,
+                    icon = Icons.Default.RequestQuote,
                     label = "Ứng lương"
                 )
                 IconButtonWithLabel(
                     onClick = {onRequestAdvanceSalaryClick()},
-                    icon = Icons.Default.Warning,
+                    icon = Icons.Default.UploadFile,
                     label = "Gửi yêu cầu ứng lương"
                 )
                 IconButtonWithLabel(
                     onClick = {onBonusClick()},
-                    icon = Icons.Default.Warning,
+                    icon = Icons.Default.PersonAddAlt,
                     label = "Thưởng/Phụ cấp"
                 )
             }
@@ -152,23 +163,23 @@ fun EmployeeDetailGrid(
             ) {
                 IconButtonWithLabel(
                     onClick = {onMinusMoneyClick()},
-                    icon = Icons.Default.Warning,
+                    icon = Icons.Default.PersonRemoveAlt1,
                     label = "Trừ tiền"
                 )
                 IconButtonWithLabel(
                     onClick = {onPaymentClick()},
-                    icon = Icons.Default.Warning,
+                    icon = Icons.Default.Paid,
                     label = "Thanh toán"
                 )
                 IconButtonWithLabel(
                     onClick = {onEmployeeInfoClick()},
-                    icon = Icons.Default.Info,
+                    icon = Icons.Default.AssignmentInd,
                     label = "Thông tin nhân viên"
                 )
                 IconButtonWithLabel(
                     onClick = {
                         showDialog.value = true},
-                    icon = Icons.Default.Warning,
+                    icon = Icons.Default.Block,
                     label = "Ngừng chấm"
                 )
 
@@ -246,8 +257,149 @@ fun EmployeeDetailGrid(
     }
 }
 
-@Preview
+@Preview(showBackground = true, name = "Employee Detail Grid Preview")
 @Composable
-fun PreviewEmployeeDetailGrid(){
-    EmployeeDetailGrid("", "", state = rememberCalendarState())
+fun PreviewEmployeeDetailGridSimple() {
+    val showDialog = remember { mutableStateOf(false) }
+    val attendanceNumber = remember {
+        mutableStateMapOf(
+            WorkStatus.WORK to 5,
+            WorkStatus.HALF_DAY to 2,
+            WorkStatus.PAID_LEAVE to 1,
+            WorkStatus.UNPAID_LEAVE to 0,
+            WorkStatus.OTHER to 0
+        )
+    }
+
+    val mockCalendarState = rememberCalendarState()
+    val attendances = remember {
+        mutableStateMapOf<LocalDate, WorkStatus>().apply {
+            put(LocalDate.now(), WorkStatus.WORK)
+            put(LocalDate.now().plusDays(1), WorkStatus.HALF_DAY)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text("Tổng chưa thanh toán:")
+        Text("1.000.000 VNĐ")
+
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                IconButtonWithLabel(
+                    onClick = {},
+                    icon = Icons.Default.AssignmentInd,
+                    label = "Chấm công"
+                )
+                IconButtonWithLabel(
+                    onClick = {},
+                    icon = Icons.Default.RequestQuote,
+                    label = "Ứng lương"
+                )
+                IconButtonWithLabel(
+                    onClick = {},
+                    icon = Icons.Default.UploadFile,
+                    label = "Gửi yêu cầu ứng lương"
+                )
+                IconButtonWithLabel(
+                    onClick = {},
+                    icon = Icons.Default.PersonAddAlt,
+                    label = "Thưởng/Phụ cấp"
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start
+            ) {
+                IconButtonWithLabel(
+                    onClick = {},
+                    icon = Icons.Default.PersonRemoveAlt1,
+                    label = "Trừ tiền"
+                )
+                IconButtonWithLabel(
+                    onClick = {},
+                    icon = Icons.Default.Paid,
+                    label = "Thanh toán"
+                )
+                IconButtonWithLabel(
+                    onClick = {},
+                    icon = Icons.Default.AssignmentInd,
+                    label = "Thông tin nhân viên"
+                )
+                IconButtonWithLabel(
+                    onClick = { showDialog.value = true },
+                    icon = Icons.Default.Block,
+                    label = "Ngừng chấm"
+                )
+            }
+
+            if (showDialog.value) {
+                SimpleDialogS(
+                    title = "Thông báo",
+                    question = "Bạn có chắc chắn muốn dừng chấm công cho nhân viên này không?",
+                    onConfirm = { showDialog.value = false },
+                    onDismiss = { showDialog.value = false }
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 400.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                WorkScheduleCalendar(
+                    state = mockCalendarState,
+                    workStatusMap = attendances.toMap()
+                )
+            }
+
+            WorkStatus.entries.chunked(2).forEach { rowItems ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    rowItems.forEach { status ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(end = 8.dp)
+                                    .background(
+                                        color = when (status) {
+                                            WorkStatus.WORK -> Color.Green
+                                            WorkStatus.HALF_DAY -> Color.Yellow
+                                            WorkStatus.PAID_LEAVE -> Color.Blue
+                                            WorkStatus.UNPAID_LEAVE -> Color.Red
+                                            WorkStatus.OTHER -> Color.Gray
+                                        },
+                                        shape = CircleShape
+                                    )
+                                    .padding(8.dp)
+                            )
+                            Text(
+                                text = "${status.label}: ${attendanceNumber[status] ?: 0}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                    if (rowItems.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
 }

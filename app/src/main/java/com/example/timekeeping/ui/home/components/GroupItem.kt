@@ -53,7 +53,7 @@ fun GroupItem(group: Group, onClick: () -> Unit, onCheckInClick: () -> Unit = {}
                 modifier = Modifier.align(Alignment.Start),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
             ) {
-                Text("Châm công")
+                Text("Chấm công")
             }
         }
     }

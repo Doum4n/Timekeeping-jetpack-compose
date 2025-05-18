@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
@@ -75,7 +76,7 @@ fun GroupDetailTopBar(
                         onClick = {
                             showDialog.value = showDialog.value.not()
                         },
-                        leadingIcon = { Icon(Icons.Default.CheckCircle, null) }
+                        leadingIcon = { Icon(Icons.Default.Delete, null) }
                     )
 
                     if (showDialog.value){

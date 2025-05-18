@@ -62,10 +62,10 @@ fun NavGraphBuilder.addRuleInputNav(navController: NavController) {
                 onBack = navController::popBackStack,
                 onSave = { rule ->
                     ruleViewModel.updateRule(rule, {
-                        Toast.makeText(navController.context, "Rule updated successfully", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(navController.context, "Cập nhật quy tắt thành công", Toast.LENGTH_SHORT).show()
                         navController.popBackStack()
                     }, { exception ->
-                        Toast.makeText(navController.context, "Failed to update rule: ${exception.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(navController.context, "Lỗi khi cập nhật: ${exception.message}", Toast.LENGTH_SHORT).show()
                     })
                 }
         )

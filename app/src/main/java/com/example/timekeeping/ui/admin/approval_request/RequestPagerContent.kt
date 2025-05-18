@@ -98,7 +98,7 @@ fun RequestPagerContentPreview() {
                         employeeId = "2",
                         groupId = "1",
                         reason = "Vacation",
-                        status = "chờ duyệt"
+                        status = "Chờ duyệt"
                     )
                 ),
                 onAccept = {},

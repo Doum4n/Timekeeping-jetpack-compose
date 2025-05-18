@@ -1,5 +1,6 @@
 package com.example.timekeeping.navigation.admin.employee
 
+import android.util.Log
 import android.widget.Toast
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
@@ -20,7 +21,12 @@ fun NavGraphBuilder.addEmployeeScreen(navController: NavHostController) {
         route = Screen.EmployeeManagement.route,
         arguments = listOf(navArgument("groupId") { type = NavType.StringType })
     ) { backStackEntry ->
-        val groupId = backStackEntry.arguments?.getString("groupId") ?: ""
+        val groupId = backStackEntry.arguments?.getString("groupId")
+        if (groupId.isNullOrEmpty()) {
+            Log.e("Navigation", "groupId is null or empty -> abort screen")
+            return@composable
+        }
+
         val employeeViewModel: EmployeeViewModel = hiltViewModel()
         EmployeeManagementScreen(
             viewModel = employeeViewModel,
