@@ -126,7 +126,7 @@ fun ShiftItem(
             modifier = Modifier.fillMaxWidth()
         ) {
             if (attendance?.attendanceType == "Đi làm") {
-                Text("Chạm để ra ca")
+                Text("Chạm để kết thúc ca")
             } else {
                 Text("Chạm để vào ca")
             }
