@@ -1,4 +1,4 @@
-package com.example.timekeeping.ui.admin.check_in.grant
+package com.example.timekeeping.ui.admin.grant
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -9,6 +9,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.timekeeping.ui.admin.components.TopBarClassic
 import com.example.timekeeping.utils.QRCodeScannerScreen
 import com.example.timekeeping.view_models.EmployeeViewModel
+import com.example.timekeeping.view_models.GroupViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -18,16 +19,23 @@ fun GrantPermissionScreen(
     onPermissionGranted: () -> Unit,
     onPermissionDenied: () -> Unit,
     onBackClick: () -> Unit,
-    employeeViewModel: EmployeeViewModel = hiltViewModel()
+    employeeViewModel: EmployeeViewModel = hiltViewModel(),
+    groupViewModel: GroupViewModel = hiltViewModel()
 ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
 
-    val roleOptions = listOf("Admin", "Quản lý", "Nhân viên")
-    var selectedRole by remember { mutableStateOf(roleOptions.first()) }
+    val roleOptions = listOf("ADMIN", "EMPLOYEE")
+    var selectedRole by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
 
     var scannedResult by remember { mutableStateOf<String?>(null) }
+
+    var role by remember { mutableStateOf("") }
+
+    LaunchedEffect(role) {
+        selectedRole = if (roleOptions.contains(role)) role else roleOptions.first()
+    }
 
     LaunchedEffect (Unit) {
         employeeViewModel.getEmployeeById(
@@ -40,6 +48,10 @@ fun GrantPermissionScreen(
                 // Handle error
             }
         )
+
+        groupViewModel.getEmployeeRoleInGroup(groupId, employeeId) { role ->
+            selectedRole = role
+        }
     }
 
     Scaffold(
@@ -87,7 +99,9 @@ fun GrantPermissionScreen(
 
             OutlinedTextField(
                 value = scannedResult ?: "",
-                onValueChange = {},
+                onValueChange = {
+                    scannedResult = it
+                },
                 label = { Text("Mã người dùng") },
                 modifier = Modifier.fillMaxWidth(),
                 //enabled = false // Không cho sửa

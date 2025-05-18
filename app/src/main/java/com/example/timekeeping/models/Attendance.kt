@@ -10,6 +10,7 @@ import java.util.Date
 data class Attendance(
     @Exclude
     var id: String = "",
+    val groupId: String = "",
     val employeeId: DocumentReference = FirebaseFirestore.getInstance().document(""),
     val shiftId: String = "",
     val attendanceType: String = "",
@@ -19,6 +20,7 @@ data class Attendance(
 ) {
     fun toMap(): Map<String, Any?> {
         return mapOf(
+            "groupId" to groupId,
             "employeeId" to employeeId,
             "shiftId" to shiftId,
             "attendanceType" to attendanceType,

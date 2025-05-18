@@ -176,14 +176,26 @@ fun PaymentInputForm(
                                 }
 
                                 onPaymentClick(
-                                    Payment(
-                                        amount = amount.toInt(),
-                                        createdAt = DateTimeMap.from(LocalDateTime.now()),
-                                        imageUrl = imageUrl,
-                                        note = note,
-                                        groupId = paymentViewModel.groupId,
-                                        employeeId = paymentViewModel.employeeId
-                                    )
+                                    if (paymentViewModel.paymentId == "") {
+                                        Payment(
+                                            amount = amount.toInt(),
+                                            createdAt = DateTimeMap.from(LocalDateTime.now()),
+                                            imageUrl = imageUrl,
+                                            note = note,
+                                            groupId = paymentViewModel.groupId,
+                                            employeeId = paymentViewModel.employeeId
+                                        )
+                                    }else{
+                                        Payment(
+                                            id = paymentViewModel.paymentId,
+                                            amount = amount.toInt(),
+                                            createdAt = DateTimeMap.from(LocalDateTime.now()),
+                                            imageUrl = imageUrl,
+                                            note = note,
+                                            groupId = paymentViewModel.groupId,
+                                            employeeId = paymentViewModel.employeeId
+                                        )
+                                    }
                                 )
 
                                 inputStream?.close()

@@ -38,6 +38,7 @@ fun NavGraphBuilder.addAttendanceNav(navController: NavController) {
             onClick = {
                 attendanceViewModel.CheckIn(
                     Attendance(
+                        groupId = groupId,
                         employeeId = employeeId.convertToReference("employees"),
                         shiftId = it.id,
                         startTime = DateTimeMap.from(LocalDateTime.now()),

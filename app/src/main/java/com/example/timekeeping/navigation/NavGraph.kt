@@ -9,9 +9,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.timekeeping.CheckInScreen
 import com.example.timekeeping.RequestJoinGroupScreen
-import com.example.timekeeping.navigation.admin.account.addMyAccountNav
+import com.example.timekeeping.navigation.account.addMyAccountNav
 import com.example.timekeeping.navigation.admin.approvalRequest.addApprovalRequestNav
-import com.example.timekeeping.navigation.admin.auth.addAuthScreens
+import com.example.timekeeping.navigation.auth.addAuthScreens
 import com.example.timekeeping.navigation.admin.checkin.addCheckInNav
 import com.example.timekeeping.navigation.admin.employee.addEmployeeFormScreen
 import com.example.timekeeping.navigation.admin.employee.addEmployeeScreen
@@ -31,7 +31,7 @@ import com.example.timekeeping.navigation.admin.shifts.addShiftScreen
 import com.example.timekeeping.navigation.admin.team.addTeamFormScreen
 import com.example.timekeeping.navigation.admin.team.addTeamScreen
 import com.example.timekeeping.navigation.employee.addAttendanceNav
-import com.example.timekeeping.ui.admin.account.MyAccountScreen
+import com.example.timekeeping.ui.account.MyAccountScreen
 import com.example.timekeeping.ui.home.HomeScreen
 import com.example.timekeeping.utils.SessionManager
 import com.google.firebase.auth.FirebaseAuth
@@ -92,11 +92,15 @@ private fun NavGraphBuilder.addProfileScreen(navController: NavHostController) {
             onLogout = {
                 navController.navigate(Screen.Login.route)
                 FirebaseAuth.getInstance().signOut()
+                SessionManager.forgetLoginSession()
             },
             onShowCode = { employeeId ->
                 navController.navigate(Screen.MyQRCode.createRoute(employeeId))
             },
-            onEdit = { navController.navigate(Screen.EditAccountInfo.createRoute(SessionManager.getEmployeeId() ?: "")) }
+            onEdit = { navController.navigate(Screen.EditAccountInfo.createRoute(SessionManager.getEmployeeId() ?: "")) },
+            onChangePassword = {
+                navController.navigate(Screen.ChangePassword.route)
+            }
         )
     }
 }

@@ -17,8 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +36,7 @@ import com.example.timekeeping.ui.admin.groups.components.IconButtonWithLabel
 import com.example.timekeeping.view_models.AttendanceViewModel
 import com.example.timekeeping.view_models.EmployeeViewModel
 import com.example.timekeeping.view_models.PaymentViewModel
+import com.example.timekeeping.view_models.PayrollViewModel
 import com.example.timekeeping.view_models.SalaryViewModel
 import java.time.LocalDate
 
@@ -49,6 +49,7 @@ fun EmployeeDetailGrid(
     onEmployeeInfoClick: () -> Unit = {},
     attendanceViewModel: AttendanceViewModel = hiltViewModel(),
     salaryViewModel: SalaryViewModel = hiltViewModel(),
+    payrollViewModel: PayrollViewModel = hiltViewModel(),
     onBonusClick: () -> Unit = {},
     onMinusMoneyClick: () -> Unit = {},
     onAdvanceSalaryClick: () -> Unit = {},
@@ -64,17 +65,24 @@ fun EmployeeDetailGrid(
     val attendances = remember { mutableStateMapOf<LocalDate, WorkStatus>() }
     val attendanceNumber = remember { mutableStateMapOf<WorkStatus, Int>() }
 
-    val payments by paymentViewModel.payments.collectAsState()
-    val totalPayment by remember(payments) {
-        mutableStateOf(payments.sumOf { it.amount })
-    }
+    var totalPayment = remember { mutableIntStateOf(0) }
     val totalWage = remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
-        salaryViewModel.calculateTotalWage(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year) {
+//        salaryViewModel.calculateTotalWage(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year) {
+//            totalWage.value = it
+//        }
+        paymentViewModel.getPayments(groupId, employeeId, state.visibleMonth.monthValue, state.visibleMonth.year)
+
+        payrollViewModel.getTotalPaymentEmployeeByMonth(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year, {
+            totalPayment.intValue = it
+        }, {
+            //Exception
+        }
+        )
+        payrollViewModel.getTotalWageEmployeeByMonth(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year) {
             totalWage.value = it
         }
-        paymentViewModel.getPayments(groupId, employeeId, state.visibleMonth.monthValue, state.visibleMonth.year)
     }
 
     LaunchedEffect(state.visibleMonth) {
@@ -115,7 +123,7 @@ fun EmployeeDetailGrid(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text("Tổng chưa thanh toán:")
-        Text("${salaryViewModel.getTotalUnpaidSalaryByEmployee(totalWage.value, totalPayment)}")
+        Text("${salaryViewModel.getTotalUnpaidSalaryByEmployee(totalWage.value, totalPayment.intValue)}")
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)

@@ -27,4 +27,14 @@ class Employee_Group (
     var role: Role = Role.EMPLOYEE,
     var status: Status = Status.PENDING,
 ) {
+    fun toMap(): Map<String, Any> {
+        return mapOf(
+            "employeeId" to employeeId,
+            "groupId" to groupId,
+            "isCreator" to isCreator,
+            "dayJoined" to dayJoined,
+            "role" to role.toString(),
+            "status" to status.toString(),
+        )
+    }
 }

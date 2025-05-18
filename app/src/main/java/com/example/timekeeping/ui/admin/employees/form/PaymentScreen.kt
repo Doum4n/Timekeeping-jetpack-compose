@@ -44,6 +44,7 @@ import com.example.timekeeping.utils.SessionManager
 import com.example.timekeeping.utils.formatCurrency
 import com.example.timekeeping.view_models.EmployeeViewModel
 import com.example.timekeeping.view_models.PaymentViewModel
+import com.example.timekeeping.view_models.PayrollViewModel
 import com.example.timekeeping.view_models.SalaryViewModel
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -74,6 +75,7 @@ fun PaymentScreen(
     salaryViewModel: SalaryViewModel = hiltViewModel(),
     employeeViewModel: EmployeeViewModel = hiltViewModel(),
     paymentViewModel: PaymentViewModel = hiltViewModel(),
+    payrollViewModel: PayrollViewModel = hiltViewModel(),
     onEditClick: (String) -> Unit,
     onDeleteClick: (Payment) -> Unit
 ) {
@@ -83,22 +85,26 @@ fun PaymentScreen(
     val adjustmentsInfo = salaryViewModel.salaryInfo.collectAsState()
     val payments by paymentViewModel.payments.collectAsState()
 
-    val totalPayment by remember(payments) {
-        mutableStateOf(payments.sumOf { it.amount })
-    }
+    var totalPayment by remember { mutableStateOf(0) }
     val totalWage = remember { mutableStateOf(0) }
 
     val role = SessionManager.getRole()
 
     LaunchedEffect(state.visibleMonth) {
         salaryViewModel.getSalaryInfoByMonth(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year)
-        salaryViewModel.calculateTotalWage(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year) {
-            totalWage.value = it
-        }
+//        salaryViewModel.calculateTotalWage(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year) {
+//            totalWage.value = it
+//        }
         paymentViewModel.getPayments(groupId, employeeId, state.visibleMonth.monthValue, state.visibleMonth.year)
         employeeViewModel.getName(employeeId, {
             name = it
         })
+        payrollViewModel.getTotalPaymentEmployeeByMonth(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year, {
+            totalPayment = it
+        }, {})
+        payrollViewModel.getTotalWageEmployeeByMonth(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year) {
+            totalWage.value = it
+        }
     }
 
     Scaffold(

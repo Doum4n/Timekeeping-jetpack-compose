@@ -193,21 +193,35 @@ class EmployeeRepository @Inject constructor (
         onSuccess: (Salary) -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        db.collection("salaries").document(salaryDocId(groupId, employeeId))
+        db.collection("salaries")
+            .whereEqualTo("employeeId", employeeId)
+            .whereEqualTo("groupId", groupId)
             .get()
-            .addOnSuccessListener { document ->
-                document.toObject(Salary::class.java)?.let {
-                    if (it.salaryType in salaryTypes) {
-                        it.id = document.id
-                        onSuccess(it)
+            .addOnSuccessListener { documents ->
+                if (!documents.isEmpty) {
+                    val doc = documents.first()
+                    val salary = doc.toObject(Salary::class.java)
+                    if (salary.salaryType in salaryTypes) {
+                        salary.id = doc.id
+                        onSuccess(salary)
+                    } else {
+                        onFailure(Exception("Invalid salary type"))
                     }
+                } else {
+                    val salary = Salary(
+                        employeeId = employeeId,
+                        groupId = groupId,
+                    )
+                    onSuccess(salary)
+                    onFailure(NoSuchElementException("No salary found for employeeId=$employeeId and groupId=$groupId"))
                 }
-            }.addOnFailureListener { exception ->
+            }
+            .addOnFailureListener { exception ->
                 onFailure(exception)
                 Log.e("EmployeeRepository", "Error loading salary", exception)
-                exception.printStackTrace()
             }
     }
+
 
     fun saveEmployees(
         employees: List<Employee>,
@@ -230,7 +244,7 @@ class EmployeeRepository @Inject constructor (
                 dayJoined = Timestamp.now().toDate(),
                 role = Role.EMPLOYEE
             )
-            batch.set(employeeGroupRef, employeeData)
+            batch.set(employeeGroupRef, employeeData.toMap())
 
             val salaryRef = db.collection("salaries").document(salaryDocId(groupId, employeeId))
             val salaryData = hashMapOf(
@@ -268,10 +282,14 @@ class EmployeeRepository @Inject constructor (
             }
     }
 
-    fun updateEmployee(employee: Employee, salary: Salary) {
+    fun updateEmployee(employee: Employee, groupId: String, salary: Salary) {
         Log.d("EmployeeRepository_updateEmployee", "Updating employee: $employee, salary: $salary")
         db.collection("employees").document(employee.id).set(employee.toMap())
-        db.collection("salaries").document(salary.id).set(salary)
+        if(salary.id == ""){
+            db.collection("salaries").document(salaryDocId(groupId, employee.id)).set(salary)
+        }else{
+            db.collection("salaries").document(salary.id).set(salary)
+        }
     }
 
     fun updateEmployee(employee: Employee) {

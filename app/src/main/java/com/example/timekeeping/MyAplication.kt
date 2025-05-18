@@ -11,6 +11,6 @@ class MyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         FirebaseApp.initializeApp(this)
-        SessionManager.init(applicationContext)
+        SessionManager.init(this)
     }
 }

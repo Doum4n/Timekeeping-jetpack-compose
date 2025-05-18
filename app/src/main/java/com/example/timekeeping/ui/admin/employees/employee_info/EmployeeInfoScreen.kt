@@ -1,5 +1,6 @@
 package com.example.timekeeping.ui.admin.employees.employee_info
 
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -42,7 +43,10 @@ fun EmployeeInfoScreen(
             employeeId,
             groupId,
             onSuccess = { _salary -> salary = _salary },
-            onFailure = { exception -> /* handle lỗi nếu cần */ }
+            onFailure = {
+                salary = Salary(employeeId = employeeId, groupId = groupId)
+                Log.d("EmployeeInfoScreen", "Salary not found for employeeId: $employeeId")
+            }
         )
     }
 

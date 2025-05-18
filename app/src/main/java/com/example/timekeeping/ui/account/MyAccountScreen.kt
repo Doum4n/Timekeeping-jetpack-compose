@@ -1,4 +1,4 @@
-package com.example.timekeeping.ui.admin.account
+package com.example.timekeeping.ui.account
 
 import android.util.Log
 import androidx.compose.foundation.Image
@@ -57,7 +57,8 @@ fun MyAccountScreen(
     groupViewModel: GroupViewModel = hiltViewModel(),
     onShowCode: (String) -> Unit = {},
     onLogout: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onChangePassword: () -> Unit
 ) {
 
     var employee by remember { mutableStateOf(Employee()) }
@@ -113,7 +114,9 @@ fun MyAccountScreen(
                             SettingItem.CODE -> {
                                 onShowCode(employee.id)
                             }
-                            else -> {}
+                            SettingItem.CHANGE_PASSWORD -> {
+                                onChangePassword()
+                            }
                         }
                     })
                 })
@@ -145,7 +148,7 @@ fun MyAccountScreen(
                     onConfirm = {
                         onLogout()
                         showLogoutDialog.value = false
-                        SessionManager.forgetLoginSession()
+//                        SessionManager.forgetLoginSession()
                     },
                     onDismiss = {
                         showLogoutDialog.value = false

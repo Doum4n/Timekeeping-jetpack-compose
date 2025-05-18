@@ -13,7 +13,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PaymentViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val paymentRepo: PaymentRepo
+    private val paymentRepo: PaymentRepo,
 ) : ViewModel() {
 
     val groupId: String = savedStateHandle.get<String>("groupId") ?: ""

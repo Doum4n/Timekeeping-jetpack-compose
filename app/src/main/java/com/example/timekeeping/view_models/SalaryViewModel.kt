@@ -64,6 +64,12 @@ class SalaryViewModel @Inject constructor (
             }, onFailure)
     }
 
+    fun getSalaryInfo(groupId: String) {
+        salaryRepo.getSalaryInfo(groupId){
+            _salaryInfo.value = it
+        }
+    }
+
     fun calculateTotalWage(groupId: String, employeeId: String, month: Int, year: Int, onResult: (Int) -> Unit) {
         salaryRepo.calculateTotalWage(groupId, employeeId, month, year, onResult)
     }

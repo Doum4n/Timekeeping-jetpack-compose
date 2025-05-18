@@ -3,6 +3,7 @@ package com.example.timekeeping.repositories
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.SavedStateHandle
 import com.example.timekeeping.models.Attendance
 import com.example.timekeeping.models.Employee
 import com.example.timekeeping.models.Salary
@@ -18,7 +19,7 @@ import javax.inject.Inject
 
 class AttendanceRepo @Inject constructor(
     val db: FirebaseFirestore,
-    val salaryRepo: SalaryRepo
+    val salaryRepo: SalaryRepo,
 ) {
 
     fun checkIn(attendance: Attendance, groupId: String, isUpdate: Boolean = false) {
@@ -147,21 +148,13 @@ class AttendanceRepo @Inject constructor(
                                     val snapshot = transaction.get(payrollRef)
                                     val oldWage = snapshot.getLong("totalWage")?.toInt() ?: 0
 
-                                    // Tính lương cũ dựa trên oldAttendance
-                                    val oldSalaryAmount = if (oldAttendance.attendanceType != "Nghỉ không lương") {
-                                        when (salary.salaryType) {
-                                            "Ca" -> salary.salary * coefficient.toInt() + allowance
-                                            "Tháng" -> if (assignmentDates > 0) salary.salary / assignmentDates else 0
-                                            else -> 0
-                                        }
-                                    } else 0
+                                    val newSalaryAmount = if (attendance.attendanceType == "Chấm 1/2 công") salaryAmount/2
+                                    else if (attendance.attendanceType == "Đi làm" || attendance.attendanceType == "Nghỉ có lương") salaryAmount
+                                    else -salaryAmount
 
-                                    // Tính lương mới dựa trên attendance hiện tại
-                                    val newSalaryAmount = if (attendance.attendanceType != "Nghỉ không lương") salaryAmount else 0
+                                    val newWage = oldWage + newSalaryAmount
 
-                                    val newWage = oldWage - oldSalaryAmount + newSalaryAmount
-
-                                    Log.d("AttendanceRepo_checkIn", "Old wage: $oldWage, Old salary amount: $oldSalaryAmount, New salary amount: $newSalaryAmount, New wage: $newWage")
+                                    Log.d("AttendanceRepo_checkIn", "Old wage: $oldWage, New salary amount: $newSalaryAmount, New wage: $newWage")
 
                                     transaction.update(payrollRef, "totalWage", newWage)
                                 }.addOnSuccessListener {
@@ -206,8 +199,9 @@ class AttendanceRepo @Inject constructor(
             }
     }
 
-    fun getAttendanceByEmployeeId(employeeId: String, month: Int, year: Int, onResult: (List<Attendance>) -> Unit) {
+    fun getAttendanceByEmployeeId(groupId: String, employeeId: String, month: Int, year: Int, onResult: (List<Attendance>) -> Unit) {
         db.collection("attendances")
+            .whereEqualTo("groupId", groupId)
             .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
             .whereEqualTo("startTime.month", month)
             .whereEqualTo("startTime.year", year)
@@ -221,8 +215,9 @@ class AttendanceRepo @Inject constructor(
             }
     }
 
-    fun getAttendanceByEmployeeIdAndDate(employeeId: String, date: LocalDate, onResult: (List<Attendance>) -> Unit) {
+    fun getAttendanceByEmployeeIdAndDate(groupId: String, employeeId: String, date: LocalDate, onResult: (List<Attendance>) -> Unit) {
         db.collection("attendances")
+            .whereEqualTo("groupId", groupId)
             .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
             .whereEqualTo("startTime.year", date.year)
             .whereEqualTo("startTime.month", date.monthValue)

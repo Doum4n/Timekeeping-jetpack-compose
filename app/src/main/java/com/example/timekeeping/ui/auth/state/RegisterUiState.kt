@@ -1,4 +1,4 @@
-package com.example.timekeeping.ui.admin.auth.state
+package com.example.timekeeping.ui.auth.state
 
 import com.example.timekeeping.models.Name
 

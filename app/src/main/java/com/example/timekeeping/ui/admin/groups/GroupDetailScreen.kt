@@ -17,6 +17,7 @@ import com.example.timekeeping.ui.admin.groups.components.GroupDetailButtonGrid
 import com.example.timekeeping.ui.admin.groups.components.GroupDetailTopBar
 import com.example.timekeeping.utils.formatCurrency
 import com.example.timekeeping.utils.toPositive
+import com.example.timekeeping.view_models.PayrollViewModel
 import com.example.timekeeping.view_models.SalaryViewModel
 import java.time.LocalDate
 
@@ -35,22 +36,35 @@ fun GroupDetailScreen(
     onRuleManagementClick: () -> Unit,
     onApproveRequestClick: () -> Unit,
 
-    salaryViewModel: SalaryViewModel = hiltViewModel()
+    salaryViewModel: SalaryViewModel = hiltViewModel(),
+    payrollViewModel: PayrollViewModel = hiltViewModel()
 ) {
 
     var totalSalary by remember { mutableStateOf(0) }
-    var totalAdvance by remember { mutableStateOf(0) }
+    var totalPayment by remember { mutableStateOf(0) }
+    var totalSalaryByMonth by remember { mutableStateOf(0) }
+    var totalAdvanceByMonth by remember { mutableStateOf(0) }
 
     LaunchedEffect(groupId) {
         salaryViewModel.getTotalUnpaidSalary(groupId, LocalDate.now().monthValue, LocalDate.now().year, isAllTime = true)
 
-        salaryViewModel.getTotalSalary(groupId, LocalDate.now().monthValue, LocalDate.now().year) {
+        salaryViewModel.getTotalAdvanceMoney(groupId, LocalDate.now().monthValue, LocalDate.now().year) {
+            totalAdvanceByMonth = it
+        }
+
+        payrollViewModel.getTotalWageGroupByMonth(groupId, LocalDate.now().monthValue, LocalDate.now().year) {
+            totalSalaryByMonth -= it
+        }
+
+        payrollViewModel.getTotalPayment(groupId, ) {
+            totalPayment = it
+        }
+
+        payrollViewModel.getTotalWageGroup(groupId) {
             totalSalary = it
         }
 
-        salaryViewModel.getTotalAdvanceMoney(groupId, LocalDate.now().monthValue, LocalDate.now().year) {
-            totalAdvance = it
-        }
+        salaryViewModel.getSalaryInfo(groupId)
     }
 
     Scaffold(
@@ -78,7 +92,7 @@ fun GroupDetailScreen(
 
             item {
                 Text(
-                    salaryViewModel.totalUnpaidSalary.collectAsState().value.formatCurrency()
+                    salaryViewModel.getTotalUnpaidSalaryByEmployee(totalSalary, totalPayment).formatCurrency()
                 )
             }
 
@@ -103,7 +117,7 @@ fun GroupDetailScreen(
                             onSalaryClick(groupId)
                         }
                 ) {
-                    SalarySection(totalSalary = totalSalary.formatCurrency(), totalAdvance = totalAdvance.toPositive().formatCurrency())
+                    SalarySection(totalSalary = totalSalary.formatCurrency(), totalAdvance = totalAdvanceByMonth.toPositive().formatCurrency())
                 }
             }
 

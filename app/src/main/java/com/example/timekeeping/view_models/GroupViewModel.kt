@@ -19,17 +19,15 @@ class GroupViewModel @Inject constructor(
     val joinedGroups = mutableStateOf<List<Group>>(emptyList())
     val createdGroups = mutableStateOf<List<Group>>(emptyList())
 
-    init {
-        loadGroups()
-    }
+//    init {
+//        loadGroups()
+//    }
 
-    private fun loadGroups() {
-        // Load joined groups
+     fun loadGroups() {
         groupRepository.loadCreatedGroups { groups ->
             createdGroups.value = groups
         }
 
-        // Load created groups
         groupRepository.loadJoinedGroups{ groups ->
             joinedGroups.value = groups
         }
@@ -75,5 +73,9 @@ class GroupViewModel @Inject constructor(
         groupRepository.deleteGroup(groupId) {
             loadGroups()  // Reload groups after deleting
         }
+    }
+
+    fun getEmployeeRoleInGroup(groupId: String, employeeId: String, onResult: (String) -> Unit) {
+        groupRepository.getEmployeeRoleInGroup(groupId, employeeId, onResult)
     }
 }

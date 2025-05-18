@@ -1,9 +1,7 @@
-package com.example.timekeeping.ui.admin.auth
+package com.example.timekeeping.ui.auth
 
-import android.util.Log
 import androidx.compose.runtime.*
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.timekeeping.utils.SessionManager
 import com.example.timekeeping.view_models.AuthViewModel
 import com.google.firebase.auth.FirebaseAuth
 
@@ -11,6 +9,7 @@ import com.google.firebase.auth.FirebaseAuth
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onNavigateToRegister: () -> Unit,
+    onForgotPasswordClick: (String) -> Unit,
     viewModel: AuthViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.loginUiState.collectAsState()
@@ -19,8 +18,8 @@ fun LoginScreen(
     // Nếu login thành công từ flow bình thường
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            onLoginSuccess()
             viewModel.createLoginSession()
+            onLoginSuccess()
             viewModel.resetLoginState()
         }
     }
@@ -47,6 +46,7 @@ fun LoginScreen(
         onEmailChange = viewModel::onEmailChange,
         onPasswordChange = viewModel::onPasswordChange,
         onLoginClick = { viewModel.loginUser(uiState.email, uiState.password) },
-        onNavigateToRegister = onNavigateToRegister
+        onNavigateToRegister = onNavigateToRegister,
+        onForgotPasswordClick = { onForgotPasswordClick(uiState.email) }
     )
 }

@@ -1,9 +1,9 @@
-package com.example.timekeeping.ui.admin.auth
+package com.example.timekeeping.ui.auth
 
 import androidx.compose.runtime.*
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.timekeeping.models.Employee
-import com.example.timekeeping.ui.admin.auth.state.RegisterUiState
+import com.example.timekeeping.ui.auth.state.RegisterUiState
 import com.example.timekeeping.view_models.AuthViewModel
 import com.example.timekeeping.view_models.RegisterState
 

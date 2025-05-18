@@ -28,6 +28,7 @@ import com.example.timekeeping.ui.admin.calender.CalendarHeader
 import com.example.timekeeping.ui.admin.calender.CalendarState
 import com.example.timekeeping.ui.admin.calender.rememberCalendarState
 import com.example.timekeeping.ui.admin.components.TopBarClassic
+import com.example.timekeeping.view_models.PayrollViewModel
 import com.example.timekeeping.view_models.SalaryViewModel
 import java.time.format.DateTimeFormatter
 
@@ -46,6 +47,7 @@ fun MonthlyPayrollScreen(
     groupId: String,
     onBackClick: () -> Unit,
     salaryViewModel: SalaryViewModel = hiltViewModel(),
+    payrollViewModel: PayrollViewModel = hiltViewModel(),
     state: CalendarState = rememberCalendarState()
 ) {
 
@@ -71,12 +73,14 @@ fun MonthlyPayrollScreen(
     var totalPaidLeave by remember { mutableStateOf(0) }
     var totalBonus by remember { mutableStateOf(0) }
 
+    var totalPayment by remember { mutableStateOf(0) }
+
     LaunchedEffect(groupId, state.visibleMonth) {
         salaryViewModel.getTotalUnpaidSalary(groupId, state.visibleMonth.monthValue, state.visibleMonth.year)
 
-        salaryViewModel.getTotalSalary(groupId, state.visibleMonth.monthValue, state.visibleMonth.year) {
-            totalSalary = it
-        }
+//        salaryViewModel.getTotalSalary(groupId, state.visibleMonth.monthValue, state.visibleMonth.year) {
+//            totalSalary = it
+//        }
 
         salaryViewModel.getTotalAdvanceMoney(groupId, state.visibleMonth.monthValue, state.visibleMonth.year) {
             totalAdvance = it
@@ -89,6 +93,14 @@ fun MonthlyPayrollScreen(
 
         salaryViewModel.getTotalBonus(groupId, state.visibleMonth.monthValue, state.visibleMonth.year) {
             totalBonus = it
+        }
+
+        payrollViewModel.getTotalWageGroupByMonth(groupId, state.visibleMonth.monthValue, state.visibleMonth.year){
+            totalSalary = it
+        }
+
+        payrollViewModel.getTotalPaymentGroupByMonth(groupId, state.visibleMonth.monthValue, state.visibleMonth.year) {
+            totalPayment = it
         }
     }
 
@@ -127,7 +139,7 @@ fun MonthlyPayrollScreen(
                         lastDayFormatted,
                         totalSalary.toString(),
                         totalAdvance.toString(),
-                        salaryViewModel.totalUnpaidSalary.collectAsState().value.toString(),
+                        totalSalary.minus(-totalAdvance).minus(totalPayment).toString(),
                         totalWorkDay.toString(),
                         totalPaidLeave.toString(),
                         totalBonus.toString()

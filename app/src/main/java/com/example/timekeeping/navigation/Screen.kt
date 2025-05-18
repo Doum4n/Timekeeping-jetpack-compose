@@ -170,6 +170,8 @@ sealed class Screen(val route: String) {
     object EditAccountInfo : Screen("editAccountInfo/{employeeId}") {
         fun createRoute(employeeId: String) = "editAccountInfo/$employeeId"
     }
+
+    object ChangePassword : Screen("changePassword")
     // endregion
 
     // region Rule

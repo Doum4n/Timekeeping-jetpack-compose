@@ -1,4 +1,4 @@
-package com.example.timekeeping.ui.admin.account
+package com.example.timekeeping.ui.account
 
 import android.util.Log
 import androidx.compose.foundation.Image

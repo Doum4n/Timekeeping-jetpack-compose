@@ -1,4 +1,4 @@
-package com.example.timekeeping.ui.admin.auth
+package com.example.timekeeping.ui.auth
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,7 +22,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.timekeeping.ui.admin.auth.state.RegisterUiState
+import com.example.timekeeping.ui.auth.state.RegisterUiState
 
 @Composable
 fun RegisterScreenContent(

@@ -155,10 +155,11 @@ class SalaryRepo @Inject constructor(
 
                             firestore.runTransaction { transaction ->
                                 val snapshot = transaction.get(payrollRef)
-                                val oldPayment = snapshot.getDouble("totalPayment") ?: 0.0
-                                val newPayment = oldPayment - adjustment.adjustmentAmount
+                                val oldPayment = snapshot.getDouble("totalWage") ?: 0.0
+                                val newPayment = if (adjustment.adjustmentType in TypeAllowance.entries.map { it.label }) oldPayment + adjustment.adjustmentAmount
+                                else oldPayment - adjustment.adjustmentAmount.toPositive()
 
-                                transaction.update(payrollRef, "totalPayment", newPayment)
+                                transaction.update(payrollRef, "totalWage", newPayment)
                             }.addOnSuccessListener { onSuccess() }
                                 .addOnFailureListener { onFailure(it) }
                         } else {
@@ -307,22 +308,22 @@ class SalaryRepo @Inject constructor(
 //                }
                 "Ca" -> {
                     val attendancesRef = firestore.collection("attendances")
-                    attendancesRef
+                    attendancesRef.whereEqualTo("groupId", groupId)
                         .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
                         .whereEqualTo("startTime.month", month)
                         .whereEqualTo("startTime.year", year)
                         .get()
                         .addOnSuccessListener { snapshot ->
-                            val assignments = snapshot.toObjects(Attendance::class.java).filter { it.attendanceType in AttendanceType }
+                            val attendances = snapshot.toObjects(Attendance::class.java).filter { it.attendanceType in AttendanceType }
 
-                            if (assignments.isEmpty()) {
+                            if (attendances.isEmpty()) {
                                 onResult(0)
                                 return@addOnSuccessListener
                             }
 
                             var fetched = 0
 
-                            for (attendance in assignments) {
+                            for (attendance in attendances) {
                                 val shiftId = attendance.shiftId
                                 firestore.collection("shifts")
                                     .document(shiftId)
@@ -334,7 +335,7 @@ class SalaryRepo @Inject constructor(
                                         totalWage += (salaryAmount * coefficient + allowance).toInt()
 
                                         fetched++
-                                        if (fetched == assignments.size) {
+                                        if (fetched == attendances.size) {
 
                                             /* ============================================================================
                                              * Apply Rule
@@ -343,7 +344,7 @@ class SalaryRepo @Inject constructor(
 
                                             GlobalScope.launch {
                                                 val comparisonMap = mapOf(
-                                                    SalaryFieldName.NUMBER_OF_DAYS.label to assignments.size
+                                                    SalaryFieldName.NUMBER_OF_DAYS.label to attendances.size
                                                 )
                                                 try {
                                                     val finalWage = applyWageRules(groupId, comparisonMap, totalWage)
@@ -398,6 +399,19 @@ class SalaryRepo @Inject constructor(
                 val totalPayment = documents.sumOf { it.getLong("totalPayment")?.toInt() ?: 0 }
                 val totalWage = documents.sumOf { it.getLong("totalWage")?.toInt() ?: 0 }
                 val totalUnpaidSalary = totalWage - totalPayment
+
+                firestore.collection("attendances")
+                    .whereEqualTo("groupId", groupId)
+                    .whereEqualTo("startTime.month", month)
+                    .whereEqualTo("startTime.year", year)
+                    .get()
+                    .addOnSuccessListener { attendances ->
+                        val attendanceList = attendances.toObjects(Attendance::class.java)
+                        val workDays = attendanceList.count { it.attendanceType == "Đi làm" }
+
+
+                    }
+
                 onResult(totalUnpaidSalary)
                 Log.d("SalaryRepo_getTotalUnpaidSalary", "totalUnpaidSalary: $totalUnpaidSalary")
             }
@@ -705,11 +719,54 @@ class SalaryRepo @Inject constructor(
         onSuccess: () -> Boolean,
         onFailure: (Exception) -> Unit = {}
     ) {
-        firestore.collection("adjustments")
-            .document(adjustmentId)
-            .set(adjustments)
-            .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { onFailure(it) }
+        val payrollQuery = firestore.collection("payrolls")
+            .whereEqualTo("groupId", adjustments.groupId)
+            .whereEqualTo("employeeId", adjustments.employeeId)
+            .whereEqualTo("month", adjustments.createdAt.month)
+            .whereEqualTo("year", adjustments.createdAt.year)
+
+        val adjustmentRef = firestore.collection("adjustments").document(adjustmentId)
+
+        adjustmentRef.get().addOnSuccessListener { adjustmentSnapshot ->
+            val oldAdjustment = adjustmentSnapshot.toObject(Adjustment::class.java)
+
+            if (oldAdjustment == null) {
+                onFailure(Exception("Old adjustment not found"))
+                return@addOnSuccessListener
+            }
+
+            adjustmentRef.set(adjustments).addOnSuccessListener {
+                payrollQuery.get().addOnSuccessListener { querySnapshot ->
+                    val document = querySnapshot.documents.firstOrNull()
+                    if (document != null) {
+                        val payrollRef = document.reference
+
+                        firestore.runTransaction { transaction ->
+                            val snapshot = transaction.get(payrollRef)
+                            val oldWage = snapshot.getDouble("totalWage") ?: 0.0
+
+                            // Tính diff giữa điều chỉnh cũ và mới
+                            val oldAmount = oldAdjustment.adjustmentAmount.toPositive()
+                            val newAmount = adjustments.adjustmentAmount.toPositive()
+
+                            val diff = if (adjustments.adjustmentType in TypeAllowance.entries.map { it.label }) {
+                                newAmount - oldAmount
+                            } else {
+                                -(newAmount - oldAmount)
+                            }
+
+                            val newWage = oldWage + diff
+
+                            transaction.update(payrollRef, "totalWage", newWage)
+                            Log.d("SalaryRepo_updateAdjustSalary", "oldWage: $oldWage, diff: $diff, newWage: $newWage")
+                        }.addOnSuccessListener { onSuccess() }
+                            .addOnFailureListener { onFailure(it) }
+                    } else {
+                        onFailure(Exception("Payroll document not found"))
+                    }
+                }.addOnFailureListener { onFailure(it) }
+            }.addOnFailureListener { onFailure(it) }
+        }.addOnFailureListener { onFailure(it) }
     }
 
     fun deleteAdjustSalary(
@@ -917,6 +974,22 @@ class SalaryRepo @Inject constructor(
                     continuation.resume(originalValue) // Fallback nếu lỗi
                 }
         }
+    }
+
+    fun getSalaryInfo(
+        groupId: String,
+        onResult: (List<Adjustment>) -> Unit
+    ) {
+        firestore.collection("adjustments")
+            .whereEqualTo("groupId", groupId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val adjustments = snapshot.toObjects(Adjustment::class.java)
+                onResult(adjustments)
+            }
+            .addOnFailureListener {
+                onResult(emptyList())
+            }
     }
 
 }

@@ -117,7 +117,7 @@ class EmployeeViewModel @Inject constructor(
     }
 
     fun updateEmployee(employee: Employee, salary: Salary) {
-        employeeRepository.updateEmployee(employee, salary)
+        employeeRepository.updateEmployee(employee, groupId, salary)
     }
 
     fun updateEmployee(employee: Employee) {

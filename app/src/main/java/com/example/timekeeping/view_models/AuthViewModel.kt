@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.timekeeping.repositories.AuthRepository
-import com.example.timekeeping.ui.admin.auth.state.LoginUiState
+import com.example.timekeeping.ui.auth.state.LoginUiState
 import com.example.timekeeping.utils.SessionManager
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel

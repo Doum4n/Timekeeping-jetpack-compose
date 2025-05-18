@@ -20,7 +20,8 @@ class GroupRepository @Inject constructor (
     val db: FirebaseFirestore,
     val auth: FirebaseAuth,
 ) {
-    val currentUserId = auth.currentUser?.uid ?: ""
+    // Mỗi lần sẽ get là mỗi lần gọi lại auth.currentUser?.uid
+    val currentUserId: String get() = auth.currentUser?.uid ?: ""
 
     fun loadJoinedGroups(onResult: (List<Group>) -> Unit) {
         SessionManager.getEmployeeReferenceByUserId(currentUserId) { employeeRef ->
@@ -161,6 +162,21 @@ class GroupRepository @Inject constructor (
             .addOnSuccessListener { function() }
             .addOnFailureListener {
                 Log.e("GroupRepository", "Failed to delete group", it)
+            }
+    }
+
+    fun getEmployeeRoleInGroup(groupId: String, employeeId: String, onResult: (String) -> Unit) {
+        db.collection("employee_group")
+            .whereEqualTo("groupId", groupId.convertToReference("groups"))
+            .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val role = snapshot.documents.firstOrNull()?.getString("role") ?: ""
+                onResult(role)
+            }
+            .addOnFailureListener {
+                Log.e("GroupRepository", "Failed to get employee role", it)
+                onResult("")
             }
     }
 }

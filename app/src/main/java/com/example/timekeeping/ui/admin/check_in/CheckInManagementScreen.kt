@@ -189,6 +189,7 @@ fun CheckInManagementScreen(
                                     attendanceViewModel.CheckIn(
                                         Attendance(
                                             id = alreadyAttended.id,
+                                            groupId = groupId,
                                             employeeId = employeeId.convertToReference("employees"),
                                             shiftId = uiState.value.selectedShiftId!!,
                                             attendanceType = type.label,
@@ -201,6 +202,7 @@ fun CheckInManagementScreen(
                                 else
                                     attendanceViewModel.CheckIn(
                                         Attendance(
+                                            groupId = groupId,
                                             employeeId = employeeId.convertToReference("employees"),
                                             shiftId = uiState.value.selectedShiftId!!,
                                             attendanceType = type.label,

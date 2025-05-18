@@ -1,4 +1,4 @@
-package com.example.timekeeping.ui.admin.auth
+package com.example.timekeeping.ui.auth
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,7 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.timekeeping.ui.admin.auth.state.LoginUiState
+import com.example.timekeeping.ui.auth.state.LoginUiState
 
 @Composable
 fun LoginScreenContent(
@@ -29,7 +29,8 @@ fun LoginScreenContent(
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onLoginClick: () -> Unit,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onForgotPasswordClick: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -88,6 +89,15 @@ fun LoginScreenContent(
             Text("Chưa có tài khoản? Đăng ký ngay")
         }
 
+        TextButton(
+            onClick = { onForgotPasswordClick() },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Quên mật khẩu?")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         if (state.isLoading) {
             CircularProgressIndicator(modifier = Modifier.padding(16.dp))
         }
@@ -115,6 +125,7 @@ fun LoginScreenPreview() {
         onEmailChange = {},
         onPasswordChange = {},
         onLoginClick = {},
-        onNavigateToRegister = {}
+        onNavigateToRegister = {},
+        onForgotPasswordClick = {}
     )
 }

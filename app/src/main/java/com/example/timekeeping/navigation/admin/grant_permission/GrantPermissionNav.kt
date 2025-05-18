@@ -6,7 +6,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.timekeeping.navigation.Screen
-import com.example.timekeeping.ui.admin.check_in.grant.GrantPermissionScreen
+import com.example.timekeeping.ui.admin.grant.GrantPermissionScreen
 
 fun NavGraphBuilder.addGrantPermissionNav(navController: NavController) {
     composable(

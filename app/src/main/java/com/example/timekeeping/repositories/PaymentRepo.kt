@@ -41,7 +41,7 @@ class PaymentRepo @Inject constructor(
                             firestore.runTransaction { transaction ->
                                 val snapshot = transaction.get(payrollRef)
                                 val oldPayment = snapshot.getDouble("totalPayment") ?: 0.0
-                                val newPayment = oldPayment - payment.amount
+                                val newPayment = oldPayment + payment.amount
 
                                 transaction.update(payrollRef, "totalPayment", newPayment)
                             }.addOnSuccessListener { onSuccess() }
@@ -67,6 +67,7 @@ class PaymentRepo @Inject constructor(
                 val payments = it.documents.mapNotNull({ document ->
                     document.toObject(Payment::class.java)?.copy(id = document.id)
                 })
+                Log.d("PaymentRepo", "Payments: $payments")
                 onSuccess(payments)
             }).addOnFailureListener({
                 onFailure(it)
@@ -74,13 +75,39 @@ class PaymentRepo @Inject constructor(
     }
 
     fun updatePayment(groupId: String, employeeId: String, payment: Payment, onSuccess: () -> Unit = {}, onFailure: (Exception) -> Unit = {}) {
-        firestore.collection("salaries")
-            .document(salaryDocId(groupId, employeeId))
-            .collection("payments-${payment.createdAt.year}-${payment.createdAt.month}")
+
+        Log.d("PaymentRepo", "Update payment: $payment")
+
+        val payrollQuery = firestore.collection("payrolls")
+            .whereEqualTo("groupId", groupId)
+            .whereEqualTo("employeeId", employeeId)
+            .whereEqualTo("month", payment.createdAt.month)
+            .whereEqualTo("year", payment.createdAt.year)
+
+        firestore.collection("payments")
             .document(payment.id)
             .set(payment)
             .addOnSuccessListener({
-                onSuccess()
+                payrollQuery.get()
+                    .addOnSuccessListener { querySnapshot ->
+                        val document = querySnapshot.documents.firstOrNull()
+                        if (document != null) {
+                            val payrollRef = document.reference
+
+                            firestore.runTransaction { transaction ->
+                                val snapshot = transaction.get(payrollRef)
+                                val oldPayment = snapshot.getDouble("totalPayment") ?: 0.0
+                                val diff = payment.amount - oldPayment
+                                val newPayment = oldPayment + diff
+
+                                transaction.update(payrollRef, "totalPayment", newPayment)
+                            }.addOnSuccessListener { onSuccess() }
+                                .addOnFailureListener { onFailure(it) }
+                        } else {
+                            onFailure(Exception("Payroll document not found"))
+                        }
+                    }
+                    .addOnFailureListener { onFailure(it) }
             }).addOnFailureListener({
                 onFailure(it)
             })

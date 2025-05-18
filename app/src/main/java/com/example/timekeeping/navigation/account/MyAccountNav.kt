@@ -1,4 +1,4 @@
-package com.example.timekeeping.navigation.admin.account
+package com.example.timekeeping.navigation.account
 
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -7,9 +7,12 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.timekeeping.navigation.Screen
-import com.example.timekeeping.ui.admin.account.MyAccountInputScreen
-import com.example.timekeeping.ui.admin.account.MyQRCodeScreen
+import com.example.timekeeping.ui.account.ChangePasswordScreen
+import com.example.timekeeping.ui.account.MyAccountInputScreen
+import com.example.timekeeping.ui.account.MyQRCodeScreen
+import com.example.timekeeping.utils.SessionManager
 import com.example.timekeeping.view_models.EmployeeViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 fun NavGraphBuilder.addMyAccountNav(navController: NavController){
     composable(
@@ -39,6 +42,15 @@ fun NavGraphBuilder.addMyAccountNav(navController: NavController){
             onUpdate = { employee ->
                 employeeViewModel.updateEmployee(employee)
             }
+        )
+    }
+
+    composable(
+        route = Screen.ChangePassword.route
+    ){
+        backStackEntry ->
+        ChangePasswordScreen(
+            onBackClick = { navController.popBackStack() }
         )
     }
 }

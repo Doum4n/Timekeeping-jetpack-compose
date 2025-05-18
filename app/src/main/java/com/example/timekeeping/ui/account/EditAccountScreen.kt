@@ -1,4 +1,4 @@
-package com.example.timekeeping.ui.admin.account
+package com.example.timekeeping.ui.account
 
 import android.net.Uri
 import android.util.Log

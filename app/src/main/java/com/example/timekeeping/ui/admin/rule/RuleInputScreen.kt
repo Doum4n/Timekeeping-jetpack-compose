@@ -81,7 +81,7 @@ fun RuleInputScreen(
     }
 
     var operator by remember { mutableStateOf("==") }
-    var value by remember { mutableStateOf("") }
+    var value by remember { mutableStateOf(0) }
 
     val operatorOptions = listOf("==", "!=", ">", "<", ">=", "<=")
 
@@ -111,8 +111,8 @@ fun RuleInputScreen(
                         else -> ""
                     }
                     value = when (rule.condition) {
-                        is ConditionNode.FieldCondition -> rule.condition.value.toString()
-                        else -> ""
+                        is ConditionNode.FieldCondition -> rule.condition.value
+                        else -> 0
                     }
                     conditions.clear()
                     conditions.addAll(when (rule.condition) {
@@ -371,9 +371,12 @@ private fun TypeItem(
         value = inputValue,
         onValueChange = {
             inputValue = it
-            onConditionChange(
-                ConditionNode.FieldCondition(selectedField, selectedOperator, inputValue.toInt())
-            )
+            val intValue = it.toIntOrNull()
+            if (intValue != null) {
+                onConditionChange(
+                    ConditionNode.FieldCondition(selectedField, selectedOperator, intValue)
+                )
+            }
         },
         label = { Text("Giá trị") }
     )
