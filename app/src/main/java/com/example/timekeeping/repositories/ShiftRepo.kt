@@ -2,6 +2,7 @@ package com.example.timekeeping.repositories
 
 import android.util.Log
 import com.example.timekeeping.models.Employee
+import com.example.timekeeping.models.Payroll
 import com.example.timekeeping.models.Shift
 import com.example.timekeeping.models.Time
 import com.example.timekeeping.utils.DateTimeMap
@@ -10,12 +11,16 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
 import javax.inject.Inject
 
 class ShiftRepository @Inject constructor(
-    private val db: FirebaseFirestore
+    private val db: FirebaseFirestore,
+    private val salaryRepo: SalaryRepo
 ) {
 
     // Load shifts by groupId
@@ -44,11 +49,57 @@ class ShiftRepository @Inject constructor(
     }
 
     // Update shift
-    fun updateShift(shiftId: String, shift: Shift, onSuccess: () -> Unit) {
+    fun updateShift(
+        shiftId: String,
+        shift: Shift,
+        onSuccess: () -> Unit
+    ) {
+
+//        val oldShift = Shift()
+//        getShiftById(shiftId) {
+//            oldShift.allowance = it?.allowance ?: 0
+//            oldShift.coefficient = it?.coefficient ?: 1.0
+//        }
+
         db.collection("shifts").document(shiftId).set(shift).addOnSuccessListener {
-            onSuccess()
+//            db.collection("payrolls")
+//                .whereEqualTo("groupId", shift.groupId)
+//                .get()
+//                .addOnSuccessListener { payrolls ->
+//                    CoroutineScope(Dispatchers.IO).launch {
+//
+//                        val map = mutableMapOf<String, Int>()
+//
+//                        for (doc in payrolls.documents) {
+//                            val payroll = doc.toObject(Payroll::class.java) ?: continue
+//                            salaryRepo.getTotalSalary(shift.groupId, payroll.month, payroll.year){
+//                                map[payroll.employeeId] = it
+//                            }
+//                        }
+//
+//                        db.runTransaction { transaction ->
+//                            for (doc in payrolls.documents) {
+//                                val payroll = doc.toObject(Payroll::class.java) ?: continue
+//                                val totalSalary = map[payroll.employeeId] ?: continue
+//
+//                                var newTotalWage = totalSalary
+//
+//                                val diff = payroll.totalWage - newTotalWage
+//
+//                                if (diff != 0) {
+//                                    newTotalWage += diff
+//                                }
+//
+//                                transaction.update(doc.reference, "totalWage", newTotalWage)
+//                            }
+//                        }.addOnSuccessListener {
+                            onSuccess()
+//                        }
+//                    }
+//                }
         }
     }
+
 
     // Delete shift
     fun deleteShift(shiftId: String, onSuccess: () -> Unit) {

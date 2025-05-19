@@ -51,6 +51,7 @@ object RepositoryModule {
     fun provideShiftRepository(): ShiftRepository {
         return ShiftRepository(
             FirebaseFirestore.getInstance(),
+            SalaryRepo(FirebaseFirestore.getInstance()),
         )
     }
 

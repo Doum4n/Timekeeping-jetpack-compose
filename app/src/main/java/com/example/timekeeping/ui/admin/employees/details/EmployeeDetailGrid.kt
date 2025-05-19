@@ -80,9 +80,9 @@ fun EmployeeDetailGrid(
     val totalWage = remember { mutableStateOf(0) }
 
     LaunchedEffect(Unit) {
-//        salaryViewModel.calculateTotalWage(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year) {
-//            totalWage.value = it
-//        }
+        salaryViewModel.calculateTotalWage(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year) {
+            totalWage.value = it
+        }
         paymentViewModel.getPayments(groupId, employeeId, state.visibleMonth.monthValue, state.visibleMonth.year)
 
         payrollViewModel.getTotalPaymentEmployeeByMonth(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year, {
@@ -91,9 +91,9 @@ fun EmployeeDetailGrid(
             //Exception
         }
         )
-        payrollViewModel.getTotalWageEmployeeByMonth(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year) {
-            totalWage.value = it
-        }
+//        payrollViewModel.getTotalWageEmployeeByMonth(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year) {
+//            totalWage.value = it
+//        }
     }
 
     LaunchedEffect(state.visibleMonth) {

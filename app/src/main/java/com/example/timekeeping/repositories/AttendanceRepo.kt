@@ -148,8 +148,8 @@ class AttendanceRepo @Inject constructor(
                                     val snapshot = transaction.get(payrollRef)
                                     val oldWage = snapshot.getLong("totalWage")?.toInt() ?: 0
 
-                                    val newSalaryAmount = if (attendance.attendanceType == "Chấm 1/2 công") salaryAmount/2
-                                    else if (attendance.attendanceType == "Đi làm" || attendance.attendanceType == "Nghỉ có lương") salaryAmount
+                                    val newSalaryAmount = if (attendance.attendanceType == "Chấm 1/2 công") -salaryAmount/2
+                                    else if (attendance.attendanceType == "Đi làm" || attendance.attendanceType == "Nghỉ có lương") salaryAmount/2
                                     else -salaryAmount
 
                                     val newWage = oldWage + newSalaryAmount

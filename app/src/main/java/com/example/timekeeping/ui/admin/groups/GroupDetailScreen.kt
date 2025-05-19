@@ -92,7 +92,7 @@ fun GroupDetailScreen(
 
             item {
                 Text(
-                    salaryViewModel.getTotalUnpaidSalaryByEmployee(totalSalary, totalPayment).formatCurrency()
+                    (totalSalary - totalPayment).formatCurrency()
                 )
             }
 

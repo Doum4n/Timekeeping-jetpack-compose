@@ -7,6 +7,7 @@ import com.example.timekeeping.models.Attendance
 import com.example.timekeeping.models.Payment
 import com.example.timekeeping.models.Salary
 import com.example.timekeeping.models.Shift
+import com.example.timekeeping.models.applyWageRules
 import com.example.timekeeping.ui.admin.employees.form.TypeAllowance
 import com.example.timekeeping.ui.admin.employees.form.TypeDeduct
 import com.example.timekeeping.ui.admin.rule.SalaryFieldName
@@ -774,11 +775,39 @@ class SalaryRepo @Inject constructor(
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
+        val payrollQuery = firestore.collection("payrolls")
+            .whereEqualTo("groupId", adjustment.groupId)
+            .whereEqualTo("employeeId", adjustment.employeeId)
+            .whereEqualTo("month", adjustment.createdAt.month)
+            .whereEqualTo("year", adjustment.createdAt.year)
+
         firestore.collection("adjustments")
             .document(adjustment.id)
             .delete()
-            .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { onFailure(it) }
+            .addOnSuccessListener {
+
+                payrollQuery.get().addOnSuccessListener { querySnapshot ->
+                    val document = querySnapshot.documents.firstOrNull()
+                    if (document != null) {
+                        val payrollRef = document.reference
+
+                        firestore.runTransaction { transaction ->
+
+                            val snapshot = transaction.get(payrollRef)
+                            val oldWage = snapshot.getDouble("totalWage") ?: 0.0
+                            val newWage = oldWage - adjustment.adjustmentAmount.toPositive()
+
+                            transaction.update(payrollRef, "totalWage", newWage)
+                        }.addOnSuccessListener { onSuccess() }
+                            .addOnFailureListener { onFailure(it) }
+                    } else {
+                        onFailure(Exception("Payroll document not found"))
+                    }
+
+                    onSuccess()
+                }
+                    .addOnFailureListener { onFailure(it) }
+            }
     }
 
     fun getSalaryById(groupId: String, employeeId: String, onSuccess: (Salary?) -> Unit) {
@@ -947,34 +976,6 @@ class SalaryRepo @Inject constructor(
      * Apply Rule
      * ============================================================================
      */
-
-    suspend fun applyWageRules(
-        groupId: String,
-        comparisonMap: Map<String, Int>,
-        originalValue: Int
-    ): Int {
-        return suspendCoroutine { continuation ->
-            firestore.collection("rules")
-                .whereEqualTo("groupId", groupId)
-                .get()
-                .addOnSuccessListener { snapshot ->
-                    var adjustedValue = originalValue
-                    for (doc in snapshot.documents) {
-                        val data = doc.data ?: continue
-                        val conditionMap = data["condition"] as? Map<String, Any> ?: continue
-                        val condition = RuleEvaluator.mapToConditionNode(conditionMap)
-                        val bonus = (data["bonus"] as? Number)?.toInt() ?: 0
-                        if (RuleEvaluator.evaluate(condition, comparisonMap)) {
-                            adjustedValue += bonus
-                        }
-                    }
-                    continuation.resume(adjustedValue) // Kết thúc bất đồng bộ và trả giá trị
-                }
-                .addOnFailureListener {
-                    continuation.resume(originalValue) // Fallback nếu lỗi
-                }
-        }
-    }
 
     fun getSalaryInfo(
         groupId: String,

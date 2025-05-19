@@ -37,8 +37,8 @@ data class Shift(
     val shiftName: String = "",
     val startTime: Time = Time(),
     val endTime: Time = Time(),
-    val allowance: Int = 0,
-    val coefficient: Double = 1.0,
+    var allowance: Int = 0,
+    var coefficient: Double = 1.0,
     val groupId: String = ""
 ) {
 

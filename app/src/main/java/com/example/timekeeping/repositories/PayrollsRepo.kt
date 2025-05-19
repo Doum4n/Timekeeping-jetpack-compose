@@ -2,7 +2,13 @@ package com.example.timekeeping.repositories
 
 import android.util.Log
 import com.example.timekeeping.models.Payroll
+import com.example.timekeeping.models.applyWageRules
+import com.example.timekeeping.ui.admin.rule.SalaryFieldName
+import com.example.timekeeping.utils.convertToReference
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class PayrollsRepo @Inject constructor(
@@ -53,6 +59,7 @@ class PayrollsRepo @Inject constructor(
 
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun getTotalWageEmployeeByMonth(
         groupId: String,
         employeeId: String,
@@ -70,7 +77,42 @@ class PayrollsRepo @Inject constructor(
                 if (!documents.isEmpty) {
                     val payroll = documents.documents[0].toObject(Payroll::class.java)
                     if (payroll != null) {
-                        onSuccess(payroll.totalWage)
+                        db.collection("attendances")
+                            .whereEqualTo("groupId", groupId)
+                            .whereEqualTo("employeeId", employeeId.convertToReference("employees"))
+                            .get()
+                            .addOnSuccessListener { documents ->
+                                val countMap = mutableMapOf<String, Int>()
+                                val document = documents.documents.firstOrNull()
+
+                                if(document != null){
+                                    val employeeId = document.getDocumentReference("employeeId")?.id
+                                    if (employeeId != null) {
+                                        countMap[employeeId] = countMap.getOrDefault(employeeId, 0) + 1
+                                    }
+                                }
+
+                                for ((employeeId, count) in countMap) {
+                                    GlobalScope.launch {
+                                        val comparisonMap = mapOf(
+                                            SalaryFieldName.NUMBER_OF_DAYS.label to count
+                                        )
+
+                                        try {
+                                            val finalWage = applyWageRules(groupId, comparisonMap, payroll.totalWage)
+
+                                            onSuccess(finalWage) // Trả kết quả sau khi có finalWage
+                                        } catch (e: Exception) {
+                                            //onSuccess(totalWage) // Fallback nếu có lỗi
+                                        }
+                                    }
+                                    Log.d("AttendanceCount", "Employee $employeeId has $count attendances")
+                                }
+                            }
+                            .addOnFailureListener { exception ->
+                                Log.w("Firestore", "Error getting documents: ", exception)
+                            }
+
                         Log.d("PayrollRepo", "totalWage: ${payroll.totalWage}")
                     }
                 }
@@ -117,6 +159,7 @@ class PayrollsRepo @Inject constructor(
             }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun getTotalWage(
         groupId: String,
         onSuccess: (Int) -> Unit = {},
@@ -131,7 +174,42 @@ class PayrollsRepo @Inject constructor(
                     totalUnpaid += payroll.totalWage
                     Log.d("PayrollRepo", "totalUnpaid: $totalUnpaid")
                 }
-                onSuccess(totalUnpaid)
+
+                db.collection("attendances")
+                    .whereEqualTo("groupId", groupId)
+                    .get()
+                    .addOnSuccessListener { documents ->
+                        val countMap = mutableMapOf<String, Int>()
+
+                        for (document in documents) {
+                            val employeeId = document.getDocumentReference("employeeId")?.id
+                            if (employeeId != null) {
+                                countMap[employeeId] = countMap.getOrDefault(employeeId, 0) + 1
+                            }
+                        }
+
+                        for ((employeeId, count) in countMap) {
+                            GlobalScope.launch {
+                                val comparisonMap = mapOf(
+                                    SalaryFieldName.NUMBER_OF_DAYS.label to count
+                                )
+
+                                try {
+                                    val finalWage = applyWageRules(groupId, comparisonMap, totalUnpaid)
+                                    onSuccess(finalWage) // Trả kết quả sau khi có finalWage
+                                } catch (e: Exception) {
+                                    //onSuccess(totalWage) // Fallback nếu có lỗi
+                                }
+                            }
+                            Log.d("AttendanceCount", "Employee $employeeId has $count attendances")
+                        }
+                    }
+                    .addOnFailureListener { exception ->
+                        Log.w("Firestore", "Error getting documents: ", exception)
+                    }
+
+
+//                onSuccess(totalUnpaid)
             }
     }
 

@@ -3,18 +3,90 @@ package com.example.timekeeping.repositories
 import android.util.Log
 import com.cloudinary.transformation.Condition
 import com.example.timekeeping.models.ConditionNode
+import com.example.timekeeping.models.Payroll
 import com.example.timekeeping.models.Rule
+import com.example.timekeeping.models.applyWageRules
+import com.example.timekeeping.ui.admin.rule.SalaryFieldName
 import com.example.timekeeping.utils.RuleEvaluator
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Transaction
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class RuleRepo @Inject constructor(
     private val firestore: FirebaseFirestore
 ) {
+    @OptIn(DelicateCoroutinesApi::class)
     fun createRule(rule: Rule, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
         firestore.collection("rules")
             .add(rule)
-            .addOnSuccessListener { onSuccess() }
+            .addOnSuccessListener {
+
+//                val totalWageMap = mutableMapOf<String, Int>()
+//                val totalNewWageMap = mutableMapOf<String, Int>()
+//
+//                firestore.collection("attendances")
+//                    .whereEqualTo("groupId", rule.groupId)
+//                    .get()
+//                    .addOnSuccessListener { documents ->
+//
+//                        val countMap = mutableMapOf<String, Int>()
+//
+//                        for (document in documents) {
+//                            val employeeId = document.getDocumentReference("employeeId")?.id
+//                            if (employeeId != null) {
+//                                countMap[employeeId] =
+//                                    countMap.getOrDefault(employeeId, 0) + 1
+//                            }
+//                        }
+//
+//                        for ((employeeId, count) in countMap) {
+//                            GlobalScope.launch {
+//                                val comparisonMap = mapOf(
+//                                    SalaryFieldName.NUMBER_OF_DAYS.label to count
+//                                )
+//
+//                                try {
+//                                    val finalWage = applyWageRules(
+//                                        rule.groupId,
+//                                        comparisonMap,
+//                                        totalWageMap[employeeId]!!
+//                                    )
+//                                    totalNewWageMap[employeeId] = finalWage
+//                                } catch (e: Exception) {
+//                                    //onSuccess(totalWage) // Fallback nếu có lỗi
+//                                }
+//                            }
+//                            Log.d(
+//                                "AttendanceCount", "Employee $employeeId has $count attendances"
+//                            )
+//                        }
+//
+//                        firestore.collection("payrolls")
+//                            .whereEqualTo("groupId", rule.groupId)
+//                            .get()
+//                            .addOnSuccessListener {
+//                                for (document in it) {
+//                                    val payroll = document.toObject(Payroll::class.java)
+//                                    totalWageMap[payroll.employeeId] = payroll.totalWage
+//
+//                                    firestore.runTransaction {
+//                                        it.update(
+//                                            document.reference,
+//                                            "totalWage",
+//                                            totalWageMap[payroll.employeeId]
+//                                        )
+//                                    }
+//                                }
+//                            }
+//                    }
+//                    .addOnFailureListener { exception ->
+//                        Log.w("Firestore", "Error getting documents: ", exception)
+//                    }
+                onSuccess()
+            }
             .addOnFailureListener { onFailure(it) }
     }
 
@@ -86,7 +158,8 @@ class RuleRepo @Inject constructor(
         firestore.collection("rules").document(ruleId)
             .get()
             .addOnSuccessListener { doc ->
-                val data = doc.data ?: return@addOnSuccessListener onFailure(Exception("Rule not found"))
+                val data =
+                    doc.data ?: return@addOnSuccessListener onFailure(Exception("Rule not found"))
                 val rule = Rule(
                     id = doc.id,
                     groupId = data["groupId"] as String,

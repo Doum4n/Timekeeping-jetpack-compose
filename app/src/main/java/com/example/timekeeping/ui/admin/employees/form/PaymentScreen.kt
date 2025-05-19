@@ -92,19 +92,22 @@ fun PaymentScreen(
 
     LaunchedEffect(state.visibleMonth) {
         salaryViewModel.getSalaryInfoByMonth(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year)
-//        salaryViewModel.calculateTotalWage(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year) {
-//            totalWage.value = it
-//        }
+        salaryViewModel.calculateTotalWage(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year) {
+            totalWage.value = it
+        }
+
+        // Lấy tất cả payment để hiển thi
         paymentViewModel.getPayments(groupId, employeeId, state.visibleMonth.monthValue, state.visibleMonth.year)
+
         employeeViewModel.getName(employeeId, {
             name = it
         })
         payrollViewModel.getTotalPaymentEmployeeByMonth(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year, {
             totalPayment = it
         }, {})
-        payrollViewModel.getTotalWageEmployeeByMonth(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year) {
-            totalWage.value = it
-        }
+//        payrollViewModel.getTotalWageEmployeeByMonth(groupId, employeeId, state.visibleMonth.month.value, state.visibleMonth.year) {
+//            totalWage.value = it
+//        }
     }
 
     Scaffold(
