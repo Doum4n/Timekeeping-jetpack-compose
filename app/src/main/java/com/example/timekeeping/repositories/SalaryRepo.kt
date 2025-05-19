@@ -795,7 +795,10 @@ class SalaryRepo @Inject constructor(
 
                             val snapshot = transaction.get(payrollRef)
                             val oldWage = snapshot.getDouble("totalWage") ?: 0.0
-                            val newWage = oldWage - adjustment.adjustmentAmount.toPositive()
+                            var newWage = if(adjustment.adjustmentType in TypeAllowance.entries.map { it.label })
+                                oldWage - adjustment.adjustmentAmount.toPositive()
+                            else
+                                oldWage + adjustment.adjustmentAmount.toPositive()
 
                             transaction.update(payrollRef, "totalWage", newWage)
                         }.addOnSuccessListener { onSuccess() }
