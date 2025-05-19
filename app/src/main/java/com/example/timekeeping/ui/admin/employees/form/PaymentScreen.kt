@@ -42,6 +42,7 @@ import com.example.timekeeping.ui.admin.calender.CalendarState
 import com.example.timekeeping.ui.admin.components.TopBarClassic
 import com.example.timekeeping.utils.SessionManager
 import com.example.timekeeping.utils.formatCurrency
+import com.example.timekeeping.utils.toPositive
 import com.example.timekeeping.view_models.EmployeeViewModel
 import com.example.timekeeping.view_models.PaymentViewModel
 import com.example.timekeeping.view_models.PayrollViewModel
@@ -168,9 +169,9 @@ fun PaymentContent(name: String, state: CalendarState, salaryInfo: List<Adjustme
         totalWorkingSalary = totalWage,
         totalBonus = totalBonus,
         totalSalary = totalWage + totalBonus,
-        totalAdvance = totalAdvance,
+        totalAdvance = totalAdvance.toPositive(),
         totalDeduct = totalDeduct,
-        totalPaid = totalPayment,
+        totalPaid = totalPayment.toPositive(),
         totalUnpaid = totalUnpaid
     )
 

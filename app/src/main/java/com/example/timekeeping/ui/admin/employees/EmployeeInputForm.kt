@@ -3,6 +3,7 @@ package com.example.timekeeping.ui.admin.employees
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
@@ -208,8 +210,10 @@ fun InputFormCard(
                     value = salary,
                     onValueChange = {
                         salary = it
-                        onEmployeeChange(employee.copy(salary = it.toInt()))
+                        val salaryInt = it.toIntOrNull() ?: 0
+                        onEmployeeChange(employee.copy(salary = salaryInt))
                     },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     label = { Text("Lương") },
                     modifier = Modifier.weight(1f)
                 )

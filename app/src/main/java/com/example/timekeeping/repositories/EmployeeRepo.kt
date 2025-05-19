@@ -65,15 +65,15 @@ class EmployeeRepository @Inject constructor (
         Tasks.whenAllSuccess<QuerySnapshot>(attendancesTask)
             .addOnSuccessListener { results ->
                 val assignments = results[0].documents
-                val attendances = results[1].documents
+//                val attendances = results[1].documents
 
                 for (doc in assignments) {
                     batch.delete(doc.reference)
                 }
 
-                for (doc in attendances) {
-                    batch.delete(doc.reference)
-                }
+//                for (doc in attendances) {
+//                    batch.delete(doc.reference)
+//                }
 
                 batch.commit()
                     .addOnSuccessListener {

@@ -40,6 +40,7 @@ import com.example.timekeeping.ui.admin.components.InfoItem
 import com.example.timekeeping.ui.admin.components.TopBarClassic
 import com.example.timekeeping.ui.admin.employees.components.SimpleDialogS
 import com.example.timekeeping.utils.SessionManager
+import com.example.timekeeping.utils.toPositive
 import com.example.timekeeping.view_models.EmployeeViewModel
 import com.example.timekeeping.view_models.SalaryViewModel
 
@@ -189,7 +190,7 @@ fun InfoDeductMoneyItem(
             .padding(vertical = 4.dp),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFEAEAF6)) // nhẹ nhàng hơn
+//        colors = CardDefaults.cardColors(containerColor = Color(0xFFEAEAF6))
     ) {
         Row(
             modifier = Modifier
@@ -207,7 +208,7 @@ fun InfoDeductMoneyItem(
                 modifier = Modifier
                     .weight(1f)
             ) {
-                Text("Số tiền: %,d".format(adjustment.adjustmentAmount), fontSize = 16.sp)
+                Text("Số tiền: %,d".format(adjustment.adjustmentAmount.toPositive()), fontSize = 16.sp)
                 Text("Ngày: ${adjustment.createdAt.format("dd/MM/yyyy HH:mm")}", fontSize = 14.sp)
                 Text("Ghi chú: ${adjustment.note}", fontSize = 14.sp)
             }

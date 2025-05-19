@@ -28,6 +28,7 @@ import com.example.timekeeping.ui.admin.calender.CalendarHeader
 import com.example.timekeeping.ui.admin.calender.CalendarState
 import com.example.timekeeping.ui.admin.calender.rememberCalendarState
 import com.example.timekeeping.ui.admin.components.TopBarClassic
+import com.example.timekeeping.utils.toPositive
 import com.example.timekeeping.view_models.PayrollViewModel
 import com.example.timekeeping.view_models.SalaryViewModel
 import java.time.format.DateTimeFormatter
@@ -138,7 +139,7 @@ fun MonthlyPayrollScreen(
                         firstDayFormatted,
                         lastDayFormatted,
                         totalSalary.toString(),
-                        totalAdvance.toString(),
+                        totalAdvance.toPositive().toString(),
                         totalSalary.minus(-totalAdvance).minus(totalPayment).toString(),
                         totalWorkDay.toString(),
                         totalPaidLeave.toString(),

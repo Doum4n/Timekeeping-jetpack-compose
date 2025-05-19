@@ -3,6 +3,7 @@ package com.example.timekeeping.ui.admin.shifts
 import android.app.TimePickerDialog
 import android.util.Log
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -149,6 +151,7 @@ fun ShiftInputForm(
                     value = salaryCoefficient.toString(),
                     onValueChange = { salaryCoefficient = it.toFloatOrNull() ?: 1F },
                     label = { Text("Hệ số lương") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -159,6 +162,7 @@ fun ShiftInputForm(
                     value = allowance.toString(),
                     onValueChange = { allowance = it.toIntOrNull() ?: 0 },
                     label = { Text("Phụ cấp ca") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
 
