@@ -209,7 +209,9 @@ fun MyAccountInputScreen(
                             inputStream?.close()
                         } catch (e: Exception) {
                             Log.e("UploadError", "Upload failed: ${e.message}")
+                            Toast.makeText(context, "Lỗi khi tải ảnh lên", Toast.LENGTH_SHORT).show()
                         }
+
                     }
 //                    onBackClick(),
                     Toast.makeText(context, "Cập nhật thành công", Toast.LENGTH_SHORT).show()

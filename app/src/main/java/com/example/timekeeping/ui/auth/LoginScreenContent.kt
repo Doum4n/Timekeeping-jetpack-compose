@@ -1,5 +1,6 @@
 package com.example.timekeeping.ui.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,10 +18,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.timekeeping.R
 import com.example.timekeeping.ui.auth.state.LoginUiState
 
 @Composable
@@ -39,6 +42,13 @@ fun LoginScreenContent(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Image(
+            painter = painterResource(id = R.drawable.login_banner),
+            contentDescription = "Login Illustration",
+            modifier = Modifier
+                .height(180.dp)
+                .padding(bottom = 16.dp)
+        )
         Text(
             text = "Đăng nhập",
             style = MaterialTheme.typography.headlineMedium,
