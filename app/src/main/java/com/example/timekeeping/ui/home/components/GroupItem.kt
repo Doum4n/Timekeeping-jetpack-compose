@@ -45,16 +45,6 @@ fun GroupItem(group: Group, onClick: () -> Unit, onCheckInClick: () -> Unit = {}
                     style = MaterialTheme.typography.bodySmall
                 )
             }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Button(
-                onClick = onCheckInClick,
-                modifier = Modifier.align(Alignment.Start),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
-            ) {
-                Text("Chấm công")
-            }
         }
     }
 }
